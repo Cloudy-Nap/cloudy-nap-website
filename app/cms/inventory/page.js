@@ -11,13 +11,13 @@ import {
   FiArrowLeft,
   FiAlertTriangle,
   FiTag,
-  FiPrinter,
-  FiMonitor,
-  FiEdit2,
-  FiX,
-  FiCheckCircle,
+  FiLayers,
+  FiGrid,
+  FiMaximize2,
 } from 'react-icons/fi';
 import { API_BASE } from '../../lib/apiBase';
+
+const CLOUDYNAP_TYPES = new Set(['bed', 'accessory', 'furniture', 'sofacumbed']);
 
 const parseNumeric = (value, fallback = 0) => {
   if (value === null || value === undefined) return fallback;
@@ -40,32 +40,55 @@ const extractImageArray = (value) => {
   return [];
 };
 
-const sanitizeProduct = (item, type) => {
+const categoryLabel = (type) => {
+  switch (type) {
+    case 'bed':
+      return 'Mattresses & beds';
+    case 'accessory':
+      return 'Accessories';
+    case 'furniture':
+      return 'Furniture';
+    case 'sofacumbed':
+      return 'Sofa cum bed';
+    default:
+      return 'Product';
+  }
+};
+
+const sanitizeProduct = (item) => {
   if (!item) return null;
-  const resolvedType = type || item.type || 'laptop';
+  const resolvedType = item.type || 'bed';
+  if (!CLOUDYNAP_TYPES.has(resolvedType)) return null;
+
   const images = extractImageArray(item);
-  const price = parseNumeric(item.price, 0);
-  const stock = parseNumeric(item.stock, 0);
+  const image = images[0] || item.image || '/mnk-category.png';
+
+  let priceLabel = 'Price on request';
+  if (resolvedType === 'furniture' || resolvedType === 'sofacumbed') {
+    const s = item.price !== null && item.price !== undefined ? String(item.price).trim() : '';
+    priceLabel = s || 'Price on request';
+  } else {
+    const n = parseNumeric(item.price, 0);
+    priceLabel = n > 0 ? `PKR ${n.toLocaleString('en-PK')}` : 'Price on request';
+  }
 
   return {
     ...item,
     id: item.id?.toString?.() ?? item.id,
     type: resolvedType,
-    name:
-      item.name ||
-      (resolvedType === 'printer'
-        ? [item.brand, item.series].filter(Boolean).join(' ')
-        : [item.brand, item.model || item.series].filter(Boolean).join(' ')) ||
-      'Untitled Product',
-    brand: item.brand || 'Unknown',
-    price,
-    priceLabel: price > 0 ? `PKR ${price.toLocaleString('en-PK')}` : 'Price on request',
-    stock,
-    lastUpdated: item.updated_at || item.updatedat || item.updatedAt || null,
-    image: images[0] || item.image || (resolvedType === 'printer' || resolvedType === 'scanner' ? '/printer-category.png' : '/laptop-category.jpg'),
-    images,
-    category: resolvedType === 'printer' ? 'Printers' : resolvedType === 'scanner' ? 'Scanners' : 'Laptops',
+    name: item.name || 'Untitled product',
+    priceLabel,
+    image,
+    category: categoryLabel(resolvedType),
   };
+};
+
+const CategoryIcon = ({ type }) => {
+  if (type === 'bed') return <FiLayers />;
+  if (type === 'accessory') return <FiPackage />;
+  if (type === 'furniture') return <FiGrid />;
+  if (type === 'sofacumbed') return <FiMaximize2 />;
+  return <FiPackage />;
 };
 
 const CmsInventoryPage = () => {
@@ -75,12 +98,6 @@ const CmsInventoryPage = () => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
-  const [stockModalOpen, setStockModalOpen] = useState(false);
-  const [stockTarget, setStockTarget] = useState(null);
-  const [stockValue, setStockValue] = useState('');
-  const [stockSaving, setStockSaving] = useState(false);
-  const [stockError, setStockError] = useState('');
-  const [stockSuccess, setStockSuccess] = useState('');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -94,13 +111,11 @@ const CmsInventoryPage = () => {
 
     try {
       const parsedUser = JSON.parse(storedUser);
-      
-      // Ensure accesspages is an array
+
       if (!Array.isArray(parsedUser.accesspages)) {
         parsedUser.accesspages = [];
       }
-      
-      // Admin users always have access, others need inventory in accesspages
+
       if (parsedUser.role !== 'admin') {
         const accessPages = parsedUser.accesspages || [];
         if (!accessPages.includes('inventory')) {
@@ -119,28 +134,12 @@ const CmsInventoryPage = () => {
       try {
         setLoading(true);
         setError('');
-        const [laptopsRes, printersRes, scannersRes] = await Promise.all([
-          fetch(`${API_BASE}/api/laptops`),
-          fetch(`${API_BASE}/api/printers`),
-          fetch(`${API_BASE}/api/scanners`),
-        ]);
-
-        if (!laptopsRes.ok) throw new Error('Failed to load laptops');
-        if (!printersRes.ok) throw new Error('Failed to load printers');
-        if (!scannersRes.ok) throw new Error('Failed to load scanners');
-
-        const [laptopsData, printersData, scannersData] = await Promise.all([
-          laptopsRes.json(),
-          printersRes.json(),
-          scannersRes.json(),
-        ]);
-
-        const sanitized = [
-          ...(Array.isArray(laptopsData) ? laptopsData.map((item) => sanitizeProduct(item, 'laptop')) : []),
-          ...(Array.isArray(printersData) ? printersData.map((item) => sanitizeProduct(item, 'printer')) : []),
-          ...(Array.isArray(scannersData) ? scannersData.map((item) => sanitizeProduct(item, 'scanner')) : []),
-        ].filter(Boolean);
-
+        const res = await fetch(`${API_BASE}/api/products`);
+        if (!res.ok) throw new Error('Failed to load catalog.');
+        const data = await res.json();
+        const sanitized = (Array.isArray(data) ? data : [])
+          .map((item) => sanitizeProduct(item))
+          .filter(Boolean);
         setProducts(sanitized);
       } catch (err) {
         console.error('CMS inventory fetch error:', err);
@@ -154,125 +153,29 @@ const CmsInventoryPage = () => {
     fetchProducts();
   }, []);
 
-  const openStockModal = (product) => {
-    setStockTarget(product);
-    setStockValue(
-      product && product.stock !== null && product.stock !== undefined
-        ? String(product.stock)
-        : '',
-    );
-    setStockError('');
-    setStockSuccess('');
-    setStockModalOpen(true);
-  };
-
-  const closeStockModal = () => {
-    if (stockSaving) return;
-    setStockModalOpen(false);
-    setStockTarget(null);
-    setStockValue('');
-    setStockError('');
-    setStockSuccess('');
-  };
-
-  const handleStockSubmit = async (event) => {
-    event.preventDefault();
-    if (!stockTarget) return;
-
-    const parsedStock = Number(stockValue);
-    if (!Number.isFinite(parsedStock) || parsedStock < 0) {
-      setStockError('Stock must be a zero or positive number.');
-      return;
-    }
-
-    setStockSaving(true);
-    setStockError('');
-    setStockSuccess('');
-
-    try {
-      let endpoint;
-      if (stockTarget.type === 'printer') {
-        endpoint = 'printers';
-      } else if (stockTarget.type === 'scanner') {
-        endpoint = 'scanners';
-      } else {
-        endpoint = 'laptops';
-      }
-      const response = await fetch(
-        `${API_BASE}/api/${endpoint}/${stockTarget.id}/stock`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ stock: parsedStock }),
-        },
-      );
-
-      const payload = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(payload?.error || 'Failed to update stock.');
-      }
-
-      const normalizedPayload = Array.isArray(payload) ? payload[0] : payload;
-      let sanitized = sanitizeProduct(normalizedPayload, stockTarget.type);
-      if (!sanitized) {
-        sanitized = {
-          ...stockTarget,
-          stock: parsedStock,
-          lastUpdated: stockTarget.lastUpdated,
-        };
-      }
-
-      setProducts((prev) =>
-        prev.map((product) =>
-          product.id === sanitized.id && product.type === sanitized.type
-            ? { ...product, ...sanitized }
-            : product,
-        ),
-      );
-
-      setStockTarget((prev) => (prev ? { ...prev, ...sanitized } : prev));
-      setStockSuccess('Stock updated successfully.');
-      setStockValue(String(sanitized.stock ?? parsedStock));
-
-      setTimeout(() => {
-        closeStockModal();
-      }, 800);
-    } catch (err) {
-      console.error('Stock update error:', err);
-      setStockError(err.message || 'Failed to update stock.');
-    } finally {
-      setStockSaving(false);
-    }
-  };
-
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const matchesFilter = filter === 'all' ? true : product.type === filter;
-      const matchesSearch = searchTerm
-        ? product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          product.brand.toLowerCase().includes(searchTerm.toLowerCase())
-        : true;
+      const q = searchTerm.toLowerCase();
+      const matchesSearch = searchTerm ? product.name.toLowerCase().includes(q) || product.category.toLowerCase().includes(q) : true;
       return matchesFilter && matchesSearch;
     });
   }, [products, filter, searchTerm]);
 
   return (
-    <div className="relative min-h-screen bg-linear-to-br from-[#0f172a] via-[#1e1b4b] to-[#020617] text-slate-100">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.23),transparent_55%)] opacity-80 pointer-events-none" />
+    <div className="relative min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(0,174,239,0.18),transparent_55%)] opacity-90 pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-300">
-              <FiPackage className="text-[#38bdf8]" /> Inventory
+            <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-400">
+              <FiPackage className="text-[#00aeef]" /> Inventory
             </p>
-            <h1 className="mt-2 text-3xl font-semibold text-white">Inventory Overview</h1>
-            <p className="mt-1 text-sm text-slate-300">
-              Review all laptops and printers currently stocking your hi-tech storefront. Manage quantities and pricing
-              with ease.
+            <h1 className="mt-2 text-3xl font-semibold text-white">Catalog overview</h1>
+            <p className="mt-1 text-sm text-slate-300 max-w-2xl">
+              Cloudynap listings (mattresses, furniture, sofa cum beds, accessories). Stock counts are not stored in
+              Supabase for this catalog—use the product list to manage what appears on the site.
             </p>
           </div>
           <div className="flex gap-3 items-center">
@@ -283,9 +186,15 @@ const CmsInventoryPage = () => {
               <FiArrowLeft />
               Back to dashboard
             </Link>
+            <Link
+              href="/cms/products"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-[#00aeef] to-[#0284c7] hover:from-[#0891b2] hover:to-[#0369a1] text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-[#00aeef]/25"
+            >
+              Edit products
+            </Link>
             <button
               onClick={() => router.refresh()}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-[#38bdf8] to-[#6366f1] hover:from-[#0ea5e9] hover:to-[#4338ca] text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-[#6366f1]/30"
+              className="inline-flex items-center gap-2 px-4 py-2.5 border border-white/20 rounded-lg text-sm font-semibold text-white hover:bg-white/10 transition"
             >
               <FiRefreshCw className={loading ? 'animate-spin' : ''} />
               Refresh
@@ -293,15 +202,15 @@ const CmsInventoryPage = () => {
           </div>
         </header>
 
-        <section className="rounded-3xl border border-white/10 bg-white/10 backdrop-blur-3xl shadow-2xl p-6 sm:p-8 space-y-6">
+        <section className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-3xl shadow-2xl p-6 sm:p-8 space-y-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3 bg-white/10 border border-white/10 rounded-xl px-4 py-3">
-              <FiSearch className="text-slate-300" />
+            <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+              <FiSearch className="text-slate-400" />
               <input
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Search by product or brand..."
-                className="bg-transparent text-sm text-white placeholder:text-slate-400 focus:outline-none"
+                placeholder="Search by name or category…"
+                className="bg-transparent text-sm text-white placeholder:text-slate-500 focus:outline-none w-full min-w-0"
               />
             </div>
             <div className="flex flex-wrap gap-3">
@@ -309,46 +218,32 @@ const CmsInventoryPage = () => {
                 onClick={() => setFilter('all')}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition inline-flex items-center gap-2 ${
                   filter === 'all'
-                    ? 'bg-linear-to-r from-[#38bdf8] to-[#6366f1] text-white shadow-lg shadow-[#6366f1]/30'
+                    ? 'bg-linear-to-r from-[#00aeef] to-[#0284c7] text-white shadow-lg shadow-[#00aeef]/25'
                     : 'bg-white/10 text-slate-200 hover:bg-white/20'
                 }`}
               >
                 <FiFilter />
                 All
               </button>
-              <button
-                onClick={() => setFilter('laptop')}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition inline-flex items-center gap-2 ${
-                  filter === 'laptop'
-                    ? 'bg-linear-to-r from-[#38bdf8] to-[#6366f1] text-white shadow-lg shadow-[#6366f1]/30'
-                    : 'bg-white/10 text-slate-200 hover:bg-white/20'
-                }`}
-              >
-                <FiMonitor />
-                Laptops
-              </button>
-              <button
-                onClick={() => setFilter('printer')}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition inline-flex items-center gap-2 ${
-                  filter === 'printer'
-                    ? 'bg-linear-to-r from-[#38bdf8] to-[#6366f1] text-white shadow-lg shadow-[#6366f1]/30'
-                    : 'bg-white/10 text-slate-200 hover:bg-white/20'
-                }`}
-              >
-                <FiPrinter />
-                Printers
-              </button>
-              <button
-                onClick={() => setFilter('scanner')}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition inline-flex items-center gap-2 ${
-                  filter === 'scanner'
-                    ? 'bg-linear-to-r from-[#38bdf8] to-[#6366f1] text-white shadow-lg shadow-[#6366f1]/30'
-                    : 'bg-white/10 text-slate-200 hover:bg-white/20'
-                }`}
-              >
-                <FiPrinter />
-                Scanners
-              </button>
+              {[
+                { id: 'bed', label: 'Beds' },
+                { id: 'accessory', label: 'Accessories' },
+                { id: 'furniture', label: 'Furniture' },
+                { id: 'sofacumbed', label: 'Sofa cum bed' },
+              ].map(({ id, label }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setFilter(id)}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+                    filter === id
+                      ? 'bg-linear-to-r from-[#00aeef] to-[#0284c7] text-white shadow-lg shadow-[#00aeef]/25'
+                      : 'bg-white/10 text-slate-200 hover:bg-white/20'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -356,7 +251,7 @@ const CmsInventoryPage = () => {
             {loading && (
               <div className="col-span-full flex flex-col items-center justify-center gap-3 py-20 text-slate-200">
                 <FiRefreshCw className="animate-spin text-2xl" />
-                <p className="text-sm">Loading inventory...</p>
+                <p className="text-sm">Loading…</p>
               </div>
             )}
 
@@ -373,7 +268,6 @@ const CmsInventoryPage = () => {
             {!loading && !error && filteredProducts.length === 0 && (
               <div className="col-span-full border border-white/10 bg-white/5 text-white/80 rounded-2xl p-6">
                 <p className="text-sm font-semibold">No products match your filters.</p>
-                <p className="text-xs mt-1">Try adjusting your search or type selection.</p>
               </div>
             )}
 
@@ -381,24 +275,23 @@ const CmsInventoryPage = () => {
               !error &&
               filteredProducts.map((product) => (
                 <article
-                  key={product.id}
-                  className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/10 backdrop-blur-xl shadow-xl transition transform hover:-translate-y-1 hover:shadow-2xl"
+                  key={`${product.type}-${product.id}`}
+                  className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl transition transform hover:-translate-y-1 hover:shadow-2xl"
                 >
                   <div className="absolute inset-0 bg-linear-to-br from-white/10 via-transparent to-white/5 opacity-50 pointer-events-none" />
                   <div className="relative p-6 flex flex-col gap-4">
                     <div className="flex items-center justify-between">
                       <span className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-white/10 text-white/80 border border-white/10">
-                        {product.type === 'printer' || product.type === 'scanner' ? <FiPrinter /> : <FiMonitor />}
+                        <CategoryIcon type={product.type} />
                         {product.category}
                       </span>
-                      <span className="text-xs text-white/60">{product.brand}</span>
                     </div>
 
                     <div className="flex items-center justify-center bg-white/5 border border-white/10 rounded-xl p-4 h-36">
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="h-26 w-full object-contain transition-transform duration-300 group-hover:scale-105"
+                        className="h-26 w-full object-contain transition-transform duration-300"
                       />
                     </div>
 
@@ -409,20 +302,7 @@ const CmsInventoryPage = () => {
                           <FiTag />
                           {product.priceLabel}
                         </span>
-                        <span>{product.stock} in stock</span>
                       </div>
-                    </div>
-
-                    
-
-                    <div className="flex justify-end">
-                      <button
-                        onClick={() => openStockModal(product)}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-linear-to-r from-[#38bdf8] to-[#6366f1] text-xs font-semibold text-white hover:from-[#0ea5e9] hover:to-[#4338ca] transition shadow-lg shadow-[#6366f1]/30"
-                      >
-                        <FiEdit2 />
-                        Update Stock
-                      </button>
                     </div>
                   </div>
                 </article>
@@ -430,90 +310,8 @@ const CmsInventoryPage = () => {
           </div>
         </section>
       </div>
-
-      {stockModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-10">
-          <div
-            className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
-            onClick={closeStockModal}
-            aria-hidden="true"
-          />
-          <div className="relative w-full max-w-md bg-slate-900 border border-white/10 rounded-2xl shadow-2xl p-6 space-y-5">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold text-white">Update Stock</h2>
-                <p className="mt-1 text-xs text-slate-300 leading-snug">
-                  {stockTarget?.name || 'Selected product'}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={closeStockModal}
-                className="text-slate-400 hover:text-white transition disabled:opacity-60"
-                disabled={stockSaving}
-              >
-                <FiX className="text-xl" />
-              </button>
-            </div>
-
-            <form className="space-y-4" onSubmit={handleStockSubmit}>
-              <div>
-                <label
-                  className="block text-xs font-semibold text-slate-300 mb-1"
-                  htmlFor="stockValue"
-                >
-                  Stock Count
-                </label>
-                <input
-                  id="stockValue"
-                  type="number"
-                  min="0"
-                  value={stockValue}
-                  onChange={(event) => setStockValue(event.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#38bdf8]"
-                  placeholder="Enter stock quantity"
-                  disabled={stockSaving}
-                />
-              </div>
-
-              {stockError && (
-                <div className="text-xs text-red-200 bg-red-900/40 border border-red-500/40 rounded-md px-3 py-2">
-                  {stockError}
-                </div>
-              )}
-
-              {stockSuccess && (
-                <div className="inline-flex items-center gap-2 text-xs text-emerald-200 bg-emerald-900/40 border border-emerald-500/40 rounded-md px-3 py-2">
-                  <FiCheckCircle />
-                  {stockSuccess}
-                </div>
-              )}
-
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={closeStockModal}
-                  className="px-4 py-2 rounded-lg border border-white/10 text-sm font-semibold text-slate-200 hover:bg-white/10 transition disabled:opacity-60"
-                  disabled={stockSaving}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-linear-to-r from-[#38bdf8] to-[#6366f1] text-sm font-semibold text-white hover:from-[#0ea5e9] hover:to-[#4338ca] transition disabled:opacity-70 disabled:cursor-not-allowed"
-                  disabled={stockSaving}
-                >
-                  {stockSaving && <FiRefreshCw className="animate-spin" />}
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
 
 export default CmsInventoryPage;
-

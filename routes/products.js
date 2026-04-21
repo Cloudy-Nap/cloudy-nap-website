@@ -60,6 +60,113 @@ const attachType = (records, type) => {
   }));
 };
 
+/** CMS + API: Cloudynap catalog tables (matches public.beds, accessories, furniture, sofacumbed). */
+const CLOUDYNAP_CATEGORIES = ['bed', 'accessory', 'furniture', 'sofacumbed'];
+const CLOUDYNAP_TABLE = {
+  bed: 'beds',
+  accessory: 'accessories',
+  furniture: 'furniture',
+  sofacumbed: 'sofacumbed',
+};
+
+const pickCloudynapStr = (specs, body, ...keys) => {
+  for (const k of keys) {
+    const raw = specs[k] ?? body[k];
+    if (raw === undefined || raw === null) continue;
+    const s = normalizeString(raw);
+    if (s) return s;
+  }
+  return null;
+};
+
+const pickCloudynapInt = (specs, body, ...keys) => {
+  for (const k of keys) {
+    const raw = specs[k] ?? body[k];
+    if (raw === undefined || raw === null || raw === '') continue;
+    const n = parseInt(String(raw).replace(/[^\d-]/g, ''), 10);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+};
+
+const buildCloudynapRow = (category, body, specs, coverUrl, urls) => {
+  const name = normalizeString(body.name);
+  const description = normalizeString(body.description);
+  const base = {
+    name: name || null,
+    description: description || null,
+    image: coverUrl,
+    image_urls: urls,
+  };
+
+  if (category === 'bed') {
+    const p = coercePriceValue(body.price);
+    return {
+      ...base,
+      price: p !== null ? Math.round(p) : null,
+      length: pickCloudynapInt(specs, body, 'length'),
+      width: pickCloudynapInt(specs, body, 'width'),
+      height: pickCloudynapInt(specs, body, 'height'),
+      series: pickCloudynapStr(specs, body, 'series'),
+      features: pickCloudynapStr(specs, body, 'features'),
+      benefits: pickCloudynapStr(specs, body, 'benefits'),
+      firmness: pickCloudynapStr(specs, body, 'firmness'),
+      fabric: pickCloudynapStr(specs, body, 'fabric'),
+      warranty: pickCloudynapStr(specs, body, 'warranty'),
+    };
+  }
+
+  if (category === 'accessory') {
+    const p = coercePriceValue(body.price);
+    return {
+      ...base,
+      price: p !== null ? Math.round(p) : null,
+      series: pickCloudynapStr(specs, body, 'series'),
+      features: pickCloudynapStr(specs, body, 'features'),
+      benefits: pickCloudynapStr(specs, body, 'benefits'),
+      firmness: pickCloudynapStr(specs, body, 'firmness'),
+      fabric: pickCloudynapStr(specs, body, 'fabric'),
+      warranty: pickCloudynapStr(specs, body, 'warranty'),
+    };
+  }
+
+  if (category === 'furniture') {
+    const priceText = normalizeString(body.price);
+    return {
+      ...base,
+      price: priceText || null,
+      seats: pickCloudynapInt(specs, body, 'seats'),
+      material: pickCloudynapStr(specs, body, 'material'),
+      warranty: pickCloudynapStr(specs, body, 'warranty'),
+    };
+  }
+
+  if (category === 'sofacumbed') {
+    const priceText = normalizeString(body.price);
+    return {
+      ...base,
+      price: priceText || null,
+      series: pickCloudynapStr(specs, body, 'series'),
+      features: pickCloudynapStr(specs, body, 'features'),
+      benefits: pickCloudynapStr(specs, body, 'benefits'),
+      firmness: pickCloudynapStr(specs, body, 'firmness'),
+      fabric: pickCloudynapStr(specs, body, 'fabric'),
+      warranty: pickCloudynapStr(specs, body, 'warranty'),
+    };
+  }
+
+  return base;
+};
+
+const resolveCloudynapCategoryParam = (param) => {
+  const p = normalizeString(param).toLowerCase();
+  if (p === 'bed' || p === 'beds') return 'bed';
+  if (p === 'accessory' || p === 'accessories') return 'accessory';
+  if (p === 'furniture') return 'furniture';
+  if (p === 'sofacumbed' || p === 'sofa-cum-bed' || p === 'sofa_cum_bed') return 'sofacumbed';
+  return null;
+};
+
 /** Which tables to load for ?subcategory= and legacy ?category= */
 const resolveCloudynapPlans = (subRaw, legacyCategoryRaw) => {
   const sub = subRaw ? String(subRaw).trim().toLowerCase() : '';
@@ -460,7 +567,9 @@ const uploadImages = async (category, files) => {
   }
 
   let bucket;
-  if (category === 'printer') {
+  if (CLOUDYNAP_CATEGORIES.includes(category)) {
+    bucket = 'catalog_images';
+  } else if (category === 'printer') {
     bucket = 'printer_images';
   } else if (category === 'scanner') {
     bucket = 'scanner_images';
@@ -506,6 +615,71 @@ router.post('/', upload.array('images', 10), async (req, res) => {
       return res.status(503).json({ error: 'Database not configured' });
     }
     const category = normalizeString(req.body.category).toLowerCase();
+
+    if (CLOUDYNAP_CATEGORIES.includes(category)) {
+      const name = normalizeString(req.body.name);
+      const priceRaw = normalizeString(req.body.price);
+      if (!name || !priceRaw) {
+        return res.status(400).json({ error: 'Product name and price are required.' });
+      }
+
+      const specsPayload = parseSpecsPayload(req.body.specs);
+      const files = req.files || [];
+      if (!files.length) {
+        return res.status(400).json({ error: 'Please upload at least one product image.' });
+      }
+
+      const { urls, coverUrl } = await uploadImages(category, files);
+      if (!coverUrl) {
+        return res.status(500).json({ error: 'Unable to determine cover image URL.' });
+      }
+
+      const tableName = CLOUDYNAP_TABLE[category];
+      const insertPayload = buildCloudynapRow(category, req.body, specsPayload, coverUrl, urls);
+
+      const { data, error } = await supabase
+        .from(tableName)
+        .insert(insertPayload)
+        .select('*')
+        .single();
+
+      if (error) {
+        console.error('Failed to create Cloudynap product:', error);
+        return res.status(500).json({
+          error:
+            error?.message ||
+            error?.details ||
+            error?.hint ||
+            'Failed to create product. Ensure Supabase has a public `catalog_images` storage bucket (or check column types).',
+        });
+      }
+
+      const userFromBody = req.body?.cmsUserId || req.body?.cmsUserName || req.body?.cmsUserRole
+        ? {
+            userId: req.body.cmsUserId,
+            userName: req.body.cmsUserName,
+            userRole: req.body.cmsUserRole,
+          }
+        : null;
+
+      await logActivity(
+        {
+          type: 'product_created',
+          action: `Created new ${category}: ${data.name || name}`,
+          entityType: 'product',
+          entityId: data.id,
+          entityName: data.name || name,
+          details: { category, price: data.price },
+          userId: userFromBody?.userId,
+          userName: userFromBody?.userName,
+          userRole: userFromBody?.userRole,
+        },
+        req,
+      );
+
+      return res.status(201).json({ product: { ...data, type: category } });
+    }
+
     if (!['laptop', 'printer', 'scanner'].includes(category)) {
       return res.status(400).json({ error: 'Invalid or missing product category.' });
     }
@@ -585,31 +759,33 @@ router.post('/', upload.array('images', 10), async (req, res) => {
     }
 
     // Log activity - get user info from body (FormData) or headers
-    const userFromBody = req.body?.cmsUserId || req.body?.cmsUserName || req.body?.cmsUserRole 
+    const userFromBody = req.body?.cmsUserId || req.body?.cmsUserName || req.body?.cmsUserRole
       ? {
           userId: req.body.cmsUserId,
           userName: req.body.cmsUserName,
           userRole: req.body.cmsUserRole,
         }
       : null;
-    
-    await logActivity({
-      type: 'product_created',
-      action: `Created new ${category}: ${data.name || details.name}`,
-      entityType: 'product',
-      entityId: data.id,
-      entityName: data.name || details.name,
-      details: {
-        category,
-        brand: data.brand || details.brand,
-        price: data.price || details.price,
-        stock: data.stock || details.stock,
+
+    await logActivity(
+      {
+        type: 'product_created',
+        action: `Created new ${category}: ${data.name || details.name}`,
+        entityType: 'product',
+        entityId: data.id,
+        entityName: data.name || details.name,
+        details: {
+          category,
+          brand: data.brand || details.brand,
+          price: data.price || details.price,
+          stock: data.stock || details.stock,
+        },
+        userId: userFromBody?.userId,
+        userName: userFromBody?.userName,
+        userRole: userFromBody?.userRole,
       },
-      // Pass user info directly if available from body
-      userId: userFromBody?.userId,
-      userName: userFromBody?.userName,
-      userRole: userFromBody?.userRole,
-    }, req);
+      req,
+    );
 
     res.status(201).json({ product: data });
   } catch (err) {
@@ -803,6 +979,104 @@ router.patch('/:category/:id', upload.array('images', 10), async (req, res) => {
       return res.status(503).json({ error: 'Database not configured' });
     }
     const categoryParam = normalizeString(req.params.category).toLowerCase();
+    const cloudCat = resolveCloudynapCategoryParam(categoryParam);
+
+    if (cloudCat) {
+      const lookupId = parseLookupId(req.params.id);
+      const tableName = CLOUDYNAP_TABLE[cloudCat];
+      const { data: existingRow, error: existingCloudError } = await supabase
+        .from(tableName)
+        .select('id')
+        .eq('id', lookupId)
+        .single();
+
+      if (existingCloudError || !existingRow) {
+        return res.status(404).json({ error: 'Product not found.' });
+      }
+
+      const name = normalizeString(req.body.name);
+      const priceRaw = normalizeString(req.body.price);
+      if (!name) {
+        return res.status(400).json({ error: 'Product name is required.' });
+      }
+      if (!priceRaw) {
+        return res.status(400).json({ error: 'Price is required.' });
+      }
+
+      const specsPayload = parseSpecsPayload(req.body.specs);
+      const existingImages = parseExistingImages(req.body.existingImages);
+      const files = req.files || [];
+
+      let uploadedUrls = [];
+      if (files.length) {
+        const uploads = await uploadImages(cloudCat, files);
+        uploadedUrls = uploads.urls;
+      }
+
+      let finalImages = [...existingImages, ...uploadedUrls]
+        .map((url) => (typeof url === 'string' ? url.trim() : ''))
+        .filter((url, index, array) => url && array.indexOf(url) === index);
+
+      if (!finalImages.length) {
+        return res.status(400).json({ error: 'At least one product image is required.' });
+      }
+
+      const coverExisting = normalizeString(req.body.coverExisting);
+      const coverNewIndex =
+        req.body.coverNewIndex !== undefined && req.body.coverNewIndex !== null
+          ? Number(req.body.coverNewIndex)
+          : null;
+
+      let coverImage = '';
+      if (coverExisting && finalImages.includes(coverExisting)) {
+        coverImage = coverExisting;
+      } else if (
+        Number.isInteger(coverNewIndex) &&
+        coverNewIndex >= 0 &&
+        coverNewIndex < uploadedUrls.length
+      ) {
+        coverImage = uploadedUrls[coverNewIndex];
+      } else if (existingImages.length && finalImages.includes(existingImages[0])) {
+        coverImage = existingImages[0];
+      } else {
+        coverImage = finalImages[0];
+      }
+
+      const updatePayload = buildCloudynapRow(cloudCat, req.body, specsPayload, coverImage, finalImages);
+
+      const { data, error } = await supabase
+        .from(tableName)
+        .update(updatePayload)
+        .eq('id', lookupId)
+        .select('*')
+        .single();
+
+      if (error) {
+        console.error('Failed to update Cloudynap product:', error);
+        return res.status(500).json({
+          error:
+            error?.message ||
+            error?.details ||
+            error?.hint ||
+            'Failed to update product.',
+        });
+      }
+
+      await logActivity(
+        {
+          type: 'product_updated',
+          action: `Updated ${cloudCat}: ${data.name || name}`,
+          entityType: 'product',
+          entityId: lookupId,
+          entityName: data.name || name,
+          details: { category: cloudCat },
+        },
+        req,
+      );
+
+      return res.json({ product: { ...data, type: cloudCat } });
+    }
+
     let category;
     if (categoryParam === 'printer' || categoryParam === 'printers') {
       category = 'printer';

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -958,7 +958,17 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
   );
 }
 
-/** Client page: read URL via `useSearchParams()` inside `ProductsPage` — do not use async here. */
+/** `useSearchParams()` must be under Suspense for static generation / Vercel build. */
 export default function AllProductsPage() {
-  return <ProductsPage />;
+  return (
+    <Suspense
+      fallback={
+        <div className={`min-h-screen flex items-center justify-center bg-white text-gray-600 ${openSans.className}`}>
+          Loading products…
+        </div>
+      }
+    >
+      <ProductsPage />
+    </Suspense>
+  );
 }

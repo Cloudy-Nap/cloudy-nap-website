@@ -30,9 +30,9 @@ const fallbackStats = [
 ];
 
 const fallbackActivities = [
-  { id: 1, message: 'Imported 12 new printers.', timestamp: '2 hours ago' },
+  { id: 1, message: 'Added a new mattress listing to the catalog.', timestamp: '2 hours ago' },
   { id: 2, message: 'Order #10234 marked as fulfilled.', timestamp: '3 hours ago' },
-  { id: 3, message: 'Updated pricing for “HP LaserJet Pro”.', timestamp: 'Yesterday' },
+  { id: 3, message: 'Updated sofa cum bed gallery images.', timestamp: 'Yesterday' },
 ];
 
 const navigationItems = [
@@ -63,9 +63,9 @@ const quickActions = [
   },
   {
     id: 'sync-inventory',
-    label: 'Inventory Management',
+    label: 'Catalog overview',
     href: '/cms/inventory',
-    description: 'Update quantities for all SKUs',
+    description: 'Review Cloudynap SKUs and pricing',
     accent: 'from-[#22c55e] to-[#10b981]',
     icon: FiPackage,
   },

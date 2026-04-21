@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   FiBox,
-  FiPrinter,
-  FiMonitor,
+  FiLayers,
+  FiPackage,
+  FiGrid,
+  FiMaximize2,
   FiTrendingUp,
   FiRefreshCw,
   FiSearch,
@@ -19,6 +21,8 @@ import {
   FiCheck,
 } from 'react-icons/fi';
 import { API_BASE } from '../../lib/apiBase';
+
+const CLOUDYNAP_TYPES = new Set(['bed', 'accessory', 'furniture', 'sofacumbed']);
 
 const parseNumeric = (value, fallback = 0) => {
   if (value === null || value === undefined) return fallback;
@@ -41,39 +45,61 @@ const extractImageArray = (value) => {
   return [];
 };
 
-const sanitizeProduct = (item, type) => {
+const categoryLabel = (type) => {
+  switch (type) {
+    case 'bed':
+      return 'Mattresses & beds';
+    case 'accessory':
+      return 'Accessories';
+    case 'furniture':
+      return 'Furniture';
+    case 'sofacumbed':
+      return 'Sofa cum bed';
+    default:
+      return 'Product';
+  }
+};
+
+const sanitizeProduct = (item) => {
   if (!item) return null;
-  const resolvedType = type || item.type || 'laptop';
+  const resolvedType = item.type || 'bed';
+  if (!CLOUDYNAP_TYPES.has(resolvedType)) return null;
+
   const images = extractImageArray(item);
-    const image = images[0] || item.image || (resolvedType === 'printer' || resolvedType === 'scanner' ? '/printer-category.png' : '/laptop-category.jpg');
-  const price = parseNumeric(item.price, 0);
+  const image = images[0] || item.image || '/mnk-category.png';
+
+  const desc =
+    typeof item.description === 'string' && item.description.trim()
+      ? item.description.trim()
+      : [item.series, item.features].filter(Boolean).join(' · ') || 'No description yet.';
+
+  let priceNumeric = 0;
+  let priceLabel = 'Price on request';
+  if (resolvedType === 'furniture' || resolvedType === 'sofacumbed') {
+    const s = item.price !== null && item.price !== undefined ? String(item.price).trim() : '';
+    priceLabel = s || 'Price on request';
+    priceNumeric = parseNumeric(s, 0);
+  } else {
+    priceNumeric = parseNumeric(item.price, 0);
+    priceLabel = priceNumeric > 0 ? `PKR ${priceNumeric.toLocaleString('en-PK')}` : 'Price on request';
+  }
+
   return {
     ...item,
     id: item.id?.toString?.() ?? item.id,
     type: resolvedType,
-    name:
-      item.name ||
-      (resolvedType === 'printer'
-        ? [item.brand, item.series].filter(Boolean).join(' ')
-        : [item.brand, item.model || item.series].filter(Boolean).join(' ')) ||
-      'Untitled Product',
-    brand: item.brand || 'Unknown',
-    description:
-      item.description ||
-      (resolvedType === 'printer'
-        ? [item.resolution, item.copyfeature, item.scanfeature, item.duplex].filter(Boolean).join(' • ')
-        : resolvedType === 'scanner'
-          ? [item.resolution, item.color_scan, item.duplex, item.wireless].filter(Boolean).join(' • ')
-          : item.processor || item.graphics || 'No description provided.'),
-    price,
-    priceLabel: price > 0 ? `PKR ${price.toLocaleString('en-PK')}` : 'Price on request',
+    name: item.name || 'Untitled product',
+    brand: item.series || 'Cloudynap',
+    description: desc,
+    price: priceNumeric,
+    priceLabel,
     image,
     images,
-    category: resolvedType === 'printer' ? 'Printers' : resolvedType === 'scanner' ? 'Scanners' : 'Laptops',
-    stock: parseNumeric(item.stock, 10),
-    rating: parseNumeric(item.rating, 4.7),
+    category: categoryLabel(resolvedType),
+    stock: null,
+    rating: parseNumeric(item.rating, 0),
     reviews: parseNumeric(item.reviews, 0),
-    featured: ['true', 't', '1', true, 1].includes(item?.featured),
+    featured: false,
   };
 };
 
@@ -89,92 +115,92 @@ const renderProductImage = (src, alt) => {
   }
   return (
     <img
-      src={src || '/laptop-category.jpg'}
+      src={src || '/mnk-category.png'}
       alt={alt}
       className="h-28 w-full object-contain transition-transform duration-300 group-hover:scale-105"
     />
   );
 };
 
-const GENERAL_FIELD_CONFIG = {
-  laptop: [
-    { id: 'name', label: 'Product Name', type: 'text', placeholder: 'MacBook Air 15"' },
-    { id: 'brand', label: 'Brand', type: 'text', placeholder: 'Apple' },
-    { id: 'model', label: 'Model', type: 'text', placeholder: 'MacBook Air' },
-    { id: 'series', label: 'Series', type: 'text', placeholder: 'M3' },
-    { id: 'sku', label: 'SKU / Identifier', type: 'text', placeholder: 'LPT-0001' },
-    { id: 'price', label: 'Price (PKR)', type: 'text', placeholder: '250000' },
-    { id: 'stock', label: 'Stock Quantity', type: 'number', placeholder: '25' },
+const EDIT_GENERAL_FIELD_CONFIG = {
+  bed: [
+    { id: 'name', label: 'Product name', type: 'text', placeholder: 'Cloudynap Ortho Comfort' },
+    { id: 'price', label: 'Price (PKR)', type: 'text', placeholder: '85000' },
   ],
-  printer: [
-    { id: 'name', label: 'Product Name', type: 'text', placeholder: 'HP LaserJet Pro' },
-    { id: 'brand', label: 'Brand', type: 'text', placeholder: 'HP' },
-    { id: 'model', label: 'Model', type: 'text', placeholder: 'LaserJet Pro' },
-    { id: 'series', label: 'Series', type: 'text', placeholder: 'M404dn' },
-    { id: 'sku', label: 'SKU / Identifier', type: 'text', placeholder: 'PRT-0001' },
-    { id: 'price', label: 'Price (PKR)', type: 'text', placeholder: '120000' },
-    { id: 'stock', label: 'Stock Quantity', type: 'number', placeholder: '15' },
+  accessory: [
+    { id: 'name', label: 'Product name', type: 'text', placeholder: 'Memory foam pillow' },
+    { id: 'price', label: 'Price (PKR)', type: 'text', placeholder: '4500' },
   ],
-  scanner: [
-    { id: 'name', label: 'Product Name', type: 'text', placeholder: 'HP ScanJet Pro' },
-    { id: 'brand', label: 'Brand', type: 'text', placeholder: 'HP' },
-    { id: 'model', label: 'Model', type: 'text', placeholder: 'ScanJet Pro' },
-    { id: 'series', label: 'Series', type: 'text', placeholder: '2500' },
-    { id: 'sku', label: 'SKU / Identifier', type: 'text', placeholder: 'SCN-0001' },
-    { id: 'price', label: 'Price (PKR)', type: 'text', placeholder: '50000' },
-    { id: 'stock', label: 'Stock Quantity', type: 'number', placeholder: '10' },
+  furniture: [
+    { id: 'name', label: 'Product name', type: 'text', placeholder: 'Accent chair' },
+    { id: 'price', label: 'Price (display text)', type: 'text', placeholder: 'PKR 32,000' },
+  ],
+  sofacumbed: [
+    { id: 'name', label: 'Product name', type: 'text', placeholder: '3-seater sofa cum bed' },
+    { id: 'price', label: 'Price (display text)', type: 'text', placeholder: 'PKR 125,000' },
   ],
 };
 
-const LAPTOP_SPEC_FIELDS = [
-  { id: 'processor', label: 'Processor', sourceKey: 'processor', placeholder: 'Apple M3 Chip, 8 Core CPU, 16 Core Neural Engine' },
-  { id: 'graphics', label: 'Graphics', sourceKey: 'graphics', placeholder: 'Apple M3 10-core GPU' },
-  { id: 'display', label: 'Display', sourceKey: 'display', placeholder: '15.3-Inch (2880 x 1864), Liquid Retina display, 500 nits' },
-  { id: 'memory', label: 'Memory', sourceKey: 'memory', placeholder: '8GB RAM' },
-  { id: 'storage', label: 'Storage', sourceKey: 'storage', placeholder: '256GB SSD' },
-  { id: 'adapter', label: 'Adapter', sourceKey: 'adapter', placeholder: 'Apple adapter included' },
-  { id: 'wifi', label: 'Wi-Fi', sourceKey: 'wifi', placeholder: 'Wi-Fi 6E' },
-  { id: 'bluetooth', label: 'Bluetooth', sourceKey: 'bluetooth', placeholder: 'Bluetooth 5.3' },
-  { id: 'camera', label: 'Camera', sourceKey: 'camera', placeholder: 'Front Facing Camera 1080p' },
-  { id: 'ports', label: 'Ports', sourceKey: 'port', placeholder: '2 x Thunderbolt' },
-  { id: 'operatingSystem', label: 'Operating System', sourceKey: 'os', placeholder: 'macOS Sonoma 14' },
-  { id: 'microphone', label: 'Microphone', sourceKey: 'mic', placeholder: 'Built-In HD' },
-  { id: 'battery', label: 'Battery', sourceKey: 'battery', placeholder: 'Up to 8 hours' },
-  { id: 'warranty', label: 'Warranty', sourceKey: 'warranty', placeholder: '1 year limited warranty' },
+const BED_SPEC_FIELDS = [
+  { id: 'length', label: 'Length (cm)', sourceKey: 'length', placeholder: '198' },
+  { id: 'width', label: 'Width (cm)', sourceKey: 'width', placeholder: '152' },
+  { id: 'height', label: 'Height (cm)', sourceKey: 'height', placeholder: '25' },
+  { id: 'series', label: 'Series / line', sourceKey: 'series', placeholder: 'Ortho Comfort' },
+  { id: 'features', label: 'Features', sourceKey: 'features', placeholder: 'Cool-gel foam' },
+  { id: 'benefits', label: 'Benefits', sourceKey: 'benefits', placeholder: 'Spinal support' },
+  { id: 'firmness', label: 'Firmness', sourceKey: 'firmness', placeholder: 'Medium-firm' },
+  { id: 'fabric', label: 'Fabric / cover', sourceKey: 'fabric', placeholder: 'Bamboo knit' },
+  { id: 'warranty', label: 'Warranty', sourceKey: 'warranty', placeholder: '10 years' },
 ];
 
-const PRINTER_SPEC_FIELDS = [
-  { id: 'memory', label: 'Memory', sourceKey: 'memory', placeholder: '128 MB SDRAM, 32 MB flash' },
-  { id: 'paperInput', label: 'Paper Input', sourceKey: 'paperinput', placeholder: '60 sheet input tray' },
-  { id: 'paperOutput', label: 'Paper Output', sourceKey: 'paperoutput', placeholder: '25-sheet output tray' },
-  { id: 'paperTypes', label: 'Paper Types', sourceKey: 'papertypes', placeholder: 'Plain paper, Photo paper' },
-  { id: 'dimensions', label: 'Dimensions', sourceKey: 'dimensions', placeholder: '425.2 x 304.1 x 149.1 mm' },
-  { id: 'weight', label: 'Weight', sourceKey: 'weight', placeholder: '3.42 kg' },
-  { id: 'power', label: 'Power', sourceKey: 'power', placeholder: '220 to 240 VAC (± 10%), 50/60 Hz (± 3Hz)' },
-  { id: 'warranty', label: 'Warranty', sourceKey: 'warranty', placeholder: '1 year limited warranty' },
-  { id: 'resolution', label: 'Resolution', sourceKey: 'resolution', placeholder: 'Up to 1200 DPI' },
-  { id: 'duplex', label: 'Duplex', sourceKey: 'duplex', placeholder: 'Yes / No' },
-  { id: 'copyFeature', label: 'Copy Feature', sourceKey: 'copyfeature', placeholder: 'Yes / No' },
-  { id: 'scanFeature', label: 'Scan Feature', sourceKey: 'scanfeature', placeholder: 'Yes / No' },
-  { id: 'wireless', label: 'Wireless', sourceKey: 'wireless', placeholder: 'Yes / No' },
+const ACCESSORY_SPEC_FIELDS = [
+  { id: 'series', label: 'Series / line', sourceKey: 'series', placeholder: 'SleepWell' },
+  { id: 'features', label: 'Features', sourceKey: 'features', placeholder: 'Cooling gel' },
+  { id: 'benefits', label: 'Benefits', sourceKey: 'benefits', placeholder: 'Neck support' },
+  { id: 'firmness', label: 'Firmness / feel', sourceKey: 'firmness', placeholder: 'Medium' },
+  { id: 'fabric', label: 'Fabric / cover', sourceKey: 'fabric', placeholder: 'Cotton cover' },
+  { id: 'warranty', label: 'Warranty', sourceKey: 'warranty', placeholder: '1 year' },
 ];
 
-const SCANNER_SPEC_FIELDS = [
-  { id: 'memory', label: 'Memory', sourceKey: 'memory', placeholder: '128 MB' },
-  { id: 'paper_types', label: 'Paper Types', sourceKey: 'paper_types', placeholder: 'Plain paper, Photo paper' },
-  { id: 'paper_size', label: 'Paper Size', sourceKey: 'paper_size', placeholder: 'A4, Letter' },
-  { id: 'duplex', label: 'Duplex', sourceKey: 'duplex', placeholder: 'Yes / No' },
-  { id: 'resolution', label: 'Resolution', sourceKey: 'resolution', placeholder: 'Up to 1200 DPI' },
-  { id: 'power', label: 'Power', sourceKey: 'power', placeholder: '220 to 240 VAC (± 10%), 50/60 Hz' },
-  { id: 'weight', label: 'Weight', sourceKey: 'weight', placeholder: '3.5 kg' },
-  { id: 'dimensions', label: 'Dimensions', sourceKey: 'dimensions', placeholder: '425.2 x 304.1 x 149.1 mm' },
-  { id: 'color_scan', label: 'Color Scan', sourceKey: 'color_scan', placeholder: 'Yes / No' },
-  { id: 'wireless', label: 'Wireless', sourceKey: 'wireless', placeholder: 'Yes / No' },
+const FURNITURE_SPEC_FIELDS = [
+  { id: 'seats', label: 'Seats / configuration', sourceKey: 'seats', placeholder: '3-seater' },
+  { id: 'material', label: 'Material', sourceKey: 'material', placeholder: 'Solid wood, velvet' },
+  { id: 'warranty', label: 'Warranty', sourceKey: 'warranty', placeholder: '2 years' },
 ];
+
+const SOFA_SPEC_FIELDS = [
+  { id: 'series', label: 'Series / line', sourceKey: 'series', placeholder: 'Lounge Plus' },
+  { id: 'features', label: 'Features', sourceKey: 'features', placeholder: 'Storage, fold mechanism' },
+  { id: 'benefits', label: 'Benefits', sourceKey: 'benefits', placeholder: 'Guest-ready' },
+  { id: 'firmness', label: 'Mattress firmness', sourceKey: 'firmness', placeholder: 'Medium' },
+  { id: 'fabric', label: 'Fabric', sourceKey: 'fabric', placeholder: 'Linen blend' },
+  { id: 'warranty', label: 'Warranty', sourceKey: 'warranty', placeholder: '5 years' },
+];
+
+const specFieldsForType = (type) => {
+  if (type === 'bed') return BED_SPEC_FIELDS;
+  if (type === 'accessory') return ACCESSORY_SPEC_FIELDS;
+  if (type === 'furniture') return FURNITURE_SPEC_FIELDS;
+  return SOFA_SPEC_FIELDS;
+};
+
+const specSectionTitle = (type) => {
+  if (type === 'bed') return 'Mattress details';
+  if (type === 'accessory') return 'Accessory details';
+  if (type === 'furniture') return 'Furniture details';
+  return 'Sofa cum bed details';
+};
+
+const CategoryBadgeIcon = ({ type }) => {
+  if (type === 'bed') return <FiLayers className="text-[#00aeef]" />;
+  if (type === 'accessory') return <FiPackage className="text-[#00aeef]" />;
+  if (type === 'furniture') return <FiGrid className="text-[#00aeef]" />;
+  if (type === 'sofacumbed') return <FiMaximize2 className="text-[#00aeef]" />;
+  return <FiBox />;
+};
 
 const CmsProductsPage = () => {
   const router = useRouter();
-  const [cmsUser, setCmsUser] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -191,7 +217,7 @@ const CmsProductsPage = () => {
     price: '',
     stock: '',
     description: '',
-  featured: false,
+    featured: false,
   });
   const [editSpecs, setEditSpecs] = useState({});
   const [editExistingImages, setEditExistingImages] = useState([]);
@@ -220,13 +246,11 @@ const CmsProductsPage = () => {
 
     try {
       const parsedUser = JSON.parse(storedUser);
-      
-      // Ensure accesspages is an array
+
       if (!Array.isArray(parsedUser.accesspages)) {
         parsedUser.accesspages = [];
       }
-      
-      // Admin users always have access, others need products in accesspages
+
       if (parsedUser.role !== 'admin') {
         const accessPages = parsedUser.accesspages || [];
         if (!accessPages.includes('products')) {
@@ -234,8 +258,6 @@ const CmsProductsPage = () => {
           return;
         }
       }
-      
-      setCmsUser(parsedUser);
     } catch (err) {
       console.error('Failed to parse CMS user', err);
       router.replace('/cms/auth/login');
@@ -247,28 +269,12 @@ const CmsProductsPage = () => {
       try {
         setLoading(true);
         setError('');
-        const [laptopsRes, printersRes, scannersRes] = await Promise.all([
-          fetch(`${API_BASE}/api/laptops`),
-          fetch(`${API_BASE}/api/printers`),
-          fetch(`${API_BASE}/api/scanners`),
-        ]);
-
-        if (!laptopsRes.ok) throw new Error('Failed to load laptops');
-        if (!printersRes.ok) throw new Error('Failed to load printers');
-        if (!scannersRes.ok) throw new Error('Failed to load scanners');
-
-        const [laptopsData, printersData, scannersData] = await Promise.all([
-          laptopsRes.json(),
-          printersRes.json(),
-          scannersRes.json(),
-        ]);
-
-        const sanitized = [
-          ...(Array.isArray(laptopsData) ? laptopsData.map((item) => sanitizeProduct(item, 'laptop')) : []),
-          ...(Array.isArray(printersData) ? printersData.map((item) => sanitizeProduct(item, 'printer')) : []),
-          ...(Array.isArray(scannersData) ? scannersData.map((item) => sanitizeProduct(item, 'scanner')) : []),
-        ].filter(Boolean);
-
+        const res = await fetch(`${API_BASE}/api/products`);
+        if (!res.ok) throw new Error('Failed to load catalog.');
+        const data = await res.json();
+        const sanitized = (Array.isArray(data) ? data : [])
+          .map((item) => sanitizeProduct(item))
+          .filter(Boolean);
         setProducts(sanitized);
       } catch (err) {
         console.error('CMS products fetch error:', err);
@@ -285,9 +291,12 @@ const CmsProductsPage = () => {
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const matchesFilter = filter === 'all' ? true : product.type === filter;
+      const q = searchTerm.toLowerCase();
       const matchesSearch = searchTerm
-        ? product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          product.brand.toLowerCase().includes(searchTerm.toLowerCase())
+        ? product.name.toLowerCase().includes(q) ||
+          product.brand.toLowerCase().includes(q) ||
+          product.description.toLowerCase().includes(q) ||
+          product.category.toLowerCase().includes(q)
         : true;
       return matchesFilter && matchesSearch;
     });
@@ -295,21 +304,23 @@ const CmsProductsPage = () => {
 
   const stats = useMemo(() => {
     const total = products.length;
-    const laptops = products.filter((product) => product.type === 'laptop').length;
-    const printers = products.filter((product) => product.type === 'printer').length;
-    const scanners = products.filter((product) => product.type === 'scanner').length;
+    const byType = (t) => products.filter((product) => product.type === t).length;
+    const numericForAverage = products.filter((p) => p.type === 'bed' || p.type === 'accessory');
     const averagePrice =
-      products.length > 0
-        ? products.reduce((sum, product) => sum + (Number.isFinite(product.price) ? product.price : 0), 0) /
-          products.length
+      numericForAverage.length > 0
+        ? Math.round(
+            numericForAverage.reduce((sum, product) => sum + (Number.isFinite(product.price) ? product.price : 0), 0) /
+              numericForAverage.length,
+          )
         : 0;
 
     return {
       total,
-      laptops,
-      printers,
-      scanners,
-      averagePrice: Math.round(averagePrice),
+      beds: byType('bed'),
+      accessories: byType('accessory'),
+      furniture: byType('furniture'),
+      sofas: byType('sofacumbed'),
+      averagePrice,
     };
   }, [products]);
 
@@ -360,15 +371,7 @@ const CmsProductsPage = () => {
     setEditCover(null);
 
     try {
-      let endpoint;
-      if (product.type === 'printer') {
-        endpoint = 'printers';
-      } else if (product.type === 'scanner') {
-        endpoint = 'scanners';
-      } else {
-        endpoint = 'laptops';
-      }
-      const response = await fetch(`${API_BASE}/api/${endpoint}/${product.id}`);
+      const response = await fetch(`${API_BASE}/api/catalog/${product.type}/${product.id}`);
       if (!response.ok) {
         throw new Error('Failed to load product details.');
       }
@@ -377,24 +380,17 @@ const CmsProductsPage = () => {
 
       setEditDetails({
         name: data.name || '',
-        brand: data.brand || '',
-        model: data.model || '',
+        brand: '',
+        model: '',
         series: data.series || '',
-        sku: data.sku || '',
+        sku: '',
         price: data.price !== null && data.price !== undefined ? String(data.price) : '',
-        stock: data.stock !== null && data.stock !== undefined ? String(data.stock) : '',
+        stock: '',
         description: typeof data.description === 'string' ? data.description : '',
-        featured: ['true', 't', '1', true, 1].includes(data?.featured),
+        featured: false,
       });
 
-      let specFields;
-      if (product.type === 'printer') {
-        specFields = PRINTER_SPEC_FIELDS;
-      } else if (product.type === 'scanner') {
-        specFields = SCANNER_SPEC_FIELDS;
-      } else {
-        specFields = LAPTOP_SPEC_FIELDS;
-      }
+      const specFields = specFieldsForType(product.type);
       const nextSpecs = specFields.reduce((acc, field) => {
         const rawValue = data[field.sourceKey];
         acc[field.id] = rawValue !== null && rawValue !== undefined ? String(rawValue) : '';
@@ -523,11 +519,6 @@ const CmsProductsPage = () => {
       return;
     }
 
-    if (!editDetails.brand.trim()) {
-      setEditError('Brand is required.');
-      return;
-    }
-
     if (!editDetails.price.trim()) {
       setEditError('Price is required.');
       return;
@@ -568,28 +559,19 @@ const CmsProductsPage = () => {
         formData.append('images', item.file);
       });
 
-      // Get CMS user info for activity logging
-      const cmsUser = JSON.parse(window.localStorage.getItem('cmsUser') || '{}');
-      
-      // Add user info to FormData as well (since headers might not work with FormData)
-      formData.append('cmsUserId', String(cmsUser.id || ''));
-      formData.append('cmsUserName', String(cmsUser.username || cmsUser.user_name || ''));
-      formData.append('cmsUserRole', String(cmsUser.role || ''));
-      
-      let categorySlug;
-      if (editTarget.type === 'printer') {
-        categorySlug = 'printer';
-      } else if (editTarget.type === 'scanner') {
-        categorySlug = 'scanner';
-      } else {
-        categorySlug = 'laptop';
-      }
+      const cmsUserLocal = JSON.parse(window.localStorage.getItem('cmsUser') || '{}');
+
+      formData.append('cmsUserId', String(cmsUserLocal.id || ''));
+      formData.append('cmsUserName', String(cmsUserLocal.username || cmsUserLocal.user_name || ''));
+      formData.append('cmsUserRole', String(cmsUserLocal.role || ''));
+
+      const categorySlug = editTarget.type;
       const response = await fetch(`${API_BASE}/api/products/${categorySlug}/${editTarget.id}`, {
         method: 'PATCH',
         headers: {
-          'X-CMS-User-Id': String(cmsUser.id || ''),
-          'X-CMS-User-Name': String(cmsUser.username || cmsUser.user_name || ''),
-          'X-CMS-User-Role': String(cmsUser.role || ''),
+          'X-CMS-User-Id': String(cmsUserLocal.id || ''),
+          'X-CMS-User-Name': String(cmsUserLocal.username || cmsUserLocal.user_name || ''),
+          'X-CMS-User-Role': String(cmsUserLocal.role || ''),
         },
         body: formData,
       });
@@ -601,10 +583,12 @@ const CmsProductsPage = () => {
       }
 
       const updatedRaw = payload.product;
-      const sanitized = sanitizeProduct(updatedRaw, editTarget.type);
-      setProducts((prev) =>
-        prev.map((item) => (item.id === sanitized.id && item.type === sanitized.type ? sanitized : item)),
-      );
+      const sanitized = sanitizeProduct(updatedRaw);
+      if (sanitized) {
+        setProducts((prev) =>
+          prev.map((item) => (item.id === sanitized.id && item.type === sanitized.type ? sanitized : item)),
+        );
+      }
       setEditMessage('Product updated successfully.');
 
       setTimeout(() => {
@@ -620,21 +604,21 @@ const CmsProductsPage = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-linear-to-br from-[#0f172a] via-[#1e1b4b] to-[#020617] text-slate-100">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.25),transparent_55%)] opacity-80 pointer-events-none" />
+    <div className="relative min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(0,174,239,0.18),transparent_55%)] opacity-90 pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-300">
-              <FiBox className="text-[#38bdf8]" /> Products
+            <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-400">
+              <FiBox className="text-[#00aeef]" /> Cloudynap
             </p>
-            <h1 className="mt-2 text-3xl font-semibold text-white">Product Catalogue</h1>
-            <p className="mt-1 text-sm text-slate-300">
-              Manage every laptop, printer, and scanner listed on your hi-tech storefront. Update, monitor, and synchronize inventory.
+            <h1 className="mt-2 text-3xl font-semibold text-white">Product catalogue</h1>
+            <p className="mt-1 text-sm text-slate-300 max-w-2xl">
+              Manage mattresses, furniture, sofa cum beds, and accessories synced with your storefront Supabase tables.
             </p>
           </div>
-          <div className="flex gap-3 items-center">
+          <div className="flex flex-wrap gap-3 items-center">
             <Link
               href="/cms/dashboard"
               className="inline-flex items-center gap-2 px-4 py-2.5 border border-white/20 rounded-lg text-sm font-semibold text-white hover:bg-white/10 transition shadow-lg shadow-black/10"
@@ -644,136 +628,123 @@ const CmsProductsPage = () => {
             </Link>
             <button
               onClick={() => router.refresh()}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-[#38bdf8] to-[#6366f1] hover:from-[#0ea5e9] hover:to-[#4338ca] text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-[#6366f1]/30"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-[#00aeef] to-[#0284c7] hover:from-[#0891b2] hover:to-[#0369a1] text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-[#00aeef]/25"
             >
               <FiRefreshCw className={loading ? 'animate-spin' : ''} />
               Refresh
             </button>
             <button
-              onClick={() => window.location.href = '/cms/products/add-product'}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-[#38bdf8] to-[#6366f1] hover:from-[#0ea5e9] hover:to-[#4338ca] text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-[#6366f1]/30"
+              onClick={() => (window.location.href = '/cms/products/add-product')}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-[#00aeef] to-[#0284c7] hover:from-[#0891b2] hover:to-[#0369a1] text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-[#00aeef]/25"
             >
-              Add Product
+              Add product
             </button>
             <button
-              onClick={() => window.location.href = '/cms/products/bulk-add-product'}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-[#38bdf8] to-[#6366f1] hover:from-[#0ea5e9] hover:to-[#4338ca] text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-[#0ea5e9]/30"
+              onClick={() => (window.location.href = '/cms/products/bulk-add-product')}
+              className="inline-flex items-center gap-2 px-4 py-2.5 border border-white/20 rounded-lg text-sm font-semibold text-white hover:bg-white/10 transition"
             >
-              Bulk Add
+              Bulk CSV (legacy)
             </button>
           </div>
         </header>
 
-        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-          <div className="rounded-2xl border border-white/10 bg-linear-to-br from-[#38bdf8] to-[#6366f1] p-6 shadow-xl">
-            <p className="text-xs uppercase tracking-wide text-white/80">Total Products</p>
+        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          <div className="rounded-2xl border border-white/10 bg-linear-to-br from-[#00aeef] to-[#0284c7] p-6 shadow-xl">
+            <p className="text-xs uppercase tracking-wide text-white/90">Total SKUs</p>
             <p className="mt-3 text-3xl font-bold text-white">{stats.total}</p>
-            <p className="text-xs text-white/70 mt-1">Active listings across all categories</p>
+            <p className="text-xs text-white/80 mt-1">All Cloudynap catalog items</p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/10 backdrop-blur-xl p-6 shadow-xl">
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-wide text-white/70">Laptops</p>
-                <p className="mt-3 text-2xl font-semibold text-white">{stats.laptops}</p>
+                <p className="text-xs uppercase tracking-wide text-white/70">Mattresses & beds</p>
+                <p className="mt-3 text-2xl font-semibold text-white">{stats.beds}</p>
               </div>
-              <span className="h-11 w-11 rounded-full bg-linear-to-br from-[#38bdf8]/30 to-[#38bdf8]/10 flex items-center justify-center text-[#38bdf8]">
-                <FiMonitor />
+              <span className="h-11 w-11 rounded-full bg-[#00aeef]/20 flex items-center justify-center text-[#00aeef]">
+                <FiLayers />
               </span>
             </div>
-            <p className="text-xs text-white/60 mt-2">Devices sourced from Supabase laptops table</p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/10 backdrop-blur-xl p-6 shadow-xl">
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-wide text-white/70">Printers</p>
-                <p className="mt-3 text-2xl font-semibold text-white">{stats.printers}</p>
+                <p className="text-xs uppercase tracking-wide text-white/70">Accessories</p>
+                <p className="mt-3 text-2xl font-semibold text-white">{stats.accessories}</p>
               </div>
-              <span className="h-11 w-11 rounded-full bg-linear-to-br from-[#f97316]/30 to-[#fb7185]/10 flex items-center justify-center text-[#fb7185]">
-                <FiPrinter />
+              <span className="h-11 w-11 rounded-full bg-white/10 flex items-center justify-center text-[#00aeef]">
+                <FiPackage />
               </span>
             </div>
-            <p className="text-xs text-white/60 mt-2">Entries from the Supabase printers table</p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/10 backdrop-blur-xl p-6 shadow-xl">
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-wide text-white/70">Scanners</p>
-                <p className="mt-3 text-2xl font-semibold text-white">{stats.scanners}</p>
+                <p className="text-xs uppercase tracking-wide text-white/70">Furniture</p>
+                <p className="mt-3 text-2xl font-semibold text-white">{stats.furniture}</p>
               </div>
-              <span className="h-11 w-11 rounded-full bg-linear-to-br from-[#10b981]/30 to-[#10b981]/10 flex items-center justify-center text-[#10b981]">
-                <FiPrinter />
+              <span className="h-11 w-11 rounded-full bg-white/10 flex items-center justify-center text-[#00aeef]">
+                <FiGrid />
               </span>
             </div>
-            <p className="text-xs text-white/60 mt-2">Entries from the Supabase scanners table</p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/10 backdrop-blur-xl p-6 shadow-xl">
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-wide text-white/70">Average Price</p>
+                <p className="text-xs uppercase tracking-wide text-white/70">Sofa cum bed</p>
+                <p className="mt-3 text-2xl font-semibold text-white">{stats.sofas}</p>
+              </div>
+              <span className="h-11 w-11 rounded-full bg-white/10 flex items-center justify-center text-[#00aeef]">
+                <FiMaximize2 />
+              </span>
+            </div>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-white/70">Avg. price (beds & accessories)</p>
                 <p className="mt-3 text-2xl font-semibold text-white">
                   {stats.averagePrice > 0 ? `PKR ${stats.averagePrice.toLocaleString('en-PK')}` : 'n/a'}
                 </p>
               </div>
-              <span className="h-11 w-11 rounded-full bg-linear-to-br from-[#22c55e]/30 to-[#16a34a]/10 flex items-center justify-center text-[#22c55e]">
+              <span className="h-11 w-11 rounded-full bg-white/10 flex items-center justify-center text-[#00aeef]">
                 <FiTrendingUp />
               </span>
             </div>
-            <p className="text-xs text-white/60 mt-2">Median pricing across current catalogue</p>
           </div>
         </section>
 
-        <section className="rounded-3xl border border-white/10 bg-white/10 backdrop-blur-3xl shadow-2xl p-6 sm:p-8 space-y-6">
+        <section className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-3xl shadow-2xl p-6 sm:p-8 space-y-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3 bg-white/10 border border-white/10 rounded-xl px-4 py-3">
-              <FiSearch className="text-slate-300" />
+            <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+              <FiSearch className="text-slate-400" />
               <input
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Search by name or brand..."
-                className="bg-transparent text-sm text-white placeholder:text-slate-400 focus:outline-none"
+                placeholder="Search name, description, or category…"
+                className="bg-transparent text-sm text-white placeholder:text-slate-500 focus:outline-none w-full min-w-0"
               />
             </div>
             <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => setFilter('all')}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-                  filter === 'all'
-                    ? 'bg-linear-to-r from-[#38bdf8] to-[#6366f1] text-white shadow-lg shadow-[#6366f1]/30'
-                    : 'bg-white/10 text-slate-200 hover:bg-white/20'
-                }`}
-              >
-                All Products
-              </button>
-              <button
-                onClick={() => setFilter('laptop')}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-                  filter === 'laptop'
-                    ? 'bg-linear-to-r from-[#38bdf8] to-[#6366f1] text-white shadow-lg shadow-[#6366f1]/30'
-                    : 'bg-white/10 text-slate-200 hover:bg-white/20'
-                }`}
-              >
-                Laptops
-              </button>
-              <button
-                onClick={() => setFilter('printer')}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-                  filter === 'printer'
-                    ? 'bg-linear-to-r from-[#38bdf8] to-[#6366f1] text-white shadow-lg shadow-[#6366f1]/30'
-                    : 'bg-white/10 text-slate-200 hover:bg-white/20'
-                }`}
-              >
-                Printers
-              </button>
-              <button
-                onClick={() => setFilter('scanner')}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-                  filter === 'scanner'
-                    ? 'bg-linear-to-r from-[#38bdf8] to-[#6366f1] text-white shadow-lg shadow-[#6366f1]/30'
-                    : 'bg-white/10 text-slate-200 hover:bg-white/20'
-                }`}
-              >
-                Scanners
-              </button>
+              {[
+                { id: 'all', label: 'All' },
+                { id: 'bed', label: 'Beds' },
+                { id: 'accessory', label: 'Accessories' },
+                { id: 'furniture', label: 'Furniture' },
+                { id: 'sofacumbed', label: 'Sofa cum bed' },
+              ].map(({ id, label }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setFilter(id)}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+                    filter === id
+                      ? 'bg-linear-to-r from-[#00aeef] to-[#0284c7] text-white shadow-lg shadow-[#00aeef]/25'
+                      : 'bg-white/10 text-slate-200 hover:bg-white/20'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -781,7 +752,7 @@ const CmsProductsPage = () => {
             {loading && (
               <div className="col-span-full flex flex-col items-center justify-center gap-3 py-20 text-slate-200">
                 <FiRefreshCw className="animate-spin text-2xl" />
-                <p className="text-sm">Loading product catalogue...</p>
+                <p className="text-sm">Loading catalogue…</p>
               </div>
             )}
 
@@ -798,7 +769,7 @@ const CmsProductsPage = () => {
             {!loading && !error && filteredProducts.length === 0 && (
               <div className="col-span-full border border-white/10 bg-white/5 text-white/80 rounded-2xl p-6">
                 <p className="text-sm font-semibold">No products match your filters.</p>
-                <p className="text-xs mt-1">Try adjusting your search or product type selection.</p>
+                <p className="text-xs mt-1">Try adjusting search or add items from Add product.</p>
               </div>
             )}
 
@@ -806,7 +777,7 @@ const CmsProductsPage = () => {
               !error &&
               filteredProducts.map((product) => (
                 <article
-                  key={product.id}
+                  key={`${product.type}-${product.id}`}
                   role="button"
                   tabIndex={0}
                   onClick={() => openEditModal(product)}
@@ -816,18 +787,13 @@ const CmsProductsPage = () => {
                       openEditModal(product);
                     }
                   }}
-                  className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 transition hover:border-[#38bdf8]/40 hover:bg-white/10 cursor-pointer"
+                  className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 transition hover:border-[#00aeef]/40 hover:bg-white/10 cursor-pointer"
                 >
-                  {product.featured && (
-                    <span className="absolute top-4 left-4 inline-flex items-center gap-1 rounded-full bg-[#38bdf8]/20 border border-[#38bdf8]/40 px-3 py-1 text-xs font-semibold text-[#38bdf8] backdrop-blur">
-                      Featured
-                    </span>
-                  )}
                   <div className="absolute inset-0 bg-linear-to-br from-white/10 via-transparent to-white/5 opacity-60 pointer-events-none" />
                   <div className="relative p-6 flex flex-col gap-4">
                     <div className="flex items-center justify-between">
                       <span className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-white/10 text-white/80 border border-white/10">
-                        {product.type === 'printer' ? <FiPrinter /> : <FiMonitor />}
+                        <CategoryBadgeIcon type={product.type} />
                         {product.category}
                       </span>
                     </div>
@@ -843,7 +809,7 @@ const CmsProductsPage = () => {
 
                     <div className="flex items-center justify-between text-sm text-white/80">
                       <span className="font-semibold text-white">{product.priceLabel}</span>
-                      <span>{product.stock} in stock</span>
+                      <span className="text-xs text-white/50">Tap to edit</span>
                     </div>
                   </div>
                   <div className="absolute top-4 right-4 inline-flex items-center gap-2 rounded-full bg-black/40 border border-white/10 px-3 py-1 text-xs text-white/80">
@@ -863,20 +829,20 @@ const CmsProductsPage = () => {
             onClick={closeEditModal}
             aria-hidden="true"
           />
-          <div className="relative w-full max-w-4xl max-h-[85vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#0f172a]/95 shadow-[0_40px_120px_rgba(15,23,42,0.6)]">
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-white/10 bg-[#0f172a]/95 px-6 py-5">
+          <div className="relative w-full max-w-4xl max-h-[85vh] overflow-y-auto rounded-3xl border border-white/10 bg-slate-900/95 shadow-[0_40px_120px_rgba(15,23,42,0.6)]">
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-white/10 bg-slate-900/95 px-6 py-5">
               <div>
-                <p className="text-xs uppercase tracking-[0.35em] text-slate-300 flex items-center gap-2">
+                <p className="text-xs uppercase tracking-[0.35em] text-slate-400 flex items-center gap-2">
                   <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/10 border border-white/10">
-                    {editTarget?.type === 'printer' ? <FiPrinter className="text-[#38bdf8]" /> : <FiMonitor className="text-[#38bdf8]" />}
+                    <CategoryBadgeIcon type={editTarget?.type} />
                   </span>
-                  Edit {editTarget?.type === 'printer' ? 'Printer' : 'Laptop'}
+                  Edit {categoryLabel(editTarget?.type)}
                 </p>
                 <h2 className="mt-2 text-2xl font-semibold text-white">
                   {editDetails.name || editTarget?.name || 'Untitled product'}
                 </h2>
                 <p className="text-xs text-slate-400 mt-1">
-                  ID #{editTarget?.id} • {editTarget?.category || (editTarget?.type === 'printer' ? 'Printers' : 'Laptops')}
+                  ID #{editTarget?.id} • {editTarget?.category || categoryLabel(editTarget?.type)}
                 </p>
               </div>
               <button
@@ -893,12 +859,12 @@ const CmsProductsPage = () => {
             {editLoading ? (
               <div className="px-6 py-16 text-center text-slate-200">
                 <FiRefreshCw className="mx-auto mb-4 text-2xl animate-spin" />
-                Loading product details...
+                Loading product details…
               </div>
             ) : (
               <form onSubmit={handleEditSubmit} className="px-6 py-8 space-y-8">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                  {(GENERAL_FIELD_CONFIG[editTarget?.type || 'laptop'] || []).map((field) => (
+                  {(EDIT_GENERAL_FIELD_CONFIG[editTarget?.type] || EDIT_GENERAL_FIELD_CONFIG.bed).map((field) => (
                     <label key={field.id} className="flex flex-col">
                       <span className="text-xs font-semibold text-slate-200 uppercase tracking-wide mb-2">
                         {field.label}
@@ -910,7 +876,7 @@ const CmsProductsPage = () => {
                         onChange={handleEditDetailChange}
                         placeholder={field.placeholder}
                         disabled={editSubmitting}
-                        className="w-full rounded-lg border border-white/15 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#38bdf8]/60 disabled:opacity-60"
+                        className="w-full rounded-lg border border-white/15 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00aeef]/60 disabled:opacity-60"
                       />
                     </label>
                   ))}
@@ -918,53 +884,23 @@ const CmsProductsPage = () => {
 
                 <div>
                   <label className="flex flex-col">
-                    <span className="text-xs font-semibold text-slate-200 uppercase tracking-wide mb-2">
-                      Description
-                    </span>
+                    <span className="text-xs font-semibold text-slate-200 uppercase tracking-wide mb-2">Description</span>
                     <textarea
                       name="description"
                       value={editDetails.description}
                       onChange={handleEditDetailChange}
                       rows={4}
-                      placeholder="High-level marketing copy or key highlights."
+                      placeholder="Marketing copy and highlights."
                       disabled={editSubmitting}
-                      className="w-full rounded-lg border border-white/15 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#38bdf8]/60 disabled:opacity-60 resize-none"
+                      className="w-full rounded-lg border border-white/15 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00aeef]/60 disabled:opacity-60 resize-none"
                     />
                   </label>
                 </div>
 
-                {editTarget?.type !== 'printer' && (
-                  <label className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-4">
-                    <input
-                      type="checkbox"
-                      name="featured"
-                      checked={Boolean(editDetails.featured)}
-                      onChange={handleEditDetailChange}
-                      disabled={editSubmitting}
-                      className="mt-1 h-4 w-4 rounded border-white/40 bg-white/10 text-[#38bdf8] focus:ring-2 focus:ring-[#38bdf8]/60 disabled:opacity-60"
-                    />
-                    <span className="text-sm text-slate-200 leading-relaxed">
-                      Feature this laptop in the navigation dropdown (maximum of three featured laptops are displayed).
-                    </span>
-                  </label>
-                )}
-
                 <div>
-                  <h3 className="text-sm font-semibold text-white mb-3">
-                    {editTarget?.type === 'printer' ? 'Printer Specifications' : 'Laptop Specifications'}
-                  </h3>
+                  <h3 className="text-sm font-semibold text-white mb-3">{specSectionTitle(editTarget?.type)}</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {(() => {
-                      let specFields;
-                      if (editTarget?.type === 'printer') {
-                        specFields = PRINTER_SPEC_FIELDS;
-                      } else if (editTarget?.type === 'scanner') {
-                        specFields = SCANNER_SPEC_FIELDS;
-                      } else {
-                        specFields = LAPTOP_SPEC_FIELDS;
-                      }
-                      return specFields;
-                    })().map((field) => (
+                    {specFieldsForType(editTarget?.type).map((field) => (
                       <label key={field.id} className="flex flex-col bg-white/5 border border-white/10 rounded-xl p-4">
                         <span className="text-xs font-semibold text-slate-200 uppercase tracking-wide mb-2">
                           {field.label}
@@ -975,7 +911,7 @@ const CmsProductsPage = () => {
                           onChange={handleEditSpecChange}
                           placeholder={field.placeholder}
                           disabled={editSubmitting}
-                          className="rounded-lg border border-white/15 bg-transparent px-3 py-2 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#38bdf8]/50 disabled:opacity-60"
+                          className="rounded-lg border border-white/15 bg-transparent px-3 py-2 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00aeef]/50 disabled:opacity-60"
                         />
                       </label>
                     ))}
@@ -986,27 +922,25 @@ const CmsProductsPage = () => {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
                       <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                        <FiUploadCloud className="text-[#38bdf8]" />
-                        Product Images
+                        <FiUploadCloud className="text-[#00aeef]" />
+                        Product images
                       </h3>
-                      <p className="text-xs text-slate-300 mt-1">
-                        Update or upload new images. Select a cover to feature on product cards.
-                      </p>
+                      <p className="text-xs text-slate-300 mt-1">Update gallery or set a new cover image.</p>
                     </div>
                     <span className="text-xs text-slate-400">
-                      Current total: {editExistingImages.length + editNewImages.length} image
+                      Total: {editExistingImages.length + editNewImages.length} image
                       {editExistingImages.length + editNewImages.length === 1 ? '' : 's'}
                     </span>
                   </div>
 
                   <label
                     htmlFor="edit-product-images"
-                    className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-white/20 rounded-2xl px-6 py-10 bg-white/5 hover:border-[#38bdf8]/60 transition cursor-pointer text-center"
+                    className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-white/20 rounded-2xl px-6 py-10 bg-white/5 hover:border-[#00aeef]/60 transition cursor-pointer text-center"
                   >
-                    <FiUploadCloud className="text-3xl text-[#38bdf8]" />
+                    <FiUploadCloud className="text-3xl text-[#00aeef]" />
                     <div>
                       <p className="text-sm font-semibold text-white">Click to upload images</p>
-                      <p className="text-xs text-slate-300 mt-1">PNG, JPG up to 5MB each. Hold Ctrl/Shift for multi-select.</p>
+                      <p className="text-xs text-slate-300 mt-1">PNG, JPG up to 8MB each.</p>
                     </div>
                     <input
                       id="edit-product-images"
@@ -1021,7 +955,7 @@ const CmsProductsPage = () => {
 
                   {editExistingImages.length > 0 && (
                     <div>
-                      <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-300 mb-2">Current Images</h4>
+                      <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-300 mb-2">Current images</h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {editExistingImages.map((url) => {
                           const isCover = editCover?.kind === 'existing' && editCover.value === url;
@@ -1029,14 +963,14 @@ const CmsProductsPage = () => {
                             <div
                               key={url}
                               className={`relative overflow-hidden rounded-xl border ${
-                                isCover ? 'border-[#38bdf8]' : 'border-white/15'
+                                isCover ? 'border-[#00aeef]' : 'border-white/15'
                               } bg-white/5`}
                             >
                               <img src={url} alt="Existing product" className="h-40 w-full object-cover" />
                               <div className="absolute inset-x-0 bottom-0 bg-black/60 px-3 py-2 flex items-center justify-between text-xs text-white">
                                 <span className="truncate pr-2">{url.split('/').slice(-1)[0]}</span>
                                 {isCover ? (
-                                  <span className="inline-flex items-center gap-1 text-[#38bdf8]">
+                                  <span className="inline-flex items-center gap-1 text-[#00aeef]">
                                     <FiCheck /> Cover
                                   </span>
                                 ) : (
@@ -1068,7 +1002,7 @@ const CmsProductsPage = () => {
 
                   {editNewImages.length > 0 && (
                     <div>
-                      <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-300 mb-2">New Images</h4>
+                      <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-300 mb-2">New images</h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {editNewImages.map((item, index) => {
                           const isCover = editCover?.kind === 'new' && editCover.id === item.id;
@@ -1076,14 +1010,14 @@ const CmsProductsPage = () => {
                             <div
                               key={item.id}
                               className={`relative overflow-hidden rounded-xl border ${
-                                isCover ? 'border-[#38bdf8]' : 'border-white/15'
+                                isCover ? 'border-[#00aeef]' : 'border-white/15'
                               } bg-white/5`}
                             >
                               <img src={item.preview} alt={`New upload ${index + 1}`} className="h-40 w-full object-cover" />
                               <div className="absolute inset-x-0 bottom-0 bg-black/60 px-3 py-2 flex items-center justify-between text-xs text-white">
                                 <span className="truncate pr-2">{item.file.name}</span>
                                 {isCover ? (
-                                  <span className="inline-flex items-center gap-1 text-[#38bdf8]">
+                                  <span className="inline-flex items-center gap-1 text-[#00aeef]">
                                     <FiCheck /> Cover
                                   </span>
                                 ) : (
@@ -1138,9 +1072,9 @@ const CmsProductsPage = () => {
                   <button
                     type="submit"
                     disabled={editSubmitting}
-                    className="px-5 py-2.5 rounded-lg bg-linear-to-r from-[#38bdf8] to-[#6366f1] text-sm font-semibold text-white shadow-lg shadow-[#6366f1]/40 hover:from-[#0ea5e9] hover:to-[#4338ca] transition disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="px-5 py-2.5 rounded-lg bg-linear-to-r from-[#00aeef] to-[#0284c7] text-sm font-semibold text-white shadow-lg shadow-[#00aeef]/30 hover:from-[#0891b2] hover:to-[#0369a1] transition disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {editSubmitting ? 'Saving changes...' : 'Save changes'}
+                    {editSubmitting ? 'Saving…' : 'Save changes'}
                   </button>
                 </div>
               </form>
@@ -1153,4 +1087,3 @@ const CmsProductsPage = () => {
 };
 
 export default CmsProductsPage;
-
