@@ -69,6 +69,30 @@ const CLOUDYNAP_TABLE = {
   sofacumbed: 'sofacumbed',
 };
 
+/**
+ * Supabase Storage bucket names must match Dashboard → Storage exactly (case-sensitive).
+ * Env overrides: SUPABASE_STORAGE_BUCKET_BED, _ACCESSORY, _FURNITURE, _SOFACUMBED, or SUPABASE_STORAGE_CATALOG_BUCKET.
+ */
+const DEFAULT_CLOUDYNAP_STORAGE_BUCKETS = {
+  bed: 'Beds',
+  accessory: 'Accessories',
+  furniture: 'Furniture',
+  sofacumbed: 'SofaCumBed',
+};
+
+const getCloudynapStorageBucket = (category) => {
+  const envSpecific = {
+    bed: process.env.SUPABASE_STORAGE_BUCKET_BED,
+    accessory: process.env.SUPABASE_STORAGE_BUCKET_ACCESSORY,
+    furniture: process.env.SUPABASE_STORAGE_BUCKET_FURNITURE,
+    sofacumbed: process.env.SUPABASE_STORAGE_BUCKET_SOFACUMBED,
+  }[category];
+  if (envSpecific && String(envSpecific).trim()) return String(envSpecific).trim();
+  const global = process.env.SUPABASE_STORAGE_CATALOG_BUCKET;
+  if (global && String(global).trim()) return String(global).trim();
+  return DEFAULT_CLOUDYNAP_STORAGE_BUCKETS[category] || DEFAULT_CLOUDYNAP_STORAGE_BUCKETS.bed;
+};
+
 const pickCloudynapStr = (specs, body, ...keys) => {
   for (const k of keys) {
     const raw = specs[k] ?? body[k];
@@ -160,7 +184,7 @@ const buildCloudynapRow = (category, body, specs, coverUrl, urls) => {
 
 const resolveCloudynapCategoryParam = (param) => {
   const p = normalizeString(param).toLowerCase();
-  if (p === 'bed' || p === 'beds') return 'bed';
+  if (p === 'bed' || p === 'beds' || p === 'matteress' || p === 'mattress' || p === 'mattresses') return 'bed';
   if (p === 'accessory' || p === 'accessories') return 'accessory';
   if (p === 'furniture') return 'furniture';
   if (p === 'sofacumbed' || p === 'sofa-cum-bed' || p === 'sofa_cum_bed') return 'sofacumbed';
@@ -412,6 +436,26 @@ const normalizeString = (value) => {
   return String(value).trim();
 };
 
+/** Multipart `category` may be a string or duplicated as an array; normalize for routing. */
+const pickBodyCategory = (body) => {
+  const raw = body?.category;
+  if (raw === undefined || raw === null) return '';
+  if (Array.isArray(raw)) {
+    const firstNonEmpty = raw.map((x) => normalizeString(x).toLowerCase()).find(Boolean);
+    return firstNonEmpty || '';
+  }
+  return normalizeString(raw).toLowerCase();
+};
+
+const resolvePostedCatalogCategory = (body) => {
+  const raw = pickBodyCategory(body);
+  if (!raw) return { cloud: null, legacy: null };
+  const cloud =
+    resolveCloudynapCategoryParam(raw) || (CLOUDYNAP_CATEGORIES.includes(raw) ? raw : null);
+  const legacy = ['laptop', 'printer', 'scanner'].includes(raw) ? raw : null;
+  return { cloud, legacy };
+};
+
 const mapSpecs = (category, specs = {}) => {
   let map;
   if (category === 'printer') {
@@ -568,7 +612,7 @@ const uploadImages = async (category, files) => {
 
   let bucket;
   if (CLOUDYNAP_CATEGORIES.includes(category)) {
-    bucket = 'catalog_images';
+    bucket = getCloudynapStorageBucket(category);
   } else if (category === 'printer') {
     bucket = 'printer_images';
   } else if (category === 'scanner') {
@@ -614,9 +658,10 @@ router.post('/', upload.array('images', 10), async (req, res) => {
     if (!supabase) {
       return res.status(503).json({ error: 'Database not configured' });
     }
-    const category = normalizeString(req.body.category).toLowerCase();
+    const { cloud: cloudCategory, legacy: legacyCategory } = resolvePostedCatalogCategory(req.body);
 
-    if (CLOUDYNAP_CATEGORIES.includes(category)) {
+    if (cloudCategory) {
+      const category = cloudCategory;
       const name = normalizeString(req.body.name);
       const priceRaw = normalizeString(req.body.price);
       if (!name || !priceRaw) {
@@ -650,7 +695,7 @@ router.post('/', upload.array('images', 10), async (req, res) => {
             error?.message ||
             error?.details ||
             error?.hint ||
-            'Failed to create product. Ensure Supabase has a public `catalog_images` storage bucket (or check column types).',
+            'Failed to create product. Check column types and Storage: set SUPABASE_STORAGE_CATALOG_BUCKET to your bucket id, bucket must exist and allow uploads.',
         });
       }
 
@@ -680,9 +725,15 @@ router.post('/', upload.array('images', 10), async (req, res) => {
       return res.status(201).json({ product: { ...data, type: category } });
     }
 
-    if (!['laptop', 'printer', 'scanner'].includes(category)) {
-      return res.status(400).json({ error: 'Invalid or missing product category.' });
+    if (!legacyCategory) {
+      return res.status(400).json({
+        error: 'Invalid or missing product category.',
+        hint:
+          'Cloudynap: bed, accessory, furniture, sofacumbed (or beds, accessories, sofa-cum-bed). Legacy CSV: laptop, printer, scanner.',
+      });
     }
+
+    const category = legacyCategory;
 
     const details = {
       name: normalizeString(req.body.name),

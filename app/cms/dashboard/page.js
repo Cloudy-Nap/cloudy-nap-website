@@ -22,12 +22,44 @@ const formatNumber = (value) => {
   return numeric.toLocaleString('en-PK');
 };
 
-const fallbackStats = [
-  { label: 'Total Products', value: 42, accent: 'from-[#0ea5e9] to-[#38bdf8]', icon: FiBox },
-  { label: 'Pending Orders', value: 7, accent: 'from-[#f97316] to-[#fb7185]', icon: FiClipboard },
-  { label: 'Fulfilled Orders', value: 128, accent: 'from-[#22c55e] to-[#10b981]', icon: FiTrendingUp },
-  { label: 'Users Online', value: 5, accent: 'from-[#a855f7] to-[#6366f1]', icon: FiUsers },
+/** Match CMS orders page status normalization */
+const normalizeOrderStatus = (status) => {
+  if (!status) return 'pending';
+  const s = String(status).toLowerCase();
+  if (s.includes('cancel')) return 'cancelled';
+  if (s.includes('complete')) return 'completed';
+  if (s.includes('process')) return 'processing';
+  return 'pending';
+};
+
+const buildStatsFromMetrics = (metrics) => [
+  {
+    label: 'Total Products',
+    value: metrics.products,
+    accent: 'from-[#00aeef] to-[#0284c7]',
+    icon: FiBox,
+  },
+  {
+    label: 'Pending Orders',
+    value: metrics.pendingOrders,
+    accent: 'from-[#f97316] to-[#fb7185]',
+    icon: FiClipboard,
+  },
+  {
+    label: 'Fulfilled Orders',
+    value: metrics.fulfilledOrders,
+    accent: 'from-[#22c55e] to-[#10b981]',
+    icon: FiTrendingUp,
+  },
+  {
+    label: 'Registered Customers',
+    value: metrics.customers,
+    accent: 'from-[#a855f7] to-[#6366f1]',
+    icon: FiUsers,
+  },
 ];
+
+const emptyMetrics = { products: 0, pendingOrders: 0, fulfilledOrders: 0, customers: 0 };
 
 const fallbackActivities = [
   { id: 1, message: 'Added a new mattress listing to the catalog.', timestamp: '2 hours ago' },
@@ -82,7 +114,8 @@ const quickActions = [
 const CmsDashboardPage = () => {
   const router = useRouter();
   const [cmsUser, setCmsUser] = useState(null);
-  const [stats, setStats] = useState(fallbackStats);
+  const [stats, setStats] = useState(() => buildStatsFromMetrics(emptyMetrics));
+  const [statsLoading, setStatsLoading] = useState(true);
   const [activities, setActivities] = useState(fallbackActivities);
   const [activeItem, setActiveItem] = useState('overview');
 
@@ -111,14 +144,67 @@ const CmsDashboardPage = () => {
       
       setCmsUser(parsedUser);
 
-      // Fetch real activities from API
       fetchActivities();
+      fetchDashboardMetrics();
 
     } catch (error) {
       console.error('Failed to parse CMS session:', error);
       router.replace('/cms/auth/login');
     }
   }, [router]);
+
+  const fetchDashboardMetrics = async () => {
+    setStatsLoading(true);
+    try {
+      const [productsRes, ordersRes, usersRes] = await Promise.all([
+        fetch(`${API_BASE}/api/products`),
+        fetch(`${API_BASE}/api/orders`),
+        fetch(`${API_BASE}/api/users`),
+      ]);
+
+      let products = 0;
+      if (productsRes.ok) {
+        const data = await productsRes.json();
+        products = Array.isArray(data) ? data.length : 0;
+      }
+
+      let pendingOrders = 0;
+      let fulfilledOrders = 0;
+      if (ordersRes.ok) {
+        const data = await ordersRes.json();
+        if (Array.isArray(data)) {
+          for (const order of data) {
+            const st = normalizeOrderStatus(order.status);
+            if (st === 'completed') {
+              fulfilledOrders += 1;
+            } else if (st !== 'cancelled') {
+              pendingOrders += 1;
+            }
+          }
+        }
+      }
+
+      let customers = 0;
+      if (usersRes.ok) {
+        const data = await usersRes.json();
+        customers = Array.isArray(data) ? data.length : 0;
+      }
+
+      setStats(
+        buildStatsFromMetrics({
+          products,
+          pendingOrders,
+          fulfilledOrders,
+          customers,
+        }),
+      );
+    } catch (error) {
+      console.error('Failed to fetch dashboard metrics:', error);
+      setStats(buildStatsFromMetrics(emptyMetrics));
+    } finally {
+      setStatsLoading(false);
+    }
+  };
 
   const fetchActivities = async () => {
     try {
@@ -290,7 +376,9 @@ const CmsDashboardPage = () => {
                     <div className="relative flex items-start justify-between">
                       <div>
                         <p className="text-xs uppercase tracking-wide text-white/80">{stat.label}</p>
-                        <p className="mt-3 text-3xl font-bold text-white">{formatNumber(stat.value)}</p>
+                        <p className="mt-3 text-3xl font-bold text-white">
+                          {statsLoading ? '—' : formatNumber(stat.value)}
+                        </p>
                       </div>
                       <span className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
                         <Icon className="text-xl text-white" />

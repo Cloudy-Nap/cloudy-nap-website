@@ -229,14 +229,14 @@ const CmsAddProductPage = () => {
       setSubmitting(true);
 
       const formData = new FormData();
+      images.forEach((item) => {
+        formData.append('images', item.file);
+      });
       formData.append('category', category);
       Object.entries(details).forEach(([key, value]) => {
         formData.append(key, value ?? '');
       });
       formData.append('specs', JSON.stringify(specs));
-      images.forEach((item) => {
-        formData.append('images', item.file);
-      });
 
       const cmsUser = JSON.parse(window.localStorage.getItem('cmsUser') || '{}');
 
