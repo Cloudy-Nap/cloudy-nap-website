@@ -34,13 +34,14 @@ const Map = () => {
         {/* Map */}
         <div className="w-[70%] mx-auto rounded-lg overflow-hidden shadow-lg">
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3620.4089675097575!2d67.00614997449246!3d24.849874878045682665!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3eb33e064597032d%3A0xec613d47d59822c3!2sHi-tekcomputers!5e0!3m2!1sen!2s!4v1762201001856!5m2!1sen!2s"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2822.894945469706!2d67.06657919999999!3d24.8864581!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3eb33f005c988d77%3A0xd0dcddb87f515bd6!2sDiamond%20Supreme%20Foam%20(CLOUDYNAP)!5e1!3m2!1sen!2s!4v1776985975328!5m2!1sen!2s"
             width="100%"
-            height="400"
+            height="450"
             style={{ border: 0 }}
-            allowFullScreen=""
+            allowFullScreen
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
+            title="Diamond Supreme Foam (CLOUDYNAP) on Google Maps"
             className="w-full"
           />
         </div>

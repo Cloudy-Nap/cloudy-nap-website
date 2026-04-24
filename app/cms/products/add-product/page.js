@@ -70,8 +70,13 @@ const accessorySpecs = [
 ];
 
 const furnitureSpecs = [
+  { id: 'length', label: 'Length', placeholder: 'e.g. 198 cm or 6 ft 6 in' },
+  { id: 'width', label: 'Width', placeholder: 'e.g. 92 cm' },
+  { id: 'height', label: 'Height', placeholder: 'e.g. 85 cm' },
+  { id: 'structure', label: 'Structure', placeholder: 'Frame type, joinery, support system' },
+  { id: 'fabric', label: 'Fabric / upholstery', placeholder: 'Velvet, leather, linen blend' },
   { id: 'seats', label: 'Seats / configuration', placeholder: '3-seater' },
-  { id: 'material', label: 'Material', placeholder: 'Solid wood, velvet upholstery' },
+  { id: 'material', label: 'Material', placeholder: 'Solid wood, metal legs' },
   { id: 'warranty', label: 'Warranty', placeholder: '2 years' },
 ];
 

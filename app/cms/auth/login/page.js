@@ -79,6 +79,8 @@ const CmsLoginPage = () => {
         orders: '/cms/orders',
         inventory: '/cms/inventory',
         customers: '/cms/customers',
+        discounts: '/cms/discounts',
+        deals: '/cms/deals',
         settings: '/cms/settings',
       };
       const redirectPath = pageMap[firstPage] || '/cms/dashboard';

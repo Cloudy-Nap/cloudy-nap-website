@@ -14,6 +14,8 @@ import {
   FiClipboard,
   FiBell,
   FiLogOut,
+  FiPercent,
+  FiGift,
 } from 'react-icons/fi';
 import { API_BASE } from '../../lib/apiBase';
 
@@ -73,6 +75,8 @@ const navigationItems = [
   { id: 'orders', label: 'Orders', href: '/cms/orders', icon: FiShoppingCart, page: 'orders' },
   { id: 'inventory', label: 'Inventory', href: '/cms/inventory', icon: FiPackage, page: 'inventory' },
   { id: 'customers', label: 'Customers', href: '/cms/customers', icon: FiUsers, page: 'customers' },
+  { id: 'discounts', label: 'Discounts', href: '/cms/discounts', icon: FiPercent, page: 'discounts' },
+  { id: 'deals', label: 'Deals', href: '/cms/deals', icon: FiGift, page: 'deals' },
   { id: 'settings', label: 'Settings', href: '/cms/settings', icon: FiSettings, page: 'settings' },
 ];
 
@@ -136,7 +140,16 @@ const CmsDashboardPage = () => {
       // Ensure accesspages is set (fallback for existing users)
       if (!parsedUser.accesspages || !Array.isArray(parsedUser.accesspages)) {
         if (parsedUser.role === 'admin') {
-          parsedUser.accesspages = ['dashboard', 'products', 'orders', 'inventory', 'customers', 'settings'];
+          parsedUser.accesspages = [
+            'dashboard',
+            'products',
+            'orders',
+            'inventory',
+            'customers',
+            'discounts',
+            'deals',
+            'settings',
+          ];
         } else {
           parsedUser.accesspages = [];
         }

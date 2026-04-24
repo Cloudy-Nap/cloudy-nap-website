@@ -9,6 +9,7 @@ const TYPE_TABLE = {
   accessory: 'accessories',
   furniture: 'furniture',
   sofacumbed: 'sofacumbed',
+  deal: 'catalog_deals',
 };
 
 router.get('/:type/:id', async (req, res) => {
@@ -30,6 +31,16 @@ router.get('/:type/:id', async (req, res) => {
     }
     if (!data) {
       return res.status(404).json({ error: 'Product not found' });
+    }
+
+    if (table === 'catalog_deals') {
+      return res.json({
+        ...data,
+        type: 'deal',
+        name: data.title,
+        price: data.deal_price,
+        items: data.items,
+      });
     }
 
     res.json({ ...data, type });

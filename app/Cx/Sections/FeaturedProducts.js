@@ -12,6 +12,7 @@ import ProductModal from '../Components/ProductModal';
 import { useCart } from '../Providers/CartProvider';
 import { useImagePreloader } from '../hooks/useImagePreloader';
 import { API_BASE } from '../../lib/apiBase';
+import { applyCategoryDiscount, discountsArrayToMap } from '../../lib/categoryDiscounts';
 
 /** Single placeholder until `image` / `image_urls` exist in Supabase */
 const PLACEHOLDER_IMAGE = '/laptop-category.jpg';
@@ -108,6 +109,24 @@ function normalizeFeaturedProduct(item) {
     rawPrice: priceValue,
     type,
     cartId: rawId ? `${type}-${rawId}` : `${type}-${item.name || 'product'}`,
+  };
+}
+
+function applyBatchDiscount(norm, discountMap) {
+  const d = applyCategoryDiscount(norm.type, norm.rawPrice, discountMap);
+  if (!d) return norm;
+  if (d.badgeOnly) {
+    return {
+      ...norm,
+      label: { text: d.badgeText, color: 'bg-red-600' },
+    };
+  }
+  return {
+    ...norm,
+    oldPrice: norm.rawPrice.toLocaleString('en-PK'),
+    price: d.discounted.toLocaleString('en-PK'),
+    rawPrice: d.discounted,
+    label: { text: d.badgeText, color: 'bg-red-600' },
   };
 }
 
@@ -274,12 +293,20 @@ const FeaturedProducts = () => {
     const fetchFeatured = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${API_BASE}/api/products`);
+        const [res, discRes] = await Promise.all([
+          fetch(`${API_BASE}/api/products`),
+          fetch(`${API_BASE}/api/discounts`),
+        ]);
         if (!res.ok) throw new Error('Failed to load products');
         const payload = await res.json();
+        const discPayload = discRes.ok ? await discRes.json().catch(() => ({})) : {};
+        const discountMap = discountsArrayToMap(discPayload.discounts);
         if (cancelled) return;
         const rows = Array.isArray(payload) ? payload : [];
-        const normalized = rows.map(normalizeFeaturedProduct).filter(Boolean);
+        const normalized = rows
+          .map(normalizeFeaturedProduct)
+          .filter(Boolean)
+          .map((n) => applyBatchDiscount(n, discountMap));
         shuffleInPlace(normalized);
         setFeatured(normalized.slice(0, 8));
       } catch (error) {

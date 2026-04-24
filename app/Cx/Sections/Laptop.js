@@ -10,6 +10,7 @@ import ProductModal from '../Components/ProductModal';
 import { useCart } from '../Providers/CartProvider';
 import { useImagePreloader } from '../hooks/useImagePreloader';
 import { API_BASE } from '../../lib/apiBase';
+import { discountsArrayToMap, mergeListProductDiscount } from '../../lib/categoryDiscounts';
 
 const Laptop = () => {
   const scrollContainerRef = useRef(null);
@@ -50,11 +51,16 @@ const Laptop = () => {
       try {
         const url = new URL(`${API_BASE}/api/products`);
         url.searchParams.set('subcategory', 'matteress');
-        const response = await fetch(url.toString());
+        const [response, discRes] = await Promise.all([
+          fetch(url.toString()),
+          fetch(`${API_BASE}/api/discounts`),
+        ]);
         if (!response.ok) {
           throw new Error('Failed to load beds');
         }
         const data = await response.json();
+        const discPayload = discRes.ok ? await discRes.json().catch(() => ({})) : {};
+        const discountMap = discountsArrayToMap(discPayload.discounts);
         const normalized = (Array.isArray(data) ? data : []).map((item) => {
           const rawImageUrls = Array.isArray(item.image_urls)
             ? item.image_urls.filter((url) => typeof url === 'string' && url.trim() !== '')
@@ -81,7 +87,7 @@ const Laptop = () => {
             images: imageArray,
             featured: ['true', 't', '1', true, 1].includes(item?.featured),
           };
-        });
+        }).map((p) => mergeListProductDiscount(p, discountMap));
         setProducts(normalized);
       } catch (err) {
         console.error('Shop Beds fetch error:', err);
@@ -284,10 +290,15 @@ const Laptop = () => {
               {product.description}
             </p>
           )}
-          <div className="flex items-baseline gap-2 mt-auto">
+          <div className="flex items-baseline gap-2 mt-auto flex-wrap">
             <span className="text-base font-bold text-gray-900">
               PKR {Number(product.price || 0).toLocaleString('en-PK')}
             </span>
+            {product.oldPriceNumeric != null && (
+              <span className="text-sm text-gray-400 line-through">
+                PKR {Number(product.oldPriceNumeric).toLocaleString('en-PK')}
+              </span>
+            )}
           </div>
         </div>
       </Link>

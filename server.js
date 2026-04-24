@@ -12,6 +12,8 @@ const productRoutes = require('./routes/products');
 const catalogRoutes = require('./routes/catalog');
 const cmsAuthRoutes = require('./routes/cmsAuth');
 const activitiesRoutes = require('./routes/activities');
+const { publicRouter: categoryDiscountsPublic, cmsRouter: categoryDiscountsCms } = require('./routes/categoryDiscounts');
+const catalogDealsRoutes = require('./routes/catalogDeals');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -30,8 +32,11 @@ app.use('/api/printers', printerRoutes);
 app.use('/api/scanners', scannerRoutes);
 app.use('/api/catalog', catalogRoutes);
 app.use('/api/products', productRoutes);
-// Register before `/api/cms` so `/api/cms/activities` is not captured by the CMS router.
+app.use('/api/discounts', categoryDiscountsPublic);
+// Register before `/api/cms` catch-all style routes
 app.use('/api/cms/activities', activitiesRoutes);
+app.use('/api/cms/discounts', categoryDiscountsCms);
+app.use('/api/cms/deals', catalogDealsRoutes);
 app.use('/api/cms', cmsAuthRoutes);
 
 // Health check endpoint

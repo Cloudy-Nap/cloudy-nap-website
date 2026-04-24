@@ -163,6 +163,11 @@ const ACCESSORY_SPEC_FIELDS = [
 ];
 
 const FURNITURE_SPEC_FIELDS = [
+  { id: 'length', label: 'Length', sourceKey: 'length', placeholder: '198 cm' },
+  { id: 'width', label: 'Width', sourceKey: 'width', placeholder: '92 cm' },
+  { id: 'height', label: 'Height', sourceKey: 'height', placeholder: '85 cm' },
+  { id: 'structure', label: 'Structure', sourceKey: 'structure', placeholder: 'Frame / structure' },
+  { id: 'fabric', label: 'Fabric / upholstery', sourceKey: 'fabric', placeholder: 'Velvet' },
   { id: 'seats', label: 'Seats / configuration', sourceKey: 'seats', placeholder: '3-seater' },
   { id: 'material', label: 'Material', sourceKey: 'material', placeholder: 'Solid wood, velvet' },
   { id: 'warranty', label: 'Warranty', sourceKey: 'warranty', placeholder: '2 years' },

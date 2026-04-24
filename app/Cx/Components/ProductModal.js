@@ -51,6 +51,7 @@ const extractImageArray = (value) => {
 };
 
 const CATALOG_TYPES = ['bed', 'accessory', 'furniture', 'sofacumbed'];
+const DEAL_TYPE = 'deal';
 
 const resolveProductType = (value) => {
   const rawType =
@@ -58,6 +59,7 @@ const resolveProductType = (value) => {
     (typeof value?.category === 'string' ? value.category : undefined);
   if (typeof rawType === 'string') {
     const normalized = rawType.toLowerCase().trim();
+    if (normalized === DEAL_TYPE || normalized === 'deals') return DEAL_TYPE;
     if (CATALOG_TYPES.includes(normalized)) return normalized;
     if (normalized.includes('printer')) return 'printer';
     if (normalized.includes('scanner')) return 'scanner';
@@ -74,6 +76,7 @@ const sanitizeProduct = (input) => {
   const rawId = hasId ? input.id.toString() : '';
   const computedName =
     input.name ||
+    input.title ||
     (type === 'printer'
       ? [input.brand, input.series].filter(Boolean).join(' ').trim()
       : [input.brand, input.model || input.series].filter(Boolean).join(' ').trim());
@@ -90,9 +93,11 @@ const sanitizeProduct = (input) => {
       ? [input.resolution, input.copyfeature, input.scanfeature, input.duplex]
           .filter(Boolean)
           .join(' • ')
-      : CATALOG_TYPES.includes(type)
-        ? [input.features, input.benefits, input.series].filter(Boolean).join(' • ') || finalName
-        : input.processor || input.graphics || finalName);
+      : type === DEAL_TYPE
+        ? normalizedDescription || finalName
+        : CATALOG_TYPES.includes(type)
+          ? [input.features, input.benefits, input.series].filter(Boolean).join(' • ') || finalName
+          : input.processor || input.graphics || finalName);
   const cartId = input.cartId || (type && rawId ? `${type}-${rawId}` : rawId);
   const category =
     input.category ||
@@ -108,13 +113,19 @@ const sanitizeProduct = (input) => {
               ? 'Furniture'
               : type === 'sofacumbed'
                 ? 'Sofa Cum Bed'
-                : 'Laptops');
+                : type === DEAL_TYPE
+                  ? 'Deals'
+                  : 'Laptops');
   const primaryImage =
     images[0] ||
     input.image ||
-    (type === 'printer' ? '/printer-category.png' : CATALOG_TYPES.includes(type) ? '/laptop-category.jpg' : '/big-laptop.png');
+    (type === 'printer'
+      ? '/printer-category.png'
+      : type === DEAL_TYPE || CATALOG_TYPES.includes(type)
+        ? '/laptop-category.jpg'
+        : '/big-laptop.png');
 
-  const numericPrice = toNumber(input.price, 0);
+  const numericPrice = toNumber(type === DEAL_TYPE ? input.deal_price ?? input.price : input.price, 0);
   return {
     ...input,
     id: rawId || input.id,
@@ -164,7 +175,12 @@ const ProductModal = ({ isOpen, onClose, product }) => {
 
   const syncSpecSelections = useCallback(
     (source) => {
-      if (!source || source.type === 'printer' || CATALOG_TYPES.includes(source.type)) {
+      if (
+        !source ||
+        source.type === 'printer' ||
+        source.type === DEAL_TYPE ||
+        CATALOG_TYPES.includes(source.type)
+      ) {
         setSelectedMemory('');
         setSelectedSize('');
         setSelectedStorage('');
@@ -209,7 +225,10 @@ const ProductModal = ({ isOpen, onClose, product }) => {
         setLoadingProduct(true);
         setProductError('');
         const catalogTypes = ['bed', 'accessory', 'furniture', 'sofacumbed'];
-        const fetchUrl = catalogTypes.includes(resolvedType)
+        const fetchUrl =
+          resolvedType === DEAL_TYPE
+            ? `${API_BASE}/api/catalog/deal/${productIdentifier}`
+            : catalogTypes.includes(resolvedType)
           ? `${API_BASE}/api/catalog/${resolvedType}/${productIdentifier}`
           : resolvedType === 'printer'
             ? `${API_BASE}/api/printers/${productIdentifier}`
@@ -353,7 +372,7 @@ const ProductModal = ({ isOpen, onClose, product }) => {
   const effectiveStorage = selectedStorage || storageOptions[0] || '';
 
   useEffect(() => {
-    if (productType === 'printer' || CATALOG_TYPES.includes(productType)) {
+    if (productType === 'printer' || productType === DEAL_TYPE || CATALOG_TYPES.includes(productType)) {
       return;
     }
     if (!selectedMemory && memoryOptions.length) {
@@ -394,6 +413,26 @@ const ProductModal = ({ isOpen, onClose, product }) => {
   const specs =
     productType === 'printer'
       ? []
+      : productType === DEAL_TYPE
+        ? (Array.isArray(productData.items) ? productData.items : []).map((line, idx) => {
+            const qty = Number(line.quantity) > 0 ? Number(line.quantity) : 1;
+            const name =
+              (typeof line.label === 'string' && line.label.trim()) ||
+              `${line.catalog_type || 'item'} (#${line.product_id ?? '—'})`;
+            const tag = line.is_free ? ' — FREE' : '';
+            return { label: `Item ${idx + 1}`, value: `${qty}× ${name}${tag}` };
+          }).filter((spec) => spec.value)
+      : productType === 'furniture'
+        ? [
+            { label: 'Length', value: sanitizeSpecValue(productData.length) },
+            { label: 'Width', value: sanitizeSpecValue(productData.width) },
+            { label: 'Height', value: sanitizeSpecValue(productData.height) },
+            { label: 'Structure', value: sanitizeSpecValue(productData.structure) },
+            { label: 'Fabric', value: sanitizeSpecValue(productData.fabric) },
+            { label: 'Seats', value: sanitizeSpecValue(productData.seats) },
+            { label: 'Material', value: sanitizeSpecValue(productData.material) },
+            { label: 'Warranty', value: sanitizeSpecValue(productData.warranty) },
+          ].filter((spec) => spec.value)
       : CATALOG_TYPES.includes(productType)
         ? [
             { label: 'Series', value: productData.series },
@@ -546,10 +585,10 @@ const ProductModal = ({ isOpen, onClose, product }) => {
                   )}
                 </div>
 
-                {CATALOG_TYPES.includes(productType) && description && (
+                {(CATALOG_TYPES.includes(productType) || productType === DEAL_TYPE) && description && (
                   <p className="text-sm text-gray-600 leading-relaxed">{description}</p>
                 )}
-                {CATALOG_TYPES.includes(productType) && specs.length > 0 && (
+                {(CATALOG_TYPES.includes(productType) || productType === DEAL_TYPE) && specs.length > 0 && (
                   <ul className="text-sm text-gray-700 space-y-1.5 border border-gray-100 rounded-sm p-3 bg-gray-50">
                     {specs.map((spec) => (
                       <li key={spec.label}>

@@ -5,30 +5,35 @@ import { openSans } from '../Font/font';
 const Testimonials = () => {
   const testimonials = [
     {
-      review: "Purchased a Chronos 7000 laptop from Hi-Tek and I'm extremely happy with my purchase! The laptop is fast and reliable, and the screen is great for watching movies. I highly recommend it to anyone looking for a quality laptop.",
-      name: "colinandmandy94",
-      rating: 5
+      review:
+        "We ordered our mattress from Cloudy Nap and the difference in sleep has been night and day. Supportive without feeling hard, and delivery was on time with the team careful bringing it upstairs. Would buy again without hesitation.",
+      name: 'Ayesha R.',
+      rating: 5,
     },
     {
-      review: "I bought a printer from Hi-Tek and I have been very impressed with the print quality. The setup was straightforward, and the after-sales service has been exceptional. Rohan from the support team was extremely helpful. I highly recommend Hi-Tek for both product quality and customer care!",
-      name: "Jennifer Black",
-      rating: 5
+      review:
+        "The pillows and topper I picked up match exactly what was described online. Customer care answered all my firmness questions before I ordered, and the packaging was spotless when it arrived. Great experience end to end.",
+      name: 'Omar Siddiqui',
+      rating: 5,
     },
     {
-      review: "I recently purchased a SpectraView LED monitor from Hi-Tek for my gaming setup, and I'm extremely satisfied! The colors are vibrant and the response time is excellent. It has greatly enhanced my gaming experience. I highly recommend Hi-Tek for their quality products and service!",
-      name: "Phillip Colligan",
-      rating: 5
+      review:
+        "Upgraded to a sofa cum bed for our guest room from Cloudy Nap. It is comfortable as a sofa and easy to open when family visits. Build quality feels solid and the fabric looks like it will last.",
+      name: 'Fatima K.',
+      rating: 5,
     },
     {
-      review: "I've been a loyal customer of Hi-Tek for years and they never disappoint. Their products are top-notch and their customer service is outstanding. Always my go-to for all my tech needs!",
-      name: "Le Thomas",
-      rating: 5
+      review:
+        "I have been buying bedroom pieces from Cloudy Nap for a while now—mattress first, then accessories—and they have been consistent every time. Fair pricing, honest advice, and quick responses on WhatsApp.",
+      name: 'Bilal Ahmed',
+      rating: 5,
     },
     {
-      review: "Great experience shopping at Hi-Tek. The staff is knowledgeable and helped me find the perfect laptop for my needs. Fast delivery and excellent packaging. Highly recommended!",
-      name: "Mike Johnson",
-      rating: 5
-    }
+      review:
+        "First time ordering furniture online and I was nervous, but the team helped me choose the right size and firmness. Delivery was fast, setup was simple, and we are sleeping better than we have in years.",
+      name: 'Sarah M.',
+      rating: 5,
+    },
   ];
 
   const renderStars = (rating) => {

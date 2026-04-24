@@ -10,6 +10,7 @@ import ProductModal from '../Components/ProductModal';
 import { useCart } from '../Providers/CartProvider';
 import { useImagePreloader } from '../hooks/useImagePreloader';
 import { API_BASE } from '../../lib/apiBase';
+import { discountsArrayToMap, mergeListProductDiscount } from '../../lib/categoryDiscounts';
 
 const PLACEHOLDER = '/laptop-category.jpg';
 
@@ -70,11 +71,16 @@ const LED = () => {
       try {
         const url = new URL(`${API_BASE}/api/products`);
         url.searchParams.set('subcategory', 'accessories');
-        const response = await fetch(url.toString());
+        const [response, discRes] = await Promise.all([
+          fetch(url.toString()),
+          fetch(`${API_BASE}/api/discounts`),
+        ]);
         if (!response.ok) {
           throw new Error('Failed to load accessories.');
         }
         const data = await response.json();
+        const discPayload = discRes.ok ? await discRes.json().catch(() => ({})) : {};
+        const discountMap = discountsArrayToMap(discPayload.discounts);
         const normalized = (Array.isArray(data) ? data : []).map((item) => {
           const rawId = item.id !== null && item.id !== undefined ? item.id.toString() : '';
           const rawImages = extractImageArray(item);
@@ -115,7 +121,7 @@ const LED = () => {
             image_urls: imageArray,
             images: imageArray,
           };
-        });
+        }).map((p) => mergeListProductDiscount(p, discountMap));
         setProducts(normalized);
       } catch (err) {
         console.error('Accessories fetch error:', err);
@@ -310,7 +316,7 @@ const LED = () => {
           </div>
           <h3 className="text-sm font-semibold text-gray-900 mb-2 line-clamp-2">{product.name}</h3>
           <p className="text-xs text-gray-600 mb-2 line-clamp-2 flex-1">{product.description}</p>
-          <div className="flex items-baseline gap-2 mt-auto">
+          <div className="flex items-baseline gap-2 mt-auto flex-wrap">
             <span className="text-base font-bold text-gray-900">
               {product.priceDisplay
                 ? String(product.priceDisplay).trim().toLowerCase().startsWith('rs')
@@ -318,6 +324,13 @@ const LED = () => {
                   : `Rs. ${product.priceDisplay}`
                 : 'Price on request'}
             </span>
+            {product.oldPriceDisplay && (
+              <span className="text-sm text-gray-400 line-through">
+                {String(product.oldPriceDisplay).trim().toLowerCase().startsWith('rs')
+                  ? product.oldPriceDisplay
+                  : `Rs. ${product.oldPriceDisplay}`}
+              </span>
+            )}
           </div>
         </div>
       </Link>

@@ -24,7 +24,7 @@ import {
   CiMenuFries,
   CiBoxes
 } from 'react-icons/ci';
-import { MdOutlineBed, MdWeekend, MdChair, MdOutlineShoppingBag } from 'react-icons/md';
+import { MdOutlineBed, MdWeekend, MdChair, MdOutlineShoppingBag, MdLocalOffer } from 'react-icons/md';
 import { GiPillow } from 'react-icons/gi';
 import ShoppingCartPopup from '../Components/ShoppingCartPopup';
 import LoginPopup from '../Components/LoginPopup';
@@ -327,7 +327,7 @@ const Navbar = () => {
   return (
     <nav className="w-full">
       {/* Top Bar - Welcome & Social Media */}
-      <div className="bg-[#d3eaf7] text-[#1a2f4a] py-2 px-4 sm:px-8 hidden md:flex items-center justify-between border-b border-sky-200/80">
+      <div className="bg-[#d3eaf7] text-[#1a2f4a] py-2 px-3 sm:px-5 hidden md:flex items-center justify-between border-b border-sky-200/80">
         <div className="flex items-center">
           <span className="text-sm font-medium">Welcome to Cloudynap.</span>
         </div>
@@ -352,8 +352,8 @@ const Navbar = () => {
       </div>
 
       {/* Middle Bar - Logo, Search & Icons */}
-      <div className="bg-white text-[#1a2f4a] py-4 px-4 lg:px-8 border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto flex flex-row items-center lg:justify-between gap-6 lg:gap-10">
+      <div className="bg-white text-[#1a2f4a] py-4 px-3 lg:px-5 border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto flex flex-row items-center lg:justify-between gap-4 lg:gap-6">
           {/* Logo */}
           <div className="flex items-center gap-3 shrink-0">
             <Link href="/">
@@ -501,7 +501,7 @@ const Navbar = () => {
                 <button 
                   type="button"
                   onClick={handleViewAllResults}
-                  className="bg-white text-gray-700 px-6 py-3 hover:bg-gray-100 transition shrink-0"
+                  className="bg-white text-gray-700 px-4 py-3 hover:bg-gray-100 transition shrink-0"
                 >
                   <CiSearch className="text-xl" />
                 </button>
@@ -510,7 +510,7 @@ const Navbar = () => {
           </div>
 
           {/* Icons */}
-          <div className="hidden lg:flex items-center gap-6">
+          <div className="hidden lg:flex items-center gap-4 shrink-0">
             <div 
               className="relative"
               onMouseEnter={() => setIsCartHovered(true)}
@@ -520,8 +520,8 @@ const Navbar = () => {
                 <CiShoppingCart className="text-2xl cursor-pointer hover:text-[#00aeef] transition" />
               </Link>
               {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-[#00aeef] text-white text-xs rounded-full min-w-5 h-5 flex items-center justify-center font-bold px-1">
-                  {cartCount}
+                <span className="absolute -top-2 -right-2 bg-[#00aeef] text-white text-[11px] leading-none rounded-full min-h-5 min-w-5 px-1.5 py-1 inline-flex items-center justify-center font-bold tabular-nums">
+                  {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}
               {isCartHovered && (
@@ -590,11 +590,11 @@ const Navbar = () => {
 
       {/* Bottom Bar - Navigation - Hidden on mobile */}
       <div className="hidden lg:block bg-[#d3eaf7] text-[#1a2f4a] border-b border-sky-200/80">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          <div className="flex flex-row items-center justify-between flex-nowrap gap-6 lg:gap-10">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-5">
+          <div className="flex flex-row items-center justify-between flex-nowrap gap-2 lg:gap-4 min-w-0">
             {/* Desktop Navigation */}
-            <div className="flex items-center shrink-0 min-w-0 flex-wrap">
-              <a href="/" className="flex items-center gap-2 px-4 py-4 bg-transparent hover:bg-sky-300/50 transition shrink-0 whitespace-nowrap">
+            <div className="flex items-center shrink-0 min-w-0 flex-wrap lg:flex-nowrap">
+              <a href="/" className="flex items-center gap-1.5 px-2.5 py-3 bg-transparent hover:bg-sky-300/50 transition shrink-0 whitespace-nowrap">
                 <CiHome className="text-2xl shrink-0" />
                 <span className="text-sm font-medium">Home</span>
               </a>
@@ -605,7 +605,7 @@ const Navbar = () => {
               >
                 <Link
                   href="/all-products"
-                  className={`flex items-center gap-2 px-4 py-4 transition whitespace-nowrap shrink-0 ${
+                  className={`flex items-center gap-1.5 px-2.5 py-3 transition whitespace-nowrap shrink-0 ${
                     isAllProductsHovered ? 'bg-sky-300/50' : 'hover:bg-sky-300/50'
                   }`}
                 >
@@ -615,6 +615,13 @@ const Navbar = () => {
 
                 {isAllProductsHovered && (
                   <div className="absolute top-full left-0 mt-0 min-w-[260px] bg-white border border-gray-200 shadow-lg rounded-sm z-50 py-1">
+                    <Link
+                      href="/all-products?subcategory=deals"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-900 hover:bg-gray-100 transition"
+                    >
+                      <MdLocalOffer className="text-xl shrink-0 text-[#1a2f4a]/80" aria-hidden />
+                      <span>Deals</span>
+                    </Link>
                     {allProductsSubcategories.map(({ label, slug, Icon }) => (
                       <Link
                         key={slug}
@@ -629,11 +636,19 @@ const Navbar = () => {
                 )}
               </div>
 
+              <Link
+                href="/all-products?subcategory=deals"
+                className="flex items-center gap-1.5 px-2 lg:px-2.5 py-3 hover:bg-sky-300/50 transition shrink-0 whitespace-nowrap"
+              >
+                <MdLocalOffer className="text-2xl shrink-0" aria-hidden />
+                <span className="text-sm font-medium">Deals</span>
+              </Link>
+
               {allProductsSubcategories.map(({ label, slug, Icon }) => (
                 <Link
                   key={slug}
                   href={`/all-products?subcategory=${encodeURIComponent(slug)}`}
-                  className="flex items-center gap-2 px-3 lg:px-4 py-4 hover:bg-sky-300/50 transition shrink-0 whitespace-nowrap"
+                  className="flex items-center gap-1.5 px-2 lg:px-2.5 py-3 hover:bg-sky-300/50 transition shrink-0 whitespace-nowrap"
                 >
                   <Icon className="text-2xl shrink-0" aria-hidden />
                   <span className="text-sm font-medium">{label}</span>
@@ -643,9 +658,9 @@ const Navbar = () => {
             </div>
 
             {/* Phone Number */}
-            <div className="flex items-center gap-2 px-6 py-4 border-l border-slate-400/50 shrink-0 whitespace-nowrap">
-              <CiPhone className="shrink-0" />
-              <span className="font-medium">+92-213-2410225</span>
+            <div className="flex items-center gap-1.5 pl-2 ml-1 sm:pl-3 sm:ml-2 py-3 border-l border-slate-400/50 shrink-0 whitespace-nowrap">
+              <CiPhone className="shrink-0 text-lg" />
+              <span className="font-medium text-sm tracking-tight">+92-213-2410225</span>
             </div>
           </div>
         </div>
@@ -860,8 +875,8 @@ const Navbar = () => {
                 <div className="relative">
                   <CiShoppingCart className="text-2xl text-gray-700" />
                   {cartCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-[#00aeef] text-white text-xs rounded-full min-w-5 h-5 flex items-center justify-center font-bold px-1">
-                      {cartCount}
+                    <span className="absolute -top-2 -right-2 bg-[#00aeef] text-white text-[11px] leading-none rounded-full min-h-5 min-w-5 px-1.5 py-1 inline-flex items-center justify-center font-bold tabular-nums">
+                      {cartCount > 99 ? '99+' : cartCount}
                     </span>
                   )}
                 </div>
@@ -895,6 +910,15 @@ const Navbar = () => {
               >
                 <CiBoxes className="text-xl text-gray-700" />
                 <span className="text-sm font-medium text-gray-900">All Products</span>
+                <FaChevronRight className="ml-auto text-gray-400 text-sm" aria-hidden />
+              </Link>
+              <Link
+                href="/all-products?subcategory=deals"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 hover:bg-gray-50 transition"
+              >
+                <MdLocalOffer className="text-xl shrink-0 text-gray-700" aria-hidden />
+                <span className="text-sm font-medium text-gray-900">Deals</span>
                 <FaChevronRight className="ml-auto text-gray-400 text-sm" aria-hidden />
               </Link>
               {allProductsSubcategories.map(({ label, slug, Icon }) => (

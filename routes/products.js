@@ -4,6 +4,9 @@ const path = require('path');
 const { parse: parseCsv } = require('csv-parse/sync');
 const { getSupabase } = require('../lib/supabaseServer');
 const { logActivity } = require('./activities');
+const catalogDealsModule = require('./catalogDeals');
+const rowToDealProduct = catalogDealsModule.rowToDealProduct;
+const isMissingDealsTable = catalogDealsModule.isMissingTableError;
 
 const router = express.Router();
 
@@ -159,6 +162,11 @@ const buildCloudynapRow = (category, body, specs, coverUrl, urls) => {
     return {
       ...base,
       price: priceText || null,
+      length: pickCloudynapStr(specs, body, 'length'),
+      width: pickCloudynapStr(specs, body, 'width'),
+      height: pickCloudynapStr(specs, body, 'height'),
+      structure: pickCloudynapStr(specs, body, 'structure'),
+      fabric: pickCloudynapStr(specs, body, 'fabric'),
       seats: pickCloudynapInt(specs, body, 'seats'),
       material: pickCloudynapStr(specs, body, 'material'),
       warranty: pickCloudynapStr(specs, body, 'warranty'),
@@ -225,6 +233,37 @@ router.get('/', async (req, res) => {
     const sortConfig = normalizeSortParam(sort);
     const parsedLimit = Number(limit);
     const applyLimit = Number.isFinite(parsedLimit) && parsedLimit > 0;
+
+    const subNorm = subcategory ? String(subcategory).trim().toLowerCase() : '';
+    if (subNorm === 'deals') {
+      const { data, error } = await supabase
+        .from('catalog_deals')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        if (isMissingDealsTable(error)) {
+          return res.json([]);
+        }
+        console.error('Failed to fetch catalog_deals:', error);
+        return res.status(500).json({ error: 'Failed to fetch deals' });
+      }
+
+      let rows = (data || []).map(rowToDealProduct).filter(Boolean);
+      if (sortConfig?.key === 'price') {
+        rows = rows.slice().sort((a, b) => {
+          const priceA = Number(a.price);
+          const priceB = Number(b.price);
+          return sortConfig.ascending ? priceA - priceB : priceB - priceA;
+        });
+      }
+      if (applyLimit) {
+        rows = rows.slice(0, parsedLimit);
+      }
+      return res.json(rows);
+    }
 
     const plans = resolveCloudynapPlans(subcategory, category);
 

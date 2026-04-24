@@ -15,6 +15,56 @@ import ProductModal from '../Cx/Components/ProductModal';
 import { useCart } from '../Cx/Providers/CartProvider';
 import { useImagePreloader } from '../Cx/hooks/useImagePreloader';
 import { API_BASE } from '../lib/apiBase';
+import { applyCategoryDiscount, discountsArrayToMap } from '../lib/categoryDiscounts';
+
+/** Mattress / product height filter (inches). API beds use cm; furniture often uses text with units. */
+const HEIGHT_INCH_STOPS = [6, 8, 12, 16, 20, 24, 28, 32];
+const CM_TO_INCH = 1 / 2.54;
+
+/**
+ * @param {unknown} raw
+ * @param {string} catalogType product.type
+ * @returns {number|null} height in inches
+ */
+const parseProductHeightInches = (raw, catalogType) => {
+  if (raw === null || raw === undefined || raw === '') return null;
+  const type = (catalogType || '').toLowerCase();
+  const s = String(raw).trim();
+  if (!s) return null;
+  const lower = s.toLowerCase();
+
+  const inchQuoted = s.match(/(\d+(?:\.\d+)?)\s*(?:in(?:ch|ches)?|")/i);
+  if (inchQuoted) {
+    const n = Number(inchQuoted[1]);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  const cmMatch = s.match(/(\d+(?:\.\d+)?)\s*cm\b/i);
+  if (cmMatch) {
+    const n = Number(cmMatch[1]);
+    return Number.isFinite(n) ? n * CM_TO_INCH : null;
+  }
+
+  const ftMatch = s.match(/(\d+(?:\.\d+)?)\s*(?:ft|feet|')\b/i);
+  if (ftMatch) {
+    const n = Number(ftMatch[1]);
+    return Number.isFinite(n) ? n * 12 : null;
+  }
+
+  const plain = s.replace(/,/g, '').match(/(\d+(?:\.\d+)?)/);
+  if (!plain) return null;
+  const n = Number(plain[1]);
+  if (!Number.isFinite(n)) return null;
+
+  if (type === 'bed') {
+    return n * CM_TO_INCH;
+  }
+
+  if (n > 45) {
+    return n * CM_TO_INCH;
+  }
+  return n;
+};
 
 /** Sidebar category label → API `subcategory` query value */
 const SUBCATEGORY_SLUGS = {
@@ -23,6 +73,7 @@ const SUBCATEGORY_SLUGS = {
   Accessories: 'accessories',
   'Sofa Cum Bed': 'sofa-cum-bed',
   Furniture: 'furniture',
+  Deals: 'deals',
 };
 
 const SLUG_TO_LABEL = {
@@ -31,6 +82,7 @@ const SLUG_TO_LABEL = {
   accessories: 'Accessories',
   'sofa-cum-bed': 'Sofa Cum Bed',
   furniture: 'Furniture',
+  deals: 'Deals',
 };
 
 export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictToType = null, pageTitle = 'All Products', showCategoryFilter = true } = {}) => {
@@ -67,16 +119,35 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
   const [priceRange, setPriceRange] = useState({ min: PRICE_MIN, max: PRICE_MAX });
 
   const [selectedPriceRange, setSelectedPriceRange] = useState('');
+  /** '' = no bound; otherwise string key matching HEIGHT_INCH_STOPS */
+  const [heightMinIn, setHeightMinIn] = useState('');
+  const [heightMaxIn, setHeightMaxIn] = useState('');
   const [sortBy, setSortBy] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState(searchParam);
 
   const [products, setProducts] = useState([]);
+  const [discountMap, setDiscountMap] = useState({});
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [fetchError, setFetchError] = useState('');
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewProduct, setPreviewProduct] = useState(null);
   const { addToCart } = useCart();
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_BASE}/api/discounts`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (!cancelled) setDiscountMap(discountsArrayToMap(d.discounts));
+      })
+      .catch(() => {
+        if (!cancelled) setDiscountMap({});
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (searchParam) {
@@ -207,7 +278,7 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
     const placeholder =
       type === 'printer'
         ? '/printer-category.png'
-        : ['bed', 'accessory', 'furniture', 'sofacumbed'].includes(type)
+        : ['bed', 'accessory', 'furniture', 'sofacumbed', 'deal'].includes(type)
           ? '/laptop-category.jpg'
           : '/laptop-category.jpg';
     const rawImages = extractImageArray(item);
@@ -217,7 +288,11 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
     const rawId = hasId ? item.id.toString() : '';
     const computedName = (item.name ||
       [item.brand, item.series, item.model].filter(Boolean).join(' ').trim() ||
-      (type === 'printer' ? 'Printer' : ['bed', 'accessory', 'furniture', 'sofacumbed'].includes(type) ? 'Product' : 'Laptop')).trim();
+      (type === 'printer'
+        ? 'Printer'
+        : ['bed', 'accessory', 'furniture', 'sofacumbed', 'deal'].includes(type)
+          ? 'Product'
+          : 'Laptop')).trim();
     const rawDescription =
       typeof item.description === 'string' ? item.description.trim() : '';
     const computedDescription =
@@ -244,7 +319,9 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
                 ? 'Sofa Cum Bed'
                 : type === 'furniture'
                   ? 'Furniture'
-                  : 'Laptops';
+                  : type === 'deal'
+                    ? 'Deals'
+                    : 'Laptops';
 
     return {
       ...item,
@@ -254,6 +331,7 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
       category: categoryTitle,
       brand: typeof item.brand === 'string' ? item.brand.trim() : '',
       cartId: hasId ? `${type}-${rawId}` : undefined,
+      dealItems: type === 'deal' && Array.isArray(item.items) ? item.items : undefined,
       price: hasPrice ? parsedPrice : 0,
       hasPrice,
       rating: parseNumeric(item.rating, 4.5),
@@ -306,8 +384,9 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
         if (restrictToType) {
           url.searchParams.set('category', restrictToType);
         }
-        if (subcategoryFromUrl) {
-          url.searchParams.set('subcategory', subcategoryFromUrl);
+        const subForApi = effectiveSubcategory || subcategoryFromUrl;
+        if (subForApi) {
+          url.searchParams.set('subcategory', subForApi);
         }
 
         const response = await fetch(url.toString());
@@ -356,7 +435,7 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
     return () => {
       isMounted = false;
     };
-  }, [sortBy, restrictToType, effectiveSubcategory]);
+  }, [sortBy, restrictToType, effectiveSubcategory, subcategoryFromUrl]);
 
   useEffect(() => {
     if (restrictToType === 'laptop') {
@@ -394,8 +473,26 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
     }
   }, [selectedPriceRange]);
 
+  const mergeProductDiscount = useCallback(
+    (p) => {
+      const d = applyCategoryDiscount(p.type, p.price, discountMap);
+      if (!d) return { ...p, discountBadge: null, originalListPrice: null };
+      if (d.badgeOnly) return { ...p, discountBadge: d.badgeText, originalListPrice: null };
+      return {
+        ...p,
+        discountBadge: d.badgeText,
+        originalListPrice: d.original,
+        price: d.discounted,
+        hasPrice: true,
+      };
+    },
+    [discountMap],
+  );
+
   const filteredProducts = useMemo(() => {
     if (!products.length) return [];
+
+    const withDiscounts = products.map(mergeProductDiscount);
 
     const applyPriceFilter = Boolean(selectedPriceRange) && selectedPriceRange !== 'all';
     const applySearchFilter = Boolean(searchTerm && searchTerm.trim());
@@ -407,7 +504,7 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
     const legacyLaptopFilter = restrictToType === 'laptop';
     const legacyPrinterFilter = restrictToType === 'printer';
 
-    return products.filter((product) => {
+    return withDiscounts.filter((product) => {
       if (legacyLaptopFilter && product.category !== 'Laptops') {
         return false;
       }
@@ -437,18 +534,47 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
         }
       }
 
-      if (!applyPriceFilter) {
-        return true;
+      if (applyPriceFilter) {
+        const numericPrice = Number(product.price);
+        if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
+          return false;
+        }
+        if (!(numericPrice >= minPrice && numericPrice <= maxPrice)) {
+          return false;
+        }
       }
 
-      const numericPrice = Number(product.price);
-      if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
-        return false;
+      const heightMinNum = heightMinIn === '' ? null : Number(heightMinIn);
+      const heightMaxNum = heightMaxIn === '' ? null : Number(heightMaxIn);
+      const heightFilterActive =
+        (heightMinNum !== null && Number.isFinite(heightMinNum)) ||
+        (heightMaxNum !== null && Number.isFinite(heightMaxNum));
+
+      if (heightFilterActive && (product.type || '').toLowerCase() !== 'deal') {
+        const hIn = parseProductHeightInches(product.height, product.type);
+        if (hIn === null || !Number.isFinite(hIn)) {
+          return false;
+        }
+        if (heightMinNum !== null && Number.isFinite(heightMinNum) && hIn < heightMinNum) {
+          return false;
+        }
+        if (heightMaxNum !== null && Number.isFinite(heightMaxNum) && hIn > heightMaxNum) {
+          return false;
+        }
       }
 
-      return numericPrice >= minPrice && numericPrice <= maxPrice;
+      return true;
     });
-  }, [products, restrictToType, selectedPriceRange, priceRange, searchTerm]);
+  }, [
+    products,
+    mergeProductDiscount,
+    restrictToType,
+    selectedPriceRange,
+    priceRange,
+    searchTerm,
+    heightMinIn,
+    heightMaxIn,
+  ]);
 
   const formatCurrency = (value) =>
     (Number(value) || 0).toLocaleString('en-PK');
@@ -473,6 +599,7 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
       'Accessories',
       'Sofa Cum Bed',
       'Furniture',
+      'Deals',
     ];
   }, [restrictToType, showCategoryFilter]);
 
@@ -560,6 +687,15 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
         href={productHref}
         className="relative bg-white border border-gray-300 rounded-sm overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer flex flex-col"
       >
+        {productType === 'deal' ? (
+          <div className="absolute top-2 left-2 z-20 bg-amber-500 text-white text-[10px] sm:text-xs font-extrabold px-2 py-1 rounded shadow">
+            Bundle
+          </div>
+        ) : product.discountBadge ? (
+          <div className="absolute top-2 left-2 z-20 bg-red-600 text-white text-[10px] sm:text-xs font-extrabold px-2 py-1 rounded shadow">
+            {product.discountBadge}
+          </div>
+        ) : null}
         <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <div className="bg-white rounded-full p-2 hover:bg-gray-100">
             <CiHeart className="text-lg" />
@@ -637,10 +773,15 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
           </div>
           <h3 className="text-sm font-semibold text-gray-900 mb-1 line-clamp-2">{product.name}</h3>
           <p className="text-xs text-gray-600 mb-2 line-clamp-2 flex-1">{productDescription}</p>
-          <div className="flex items-baseline gap-2 mt-auto">
+          <div className="flex items-baseline gap-2 mt-auto flex-wrap">
             <span className="text-base font-bold text-blue-500">
               {hasPrice ? `Rs. ${formatCurrency(product.price)}` : 'Price on request'}
             </span>
+            {product.originalListPrice ? (
+              <span className="text-sm text-gray-400 line-through">
+                Rs. {formatCurrency(product.originalListPrice)}
+              </span>
+            ) : null}
           </div>
         </div>
       </Link>
@@ -784,6 +925,66 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
                       </label>
                     ))}
                     
+                  </div>
+                </div>
+              </div>
+
+              {/* Height (inches) */}
+              <div className="bg-white rounded-sm border border-gray-200 shadow-lg p-4">
+                <h3 className="text-sm font-bold text-gray-900 mb-3">HEIGHT (INCHES)</h3>
+                <p className="text-xs text-gray-500 mb-3">
+                  Filter by product height. Beds stored in cm are converted automatically.
+                </p>
+                <div className="space-y-3">
+                  <div>
+                    <label htmlFor="height-min-in" className="block text-xs font-medium text-gray-600 mb-1">
+                      From
+                    </label>
+                    <select
+                      id="height-min-in"
+                      value={heightMinIn}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setHeightMinIn(v);
+                        setCurrentPage(1);
+                        if (v !== '' && heightMaxIn !== '' && Number(v) > Number(heightMaxIn)) {
+                          setHeightMaxIn(v);
+                        }
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#00aeef]"
+                    >
+                      <option value="">Any</option>
+                      {HEIGHT_INCH_STOPS.map((n) => (
+                        <option key={`hmin-${n}`} value={String(n)}>
+                          {n}&quot;
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="height-max-in" className="block text-xs font-medium text-gray-600 mb-1">
+                      To
+                    </label>
+                    <select
+                      id="height-max-in"
+                      value={heightMaxIn}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setHeightMaxIn(v);
+                        setCurrentPage(1);
+                        if (v !== '' && heightMinIn !== '' && Number(v) < Number(heightMinIn)) {
+                          setHeightMinIn(v);
+                        }
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#00aeef]"
+                    >
+                      <option value="">Any</option>
+                      {HEIGHT_INCH_STOPS.map((n) => (
+                        <option key={`hmax-${n}`} value={String(n)}>
+                          {n}&quot;
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>

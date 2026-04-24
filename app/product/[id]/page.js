@@ -13,12 +13,14 @@ import Footer from '../../Cx/Layout/Footer';
 import { openSans } from '../../Cx/Font/font';
 import { useCart } from '../../Cx/Providers/CartProvider';
 import { API_BASE } from '../../lib/apiBase';
+import { applyCategoryDiscount, discountsArrayToMap } from '../../lib/categoryDiscounts';
 
 const DEFAULT_MEMORY_OPTIONS = ['8GB Unified Memory', '16GB Unified Memory', '24GB Unified Memory'];
 const DEFAULT_DISPLAY_OPTIONS = ['13-inch Retina Display', '14-inch Liquid Retina XDR', '16-inch Liquid Retina XDR'];
 const DEFAULT_STORAGE_OPTIONS = ['256GB SSD', '512GB SSD', '1TB SSD', '2TB SSD'];
 
 const CATALOG_TYPES = ['bed', 'accessory', 'furniture', 'sofacumbed'];
+const DEAL_TYPE = 'deal';
 
 const SPEC_PLACEHOLDER = '—';
 
@@ -42,6 +44,8 @@ const catalogFallbackImage = (type) => {
       return '/headphone-category.png';
     case 'furniture':
       return '/toner-category.jpg';
+    case 'deal':
+      return '/laptop-category.jpg';
     case 'sofacumbed':
       return '/mnk-category.png';
     default:
@@ -137,17 +141,137 @@ const buildCuratedCatalogSpecs = (item, productType) => {
       ];
     case 'furniture':
       return [
+        specRow('Length', pickCatalogColumn(item, 'length', 'length_cm', 'length_in', 'length_mm', 'l')),
+        specRow('Width', pickCatalogColumn(item, 'width', 'width_cm', 'width_in', 'w')),
+        specRow('Height', pickCatalogColumn(item, 'height', 'height_cm', 'height_in', 'thickness', 'h')),
+        specRow('Structure', pickCatalogColumn(item, 'structure', 'frame', 'construction')),
+        specRow('Fabric', pickCatalogColumn(item, 'fabric', 'fabric_type', 'upholstery', 'textile')),
         specRow('Seats', pickCatalogColumn(item, 'seats', 'seat', 'seat_count', 'seating_capacity')),
-        specRow(
-          'Material',
-          pickCatalogColumn(item, 'material', 'wood', 'finish', 'frame_material', 'fabric'),
-        ),
+        specRow('Material', pickCatalogColumn(item, 'material', 'wood', 'finish', 'frame_material')),
         specRow('Warranty', pickCatalogColumn(item, 'warranty')),
       ];
+    case 'deal': {
+      const lines = Array.isArray(item.items) ? item.items : [];
+      return lines.map((line, idx) => {
+        const qty = Number(line.quantity) > 0 ? Number(line.quantity) : 1;
+        const name =
+          (typeof line.label === 'string' && line.label.trim()) ||
+          `${line.catalog_type || 'item'} (#${line.product_id ?? '—'})`;
+        const tag = line.is_free ? ' — FREE' : '';
+        return specRow(`Package ${idx + 1}`, `${qty}× ${name}${tag}`);
+      });
+    }
     default:
       return [];
   }
 };
+
+const catalogSectionTitle = (t) => {
+  switch (t) {
+    case 'bed':
+      return 'Mattress';
+    case 'accessory':
+      return 'Accessory';
+    case 'furniture':
+      return 'Furniture';
+    case 'sofacumbed':
+      return 'Sofa cum bed';
+    default:
+      return t || 'Product';
+  }
+};
+
+/** List / detail price display for an included catalog row (furniture/sofa often text). */
+const formatCatalogLinePrice = (detail, catalogType) => {
+  if (!detail) return null;
+  const p = detail.price;
+  if (p === null || p === undefined) return null;
+  if (catalogType === 'furniture' || catalogType === 'sofacumbed') {
+    const s = String(p).trim();
+    return s || null;
+  }
+  const n = Number(p);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return `PKR ${n.toLocaleString('en-PK')}`;
+};
+
+function IncludedDealLineCard({ entry, index }) {
+  const { line, catalogType, detail, status } = entry;
+  const qty = Number(line.quantity) > 0 ? Number(line.quantity) : 1;
+  const fallbackName =
+    (typeof line.label === 'string' && line.label.trim()) ||
+    `${catalogSectionTitle(catalogType)} (#${line.product_id ?? '—'})`;
+  const headline =
+    status === 'ok' && detail
+      ? `${qty}× ${detail.name || detail.title || fallbackName}${line.is_free ? ' — FREE' : ''}`
+      : `${qty}× ${fallbackName}${line.is_free ? ' — FREE' : ''}`;
+
+  if (status === 'loading') {
+    return (
+      <div className="rounded-sm border border-gray-200 bg-gray-50/80 p-4 animate-pulse">
+        <div className="h-4 bg-gray-200 rounded w-2/3 mb-2" />
+        <div className="h-3 bg-gray-200 rounded w-full mb-1" />
+        <div className="h-3 bg-gray-200 rounded w-5/6" />
+      </div>
+    );
+  }
+
+  if (status === 'error' || !detail) {
+    return (
+      <div className="rounded-sm border border-amber-200 bg-amber-50/50 p-4 text-sm text-amber-900">
+        <p className="font-semibold text-gray-900">{headline}</p>
+        <p className="mt-1 text-amber-800">
+          This item could not be loaded. It may have been removed from the catalog.
+        </p>
+      </div>
+    );
+  }
+
+  const specs = buildCuratedCatalogSpecs(detail, catalogType);
+  const desc = typeof detail.description === 'string' ? detail.description.trim() : '';
+  const listPrice = formatCatalogLinePrice(detail, catalogType);
+  const pid = detail.id != null ? encodeURIComponent(String(detail.id)) : '';
+
+  return (
+    <div className="rounded-sm border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-[#00aeef]">
+            {catalogSectionTitle(catalogType)}
+          </p>
+          <h4 className="text-base font-semibold text-gray-900 mt-0.5">{headline}</h4>
+        </div>
+        {pid ? (
+          <Link
+            href={`/product/${pid}?type=${encodeURIComponent(catalogType)}`}
+            className="text-sm font-medium text-[#00aeef] hover:text-[#0099d9] shrink-0"
+          >
+            View product →
+          </Link>
+        ) : null}
+      </div>
+      {listPrice ? (
+        <p className="text-xs text-gray-500 mb-2">Regular listing price: {listPrice}</p>
+      ) : null}
+      {desc ? (
+        <div className="text-sm text-gray-600 space-y-2 mb-4">
+          {desc.split('\n').map((para, i) => (
+            <p key={i}>{para}</p>
+          ))}
+        </div>
+      ) : null}
+      <h5 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Specifications</h5>
+      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+        {specs.map((row) => (
+          <React.Fragment key={`${index}-${row.label}`}>
+            <dt className="text-gray-600">{row.label}</dt>
+            <dd className="font-medium text-gray-900">{row.value}</dd>
+          </React.Fragment>
+        ))}
+      </dl>
+    </div>
+  );
+}
 
 const sanitizeSpecValue = (value) => {
   if (value === null || value === undefined) return '';
@@ -161,13 +285,16 @@ const ProductPage = () => {
   const searchParams = useSearchParams();
   const requestedType = searchParams?.get('type');
   const requestedTypeLower = typeof requestedType === 'string' ? requestedType.toLowerCase() : '';
-  const initialType = CATALOG_TYPES.includes(requestedTypeLower)
-    ? requestedTypeLower
-    : requestedTypeLower === 'printer'
-      ? 'printer'
-      : requestedTypeLower === 'scanner'
-        ? 'scanner'
-        : 'laptop';
+  const initialType =
+    requestedTypeLower === DEAL_TYPE
+      ? DEAL_TYPE
+      : CATALOG_TYPES.includes(requestedTypeLower)
+        ? requestedTypeLower
+        : requestedTypeLower === 'printer'
+          ? 'printer'
+          : requestedTypeLower === 'scanner'
+            ? 'scanner'
+            : 'laptop';
   
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -182,6 +309,98 @@ const ProductPage = () => {
   const { addToCart } = useCart();
   const thumbnailScrollRef = useRef(null);
   const [activeTab, setActiveTab] = useState('description');
+  const [discountMap, setDiscountMap] = useState({});
+  const [dealIncludedProducts, setDealIncludedProducts] = useState([]);
+
+  useEffect(() => {
+    if (!product || product.type !== DEAL_TYPE) {
+      setDealIncludedProducts([]);
+      return undefined;
+    }
+    const items = Array.isArray(product.items) ? product.items : [];
+    if (!items.length) {
+      setDealIncludedProducts([]);
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    setDealIncludedProducts(
+      items.map((line) => ({
+        line,
+        catalogType: String(line.catalog_type || '').toLowerCase(),
+        detail: null,
+        status: 'loading',
+      })),
+    );
+
+    (async () => {
+      const results = await Promise.all(
+        items.map(async (line) => {
+          const ct = String(line.catalog_type || '').toLowerCase();
+          const pid = line.product_id;
+          if (!CATALOG_TYPES.includes(ct) || pid === undefined || pid === null || String(pid).trim() === '') {
+            return { line, catalogType: ct, detail: null, status: 'error' };
+          }
+          try {
+            const res = await fetch(
+              `${API_BASE}/api/catalog/${ct}/${encodeURIComponent(String(pid))}`,
+            );
+            if (!res.ok) {
+              return { line, catalogType: ct, detail: null, status: 'error' };
+            }
+            const data = await res.json();
+            return { line, catalogType: ct, detail: data, status: 'ok' };
+          } catch {
+            return { line, catalogType: ct, detail: null, status: 'error' };
+          }
+        }),
+      );
+      if (!cancelled) {
+        setDealIncludedProducts(results);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [product]);
+
+  const dealDetailEntries = useMemo(() => {
+    if (!product || product.type !== DEAL_TYPE || !Array.isArray(product.items) || !product.items.length) {
+      return [];
+    }
+    const items = product.items;
+    const firstPid = items[0]?.product_id != null ? String(items[0].product_id) : '';
+    const aligned =
+      dealIncludedProducts.length === items.length &&
+      dealIncludedProducts[0]?.line?.product_id != null &&
+      String(dealIncludedProducts[0].line.product_id) === firstPid;
+    if (aligned) {
+      return dealIncludedProducts;
+    }
+    return items.map((line) => ({
+      line,
+      catalogType: String(line.catalog_type || '').toLowerCase(),
+      detail: null,
+      status: 'loading',
+    }));
+  }, [product, dealIncludedProducts]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_BASE}/api/discounts`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (!cancelled) setDiscountMap(discountsArrayToMap(d.discounts));
+      })
+      .catch(() => {
+        if (!cancelled) setDiscountMap({});
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const parseNumeric = (value, fallback = 0) => {
     if (value === null || value === undefined) return fallback;
@@ -288,6 +507,9 @@ const ProductPage = () => {
       try {
         let endpointType = initialType;
         const buildUrl = (type) => {
+          if (type === DEAL_TYPE) {
+            return `${API_BASE}/api/catalog/deal/${productId}`;
+          }
           if (CATALOG_TYPES.includes(type)) {
             return `${API_BASE}/api/catalog/${type}/${productId}`;
           }
@@ -298,7 +520,7 @@ const ProductPage = () => {
 
         let response = await fetch(buildUrl(endpointType));
 
-        if (response.status === 404) {
+        if (response.status === 404 && endpointType !== DEAL_TYPE) {
           // Try fallback types (do not hop Cloudynap tables by id — ids may collide across tables)
           const fallbackTypes = CATALOG_TYPES.includes(endpointType)
             ? []
@@ -326,7 +548,8 @@ const ProductPage = () => {
         }
 
         const data = await response.json();
-        const resolvedType = resolveProductType(data, endpointType);
+        const resolvedType =
+          endpointType === DEAL_TYPE || data?.type === DEAL_TYPE ? DEAL_TYPE : resolveProductType(data, endpointType);
         const imageArray = extractImageArray(data, resolvedType);
         const placeholder =
           resolvedType === 'printer'
@@ -343,7 +566,9 @@ const ProductPage = () => {
             : data.id;
         const computedName =
           (data.name ||
-            (resolvedType === 'printer'
+            (resolvedType === DEAL_TYPE
+              ? data.title || data.name
+              : resolvedType === 'printer'
               ? [data.brand, data.series].filter(Boolean).join(' ').trim()
               : [data.brand, data.model || data.series].filter(Boolean).join(' ').trim())) || '';
         const finalName = computedName.trim()
@@ -380,11 +605,17 @@ const ProductPage = () => {
                       ? 'Sofa Cum Bed'
                       : resolvedType === 'furniture'
                         ? 'Furniture'
-                        : 'Laptops'),
+                        : resolvedType === DEAL_TYPE
+                          ? 'Deals'
+                          : 'Laptops'),
+          items: data.items,
           cartId: rawId ? `${resolvedType}-${rawId}` : undefined,
           name: finalName,
           description: computedDescription,
-          price: parseNumeric(data.price, 0),
+          price:
+            resolvedType === DEAL_TYPE
+              ? parseNumeric(data.deal_price ?? data.price, 0)
+              : parseNumeric(data.price, 0),
           hasPrice: parseNumeric(data.price, 0) > 0,
           rating: parseNumeric(data.rating, 4.7) || 4.7,
           reviews: parseNumeric(data.reviews, 0),
@@ -399,6 +630,7 @@ const ProductPage = () => {
         if (
           normalized.type === 'printer' ||
           normalized.type === 'scanner' ||
+          normalized.type === DEAL_TYPE ||
           CATALOG_TYPES.includes(normalized.type)
         ) {
           setSelectedMemory('');
@@ -470,7 +702,8 @@ const ProductPage = () => {
   const productTypeResolved = product?.type || initialType;
   const isPrinter = productTypeResolved === 'printer';
   const isScanner = productTypeResolved === 'scanner';
-  const isCatalog = CATALOG_TYPES.includes(productTypeResolved);
+  const isCatalog =
+    CATALOG_TYPES.includes(productTypeResolved) || productTypeResolved === DEAL_TYPE;
   /** Only legacy laptop SKUs use RAM / display / storage variant UI. */
   const showLaptopVariantUi = productTypeResolved === 'laptop';
 
@@ -536,6 +769,13 @@ const ProductPage = () => {
     return new Intl.NumberFormat('en-PK').format(price);
   };
 
+  const discountInfo =
+    product.type === DEAL_TYPE
+      ? null
+      : CATALOG_TYPES.includes(product.type)
+        ? applyCategoryDiscount(product.type, product.price, discountMap)
+        : null;
+
   const productTitle = product.name || 'Product';
   const productBrand = product.brand || 'Unknown';
   const productModel = product.model || `SKU-${product.id}`;
@@ -556,7 +796,9 @@ const ProductPage = () => {
               ? 'Furniture'
               : product.type === 'sofacumbed'
                 ? 'Sofa Cum Bed'
-                : 'Laptops');
+                : product.type === DEAL_TYPE
+                  ? 'Deals'
+                  : 'Laptops');
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -565,9 +807,16 @@ const ProductPage = () => {
       product.image ||
       (product.type === 'printer' || product.type === 'scanner'
         ? '/printer-category.png'
-        : CATALOG_TYPES.includes(product.type)
-          ? catalogFallbackImage(product.type)
-          : '/big-laptop.png');
+        : product.type === DEAL_TYPE
+          ? catalogFallbackImage('deal')
+          : CATALOG_TYPES.includes(product.type)
+            ? catalogFallbackImage(product.type)
+            : '/big-laptop.png');
+    const cartPrice =
+      discountInfo && !discountInfo.badgeOnly && discountInfo.discounted != null
+        ? discountInfo.discounted
+        : product.price;
+
     addToCart(
       {
         id: cartId,
@@ -575,7 +824,7 @@ const ProductPage = () => {
         type: product.type,
         category: product.category,
         name: product.name,
-        price: product.price,
+        price: cartPrice,
         image: imageSrc,
         brand: product.brand,
         model: product.model,
@@ -589,9 +838,11 @@ const ProductPage = () => {
 
   const productType = product.type || initialType;
   const specListRaw =
-    CATALOG_TYPES.includes(productType)
-      ? buildCuratedCatalogSpecs(product, productType)
-      : productType === 'printer'
+    productType === DEAL_TYPE
+      ? buildCuratedCatalogSpecs(product, DEAL_TYPE)
+      : CATALOG_TYPES.includes(productType)
+        ? buildCuratedCatalogSpecs(product, productType)
+        : productType === 'printer'
         ? [
             { label: 'Brand', value: product.brand },
             { label: 'Series', value: product.series },
@@ -639,17 +890,21 @@ const ProductPage = () => {
               { label: 'Microphone', value: product.mic },
               { label: 'Battery', value: product.battery },
             ];
-  const specList = CATALOG_TYPES.includes(productType)
-    ? specListRaw
-    : specListRaw.filter((spec) => spec.value);
+  const specList =
+    CATALOG_TYPES.includes(productType) || productType === DEAL_TYPE
+      ? specListRaw
+      : specListRaw.filter((spec) => spec.value);
 
-  const isCatalogProduct = CATALOG_TYPES.includes(productType);
+  const isCatalogProduct =
+    CATALOG_TYPES.includes(productType) || productType === DEAL_TYPE;
   const primaryImageFallback =
     product.type === 'printer' || product.type === 'scanner'
       ? '/printer-category.png'
-      : CATALOG_TYPES.includes(product.type)
-        ? catalogFallbackImage(product.type)
-        : '/big-laptop.png';
+      : product.type === DEAL_TYPE
+        ? catalogFallbackImage('deal')
+        : CATALOG_TYPES.includes(product.type)
+          ? catalogFallbackImage(product.type)
+          : '/big-laptop.png';
 
   return (
     <div className={`min-h-screen flex flex-col bg-white ${openSans.className}`}>
@@ -766,15 +1021,35 @@ const ProductPage = () => {
             </div>
 
             {/* Pricing */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-3xl font-bold text-[#00aeef]">
-                {product.price > 0 ? `PKR ${formatPrice(product.price)}` : 'Price on request'}
-              </span>
+            <div className="space-y-2">
+              {discountInfo ? (
+                <span className="inline-block bg-red-600 text-white text-xs font-extrabold px-2.5 py-1 rounded shadow">
+                  {discountInfo.badgeText}
+                </span>
+              ) : null}
+              <div className="flex items-center gap-3 flex-wrap">
+                {discountInfo && !discountInfo.badgeOnly && discountInfo.discounted != null ? (
+                  <>
+                    <span className="text-3xl font-bold text-[#00aeef]">
+                      PKR {formatPrice(discountInfo.discounted)}
+                    </span>
+                    <span className="text-xl text-gray-400 line-through">
+                      PKR {formatPrice(discountInfo.original)}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-3xl font-bold text-[#00aeef]">
+                    {product.price > 0 ? `PKR ${formatPrice(product.price)}` : 'Price on request'}
+                  </span>
+                )}
+              </div>
             </div>
 
             {isCatalogProduct && specList.length > 0 && (
               <div className="rounded-sm border border-gray-200 bg-gray-50 p-4">
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">Product details</h3>
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                  {productType === DEAL_TYPE ? 'Bundle overview' : 'Product details'}
+                </h3>
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
                   {specList.map((row) => (
                     <React.Fragment key={row.label}>
@@ -783,6 +1058,20 @@ const ProductPage = () => {
                     </React.Fragment>
                   ))}
                 </dl>
+              </div>
+            )}
+
+            {productType === DEAL_TYPE && dealDetailEntries.length > 0 && (
+              <div className="rounded-sm border border-gray-200 bg-white p-4 space-y-4">
+                <h3 className="text-sm font-semibold text-gray-900">Included products — full details</h3>
+                <p className="text-xs text-gray-500">
+                  Each item below is part of this bundle. Specifications come from the live catalog listing.
+                </p>
+                <div className="space-y-4">
+                  {dealDetailEntries.map((entry, idx) => (
+                    <IncludedDealLineCard key={`${idx}-${entry.line.product_id}-${entry.catalogType}`} entry={entry} index={idx} />
+                  ))}
+                </div>
               </div>
             )}
 
@@ -1069,7 +1358,37 @@ const ProductPage = () => {
                   <h3 className="text-lg font-semibold text-gray-900">
                     Specification
                   </h3>
-                  {specList.length === 0 ? (
+                  {productType === DEAL_TYPE ? (
+                    <div className="space-y-8">
+                      {specList.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-900 mb-3">Bundle overview</h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {specList.map((spec) => (
+                              <div key={spec.label}>
+                                <p className="font-bold text-gray-900">{spec.label}</p>
+                                <p>{spec.value}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {dealDetailEntries.length > 0 ? (
+                        <div className="space-y-4">
+                          <h4 className="text-sm font-semibold text-gray-900">Each included product</h4>
+                          {dealDetailEntries.map((entry, idx) => (
+                            <IncludedDealLineCard
+                              key={`tab-${idx}-${entry.line.product_id}-${entry.catalogType}`}
+                              entry={entry}
+                              index={idx}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <p>Loading included products…</p>
+                      )}
+                    </div>
+                  ) : specList.length === 0 ? (
                     <p>Specifications will be available soon.</p>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
