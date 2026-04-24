@@ -8,6 +8,7 @@ import { FaCopy, FaPinterest } from 'react-icons/fa6';
 import { openSans } from '../Font/font';
 import { useCart } from '../Providers/CartProvider';
 import { API_BASE } from '../../lib/apiBase';
+import { getCategoryPlaceholderImage } from '../../lib/categoryPlaceholders';
 import { useImagePreloader } from '../hooks/useImagePreloader';
 
 const DEFAULT_MEMORY_OPTIONS = ['8GB Unified Memory', '16GB Unified Memory', '24GB Unified Memory'];
@@ -65,7 +66,7 @@ const resolveProductType = (value) => {
     if (normalized.includes('scanner')) return 'scanner';
     if (normalized.includes('laptop')) return 'laptop';
   }
-  return 'laptop';
+  return 'bed';
 };
 
 const sanitizeProduct = (input) => {
@@ -119,11 +120,7 @@ const sanitizeProduct = (input) => {
   const primaryImage =
     images[0] ||
     input.image ||
-    (type === 'printer'
-      ? '/printer-category.png'
-      : type === DEAL_TYPE || CATALOG_TYPES.includes(type)
-        ? '/laptop-category.jpg'
-        : '/big-laptop.png');
+    getCategoryPlaceholderImage(type === DEAL_TYPE ? 'deal' : type, category);
 
   const numericPrice = toNumber(type === DEAL_TYPE ? input.deal_price ?? input.price : input.price, 0);
   return {
@@ -215,7 +212,7 @@ const ProductModal = ({ isOpen, onClose, product }) => {
     setProductData(sanitized);
     syncSpecSelections(sanitized);
 
-    const resolvedType = sanitized?.type || 'laptop';
+    const resolvedType = sanitized?.type || 'bed';
     const productIdentifier = product?.id ?? sanitized?.id;
     if (!productIdentifier) return;
 
@@ -265,9 +262,11 @@ const ProductModal = ({ isOpen, onClose, product }) => {
 
   const productImages = useMemo(() => {
     const source = productData;
-    if (!source) return ['/big-laptop.png'];
+    if (!source) return [getCategoryPlaceholderImage('bed')];
     const fromSanitized = extractImageArray(source);
-    return fromSanitized.length ? fromSanitized : ['/big-laptop.png'];
+    const t = source.type || 'bed';
+    const fb = getCategoryPlaceholderImage(t === DEAL_TYPE ? 'deal' : t, source.category);
+    return fromSanitized.length ? fromSanitized : [fb];
   }, [productData]);
 
   useImagePreloader(productImages);
@@ -287,7 +286,7 @@ const ProductModal = ({ isOpen, onClose, product }) => {
     const height = size?.height || 500;
     return (
       <Image
-        src={src || '/big-laptop.png'}
+        src={src || getCategoryPlaceholderImage(productData?.type, productData?.category)}
         alt={alt}
         width={width}
         height={height}
@@ -296,7 +295,7 @@ const ProductModal = ({ isOpen, onClose, product }) => {
     );
   };
 
-  const productType = productData?.type || 'laptop';
+  const productType = productData?.type || 'bed';
   const handleAddToCart = () => {
     const cartId = productData.cartId || (productType ? `${productType}-${productData.id}` : productData.id);
     addToCart(

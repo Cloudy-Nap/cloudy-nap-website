@@ -8,6 +8,7 @@ import Navbar from '../Cx/Layout/Navbar';
 import Footer from '../Cx/Layout/Footer';
 import { openSans } from '../Cx/Font/font';
 import { useCart } from '../Cx/Providers/CartProvider';
+import { getCategoryPlaceholderImage } from '../lib/categoryPlaceholders';
 
 const formatCurrency = (value) => {
   const numeric = Number(value) || 0;
@@ -147,7 +148,7 @@ const CartPage = () => {
                           </button>
                           <div className="hidden md:flex h-16 w-24 items-center justify-center rounded-lg bg-gray-100 overflow-hidden">
                             <img
-                              src={item.image || '/laptop-category.jpg'}
+                              src={item.image || getCategoryPlaceholderImage(item.type, item.category)}
                               alt={item.name}
                               className="h-full w-full object-contain"
                             />

@@ -18,11 +18,12 @@ const Footer = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Image
-                src="/loogo.png"
+                src="/new-logo.png"
                 alt="Cloudynap"
-                width={128}
-                height={44}
-                className="object-contain h-9 w-auto sm:h-10"
+                width={256}
+                height={88}
+                className="object-contain h-9 w-auto sm:h-10 max-h-10"
+                unoptimized
               />
             </div>
             <p className="text-[#1a2f4a]/80">Your Trusted IT Partner.</p>

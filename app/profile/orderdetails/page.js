@@ -32,6 +32,7 @@ import Navbar from '../../Cx/Layout/Navbar';
 import Footer from '../../Cx/Layout/Footer';
 import { openSans } from '../../Cx/Font/font';
 import { API_BASE } from '../../lib/apiBase';
+import { getCategoryPlaceholderImage } from '../../lib/categoryPlaceholders';
 
 const STATUS_STEPS = [
   { id: 'placed', label: 'Order Placed', icon: FiShoppingBag },
@@ -164,10 +165,10 @@ const sanitizeOrder = (raw) => {
         const safeQuantity = Number.isFinite(quantity) && quantity > 0 ? quantity : 1;
         const safePrice = Number.isFinite(price) ? price : 0;
         const metadata = item.metadata || {};
-        const fallbackImage =
-          (metadata?.category || item.category || '').toLowerCase().includes('printer')
-            ? '/printer-category.png'
-            : '/laptop-category.jpg';
+        const fallbackImage = getCategoryPlaceholderImage(
+          metadata?.type,
+          metadata?.category || item.category,
+        );
 
         return {
           ...item,

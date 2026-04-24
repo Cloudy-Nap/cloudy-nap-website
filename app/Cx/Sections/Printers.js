@@ -11,8 +11,7 @@ import { useCart } from '../Providers/CartProvider';
 import { useImagePreloader } from '../hooks/useImagePreloader';
 import { API_BASE } from '../../lib/apiBase';
 import { discountsArrayToMap, mergeListProductDiscount } from '../../lib/categoryDiscounts';
-
-const PLACEHOLDER = '/laptop-category.jpg';
+import { getCategoryPlaceholderImage } from '../../lib/categoryPlaceholders';
 
 const Printers = () => {
   const scrollContainerRef = useRef(null);
@@ -84,7 +83,7 @@ const Printers = () => {
         const normalized = (Array.isArray(data) ? data : []).map((item) => {
           const rawId = item.id !== null && item.id !== undefined ? item.id.toString() : '';
           const rawImages = extractImageArray(item);
-          const primaryImage = rawImages[0] || item.image || PLACEHOLDER;
+          const primaryImage = rawImages[0] || item.image || getCategoryPlaceholderImage('sofacumbed');
           const imageArray = rawImages.length ? rawImages : [primaryImage];
           const computedName = (item.name || [item.brand, item.series].filter(Boolean).join(' ').trim() || 'Product').trim();
           const rawDescription =
@@ -178,7 +177,7 @@ const Printers = () => {
     }
     return (
       <Image
-        src={src || PLACEHOLDER}
+        src={src || getCategoryPlaceholderImage('sofacumbed')}
         alt={alt}
         width={size.width}
         height={size.height}
@@ -201,7 +200,7 @@ const Printers = () => {
   const PrinterCard = ({ product }) => {
     const images = Array.isArray(product.imageUrls) && product.imageUrls.length
       ? product.imageUrls
-      : [product.image || PLACEHOLDER];
+      : [product.image || getCategoryPlaceholderImage('sofacumbed')];
     useImagePreloader(images);
     const [activeImage, setActiveImage] = useState(0);
     const productType = (product.type || 'sofacumbed').toLowerCase();

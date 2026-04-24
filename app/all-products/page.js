@@ -16,6 +16,7 @@ import { useCart } from '../Cx/Providers/CartProvider';
 import { useImagePreloader } from '../Cx/hooks/useImagePreloader';
 import { API_BASE } from '../lib/apiBase';
 import { applyCategoryDiscount, discountsArrayToMap } from '../lib/categoryDiscounts';
+import { getCategoryPlaceholderImage } from '../lib/categoryPlaceholders';
 
 /** Mattress / product height filter (inches). API beds use cm; furniture often uses text with units. */
 const HEIGHT_INCH_STOPS = [6, 8, 12, 16, 20, 24, 28, 32];
@@ -275,12 +276,7 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
 
   const normalizeProduct = (item, type) => {
     if (!item) return null;
-    const placeholder =
-      type === 'printer'
-        ? '/printer-category.png'
-        : ['bed', 'accessory', 'furniture', 'sofacumbed', 'deal'].includes(type)
-          ? '/laptop-category.jpg'
-          : '/laptop-category.jpg';
+    const placeholder = getCategoryPlaceholderImage(type === 'deal' ? 'deal' : type);
     const rawImages = extractImageArray(item);
     const primaryImage = rawImages[0] || item.image || placeholder;
     const imageArray = rawImages.length ? rawImages : [primaryImage];
@@ -630,11 +626,18 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
     return stars;
   };
 
-  const renderProductImage = (src, alt, className, size = { width: 160, height: 160 }) => {
-    if (src?.startsWith('http')) {
+  const renderProductImage = (
+    src,
+    alt,
+    className,
+    size = { width: 160, height: 160 },
+    fallbackSrc,
+  ) => {
+    const resolved = src || fallbackSrc || getCategoryPlaceholderImage('bed');
+    if (resolved?.startsWith('http')) {
       return (
         <img
-          src={src}
+          src={resolved}
           alt={alt}
           className={className}
           style={{ width: size.width, height: size.height }}
@@ -643,7 +646,7 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
     }
     return (
       <Image
-        src={src || '/laptop-category.jpg'}
+        src={resolved}
         alt={alt}
         width={size.width}
         height={size.height}
@@ -653,14 +656,14 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
   };
 
   const ProductCard = ({ product, onPreview, onAddToCart }) => {
-    const productType = (product.type || 'laptop').toLowerCase();
+    const productType = (product.type || 'bed').toLowerCase();
     const productId = product.id ? encodeURIComponent(product.id) : '';
     const productHref = productId ? `/product/${productId}?type=${encodeURIComponent(productType)}` : '#';
     const productDescription = product.description || 'Specifications coming soon.';
     const hasPrice = product.hasPrice || (Number.isFinite(product.price) && product.price > 0);
     const images = Array.isArray(product.imageUrls) && product.imageUrls.length
       ? product.imageUrls
-      : [product.image || (productType === 'printer' ? '/printer-category.png' : '/laptop-category.jpg')];
+      : [product.image || getCategoryPlaceholderImage(productType === 'deal' ? 'deal' : productType, product.category)];
     useImagePreloader(images);
     const [activeImage, setActiveImage] = useState(0);
 
@@ -728,6 +731,7 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
             `${product.name} preview ${activeImage + 1}`,
             'object-contain transition-opacity duration-200 max-h-full max-w-full',
             { width: 160, height: 160 },
+            getCategoryPlaceholderImage(productType === 'deal' ? 'deal' : productType, product.category),
           )}
 
           {images.length > 1 && (

@@ -30,6 +30,7 @@ import ShoppingCartPopup from '../Components/ShoppingCartPopup';
 import LoginPopup from '../Components/LoginPopup';
 import { useCart } from '../Providers/CartProvider';
 import { API_BASE } from '../../lib/apiBase';
+import { getCategoryPlaceholderImage } from '../../lib/categoryPlaceholders';
 
 
 const Navbar = () => {
@@ -60,7 +61,7 @@ const Navbar = () => {
   };
 
   const extractPrimaryImage = (item) => {
-    if (!item) return '/big-laptop.png';
+    if (!item) return getCategoryPlaceholderImage('bed');
     const candidates = [
       item.imageUrls,
       item.image_urls,
@@ -76,7 +77,7 @@ const Navbar = () => {
     if (typeof item.image === 'string' && item.image.trim()) {
       return item.image.trim();
     }
-    return '/big-laptop.png';
+    return getCategoryPlaceholderImage(item.type, item.category);
   };
 
   const formatPrice = (value) => {
@@ -86,7 +87,11 @@ const Navbar = () => {
 
   const normalizeProduct = (item) => {
     if (!item) return null;
-    const inferredType = item?.type || (typeof item?.category === 'string' && item.category.toLowerCase().includes('printer') ? 'printer' : 'laptop');
+    const inferredType =
+      item?.type ||
+      (typeof item?.category === 'string' && item.category.toLowerCase().includes('printer')
+        ? 'printer'
+        : 'bed');
     return {
       id: item.id || item.sourceId || null,
       name: item.name || 'Unnamed Product',
@@ -95,7 +100,9 @@ const Navbar = () => {
       price: item.price || 0,
       image: extractPrimaryImage(item),
       type: inferredType,
-      category: item.category || (inferredType === 'printer' ? 'Printers' : 'Laptops'),
+      category:
+        item.category ||
+        (inferredType === 'printer' ? 'Printers' : inferredType === 'bed' ? 'Matteress' : 'Laptops'),
     };
   };
 
@@ -358,12 +365,13 @@ const Navbar = () => {
           <div className="flex items-center gap-3 shrink-0">
             <Link href="/">
             <Image 
-              src="/loogo.png" 
+              src="/new-logo.png" 
               alt="Cloudynap" 
-              width={128} 
-              height={44}
-              className="object-contain h-9 w-auto sm:h-10"
+              width={256} 
+              height={88}
+              className="object-contain h-9 w-auto sm:h-10 max-h-10"
               priority
+              unoptimized
             />
             </Link>
           </div>
@@ -461,7 +469,7 @@ const Navbar = () => {
                               >
                                 <div className="w-12 h-12 shrink-0 flex items-center justify-center bg-gray-50 rounded overflow-hidden">
                                   <Image
-                                    src={product.image || '/big-laptop.png'}
+                                    src={product.image || getCategoryPlaceholderImage(product.type, product.category)}
                                     alt={product.name}
                                     width={48}
                                     height={48}
@@ -675,11 +683,12 @@ const Navbar = () => {
           {/* Mobile Menu Header */}
           <div className="bg-white text-[#1a2f4a] p-4 flex items-center justify-between border-b border-slate-200 sticky top-0 z-10">
             <Image 
-              src="/loogo.png" 
+              src="/new-logo.png" 
               alt="Cloudynap" 
-              width={112} 
-              height={40}
-              className="object-contain h-8 w-auto"
+              width={224} 
+              height={80}
+              className="object-contain h-8 w-auto max-h-8"
+              unoptimized
             />
             <button 
               onClick={() => setIsMobileMenuOpen(false)}
@@ -778,7 +787,7 @@ const Navbar = () => {
                                 >
                                   <div className="w-12 h-12 shrink-0 flex items-center justify-center bg-gray-50 rounded overflow-hidden">
                                     <Image
-                                      src={product.image || '/big-laptop.png'}
+                                      src={product.image || getCategoryPlaceholderImage(product.type, product.category)}
                                       alt={product.name}
                                       width={48}
                                       height={48}

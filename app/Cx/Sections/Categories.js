@@ -2,6 +2,7 @@
 
 import React, { useRef } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { openSans } from '../Font/font';
 
@@ -21,12 +22,10 @@ const Categories = () => {
   };
 
   const categories = [
-    { name: 'Laptops', image: '/laptop-category.jpg', alt: 'Laptops' },
-    { name: 'Printers', image: '/printer-category.png', alt: 'Printers' },
-    { name: 'Headphones', image: '/headphone-category.png', alt: 'Headphones' },
-    { name: 'Keyboard & Mouse', image: '/mnk-category.png', alt: 'Keyboard & Mouse' },
-    { name: 'Toners', image: '/toner-category.jpg', alt: 'Toners' },
-    { name: 'LEDs', image: '/monitor-category.png', alt: 'LEDs' }
+    { name: 'Mattresses', image: '/matt.png', alt: 'Mattresses', href: '/all-products?subcategory=matteress' },
+    { name: 'Accessories', image: '/pillow.png', alt: 'Accessories', href: '/all-products?subcategory=accessories' },
+    { name: 'Sofa cum bed', image: '/sofa-cum-bed.png', alt: 'Sofa cum bed', href: '/all-products?subcategory=sofa-cum-bed' },
+    { name: 'Furniture', image: '/furniture.png', alt: 'Furniture', href: '/all-products?subcategory=furniture' },
   ];
 
   return (
@@ -51,9 +50,10 @@ const Categories = () => {
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {categories.map((category, index) => (
-              <div
+              <Link
                 key={index}
-                className="shrink-0 w-[205px] h-[236px] bg-white border border-gray-300 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                href={category.href}
+                className="shrink-0 w-[205px] h-[236px] bg-white border border-gray-300 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer block"
               >
                 <div className="w-full h-[148px] mt-4 flex items-center justify-center">
                   <Image
@@ -67,7 +67,7 @@ const Categories = () => {
                 <div className="p-4 text-center flex items-center justify-center ">
                   <h3 className="text-base font-semibold text-gray-900">{category.name}</h3>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
 

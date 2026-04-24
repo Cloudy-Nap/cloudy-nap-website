@@ -11,6 +11,7 @@ import { useCart } from '../Providers/CartProvider';
 import { useImagePreloader } from '../hooks/useImagePreloader';
 import { API_BASE } from '../../lib/apiBase';
 import { discountsArrayToMap, mergeListProductDiscount } from '../../lib/categoryDiscounts';
+import { getCategoryPlaceholderImage } from '../../lib/categoryPlaceholders';
 
 const Laptop = () => {
   const scrollContainerRef = useRef(null);
@@ -65,7 +66,7 @@ const Laptop = () => {
           const rawImageUrls = Array.isArray(item.image_urls)
             ? item.image_urls.filter((url) => typeof url === 'string' && url.trim() !== '')
             : [];
-          const primaryImage = rawImageUrls[0] || item.image || '/laptop-category.jpg';
+          const primaryImage = rawImageUrls[0] || item.image || getCategoryPlaceholderImage('bed');
           const imageArray = rawImageUrls.length ? rawImageUrls : [primaryImage];
           const rawId = item.id !== null && item.id !== undefined && item.id.toString
             ? item.id.toString()
@@ -154,7 +155,7 @@ const Laptop = () => {
     }
     return (
       <Image
-        src={src || '/laptop-category.jpg'}
+        src={src || getCategoryPlaceholderImage('bed')}
         alt={alt}
         width={size.width}
         height={size.height}
@@ -166,7 +167,7 @@ const Laptop = () => {
   const LaptopCard = ({ product }) => {
     const images = Array.isArray(product.imageUrls) && product.imageUrls.length
       ? product.imageUrls
-      : [product.image || '/laptop-category.jpg'];
+      : [product.image || getCategoryPlaceholderImage('bed')];
     useImagePreloader(images);
     const [activeImage, setActiveImage] = useState(0);
     const productType = (product.type || 'bed').toLowerCase();

@@ -10,6 +10,7 @@ import Footer from '../Cx/Layout/Footer';
 import { openSans } from '../Cx/Font/font';
 import { useCart } from '../Cx/Providers/CartProvider';
 import { API_BASE } from '../lib/apiBase';
+import { getCategoryPlaceholderImage } from '../lib/categoryPlaceholders';
 
 const ORDER_DETAIL_STEPS = [
   { id: 'placed', label: 'Order Placed', icon: FiShoppingBag },
@@ -158,9 +159,10 @@ const sanitizeOrderDetailData = (raw) => {
             metadata = {};
           }
         }
-        const fallbackImage = (metadata?.category || item.category || '').toLowerCase().includes('printer')
-          ? '/printer-category.png'
-          : '/laptop-category.jpg';
+        const fallbackImage = getCategoryPlaceholderImage(
+          metadata?.type,
+          metadata?.category || item.category,
+        );
         const quantity = parseAmount(item.quantity || 1) || 1;
         const price = parseAmount(item.price || 0);
         return {
@@ -535,7 +537,9 @@ const userCards = useMemo(() => {
         items.push({
           title: item.name,
           price: `PKR ${Number(item.price || 0).toLocaleString('en-PK')}`,
-          image: item.metadata?.image || '/laptop-category.jpg',
+          image:
+            item.metadata?.image ||
+            getCategoryPlaceholderImage(item.metadata?.type, item.metadata?.category || item.category),
           rating: 4.5,
           reviews: 120,
           badge: null,
@@ -557,7 +561,7 @@ const userCards = useMemo(() => {
       return {
         ...item,
         displayName: item.name || item.title || 'Product',
-        image: item.image || item.thumbnail || '/laptop-category.jpg',
+        image: item.image || item.thumbnail || getCategoryPlaceholderImage(item.type, item.category),
         price: safePrice,
         quantity: safeQuantity,
         lineTotal: safePrice * safeQuantity,

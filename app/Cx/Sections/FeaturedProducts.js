@@ -13,18 +13,7 @@ import { useCart } from '../Providers/CartProvider';
 import { useImagePreloader } from '../hooks/useImagePreloader';
 import { API_BASE } from '../../lib/apiBase';
 import { applyCategoryDiscount, discountsArrayToMap } from '../../lib/categoryDiscounts';
-
-/** Single placeholder until `image` / `image_urls` exist in Supabase */
-const PLACEHOLDER_IMAGE = '/laptop-category.jpg';
-
-const placeholderImage = {
-  laptop: PLACEHOLDER_IMAGE,
-  printer: '/printer-category.png',
-  bed: PLACEHOLDER_IMAGE,
-  accessory: PLACEHOLDER_IMAGE,
-  furniture: PLACEHOLDER_IMAGE,
-  sofacumbed: PLACEHOLDER_IMAGE,
-};
+import { getCategoryPlaceholderImage } from '../../lib/categoryPlaceholders';
 
 function shuffleInPlace(array) {
   const a = array;
@@ -79,8 +68,7 @@ function normalizeFeaturedProduct(item) {
   const image =
     imageArray[0] ||
     (typeof item.image === 'string' && item.image.trim() ? item.image.trim() : null) ||
-    placeholderImage[type] ||
-    PLACEHOLDER_IMAGE;
+    getCategoryPlaceholderImage(type);
   const priceValue = parsePrice(item.price);
   const oldPriceValue = parsePrice(item.old_price);
   const rawDesc = typeof item.description === 'string' ? item.description.trim() : '';
@@ -149,14 +137,14 @@ const renderStars = (rating) => {
 };
 
 const FeaturedProductCard = ({ product, onPreview, onAddToCart }) => {
-  const productType = (product.type || 'laptop').toLowerCase();
+  const productType = (product.type || 'bed').toLowerCase();
   const productId = product.id ? encodeURIComponent(product.id) : '';
   const href = productId
     ? `/product/${productId}?type=${encodeURIComponent(productType)}`
     : '/all-products';
   const images = Array.isArray(product.imageUrls) && product.imageUrls.length
     ? product.imageUrls
-    : [product.image || placeholderImage[productType] || PLACEHOLDER_IMAGE];
+    : [product.image || getCategoryPlaceholderImage(productType)];
   useImagePreloader(images);
   const [activeImage, setActiveImage] = useState(0);
 
@@ -217,7 +205,7 @@ const FeaturedProductCard = ({ product, onPreview, onAddToCart }) => {
 
       <div className="relative w-full h-40 flex items-center justify-center p-4 bg-white">
         <Image
-          src={images[activeImage] || placeholderImage[productType] || PLACEHOLDER_IMAGE}
+          src={images[activeImage] || getCategoryPlaceholderImage(productType)}
           alt={product.name}
           width={160}
           height={160}
@@ -347,7 +335,7 @@ const FeaturedProducts = () => {
               
               <div className="mt-4 overflow-hidden flex justify-center items-end h-112">
                 <Image
-                  src="/stacked-laptops.jpg"
+                  src="/matt.png"
                   alt="Featured collection"
                   width={600}
                   height={600}

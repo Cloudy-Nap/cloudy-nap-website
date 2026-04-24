@@ -7,6 +7,7 @@ import { FaTimes } from 'react-icons/fa';
 import { FiArrowRight } from 'react-icons/fi';
 import { openSans } from '../Font/font';
 import { useCart } from '../Providers/CartProvider';
+import { getCategoryPlaceholderImage } from '../../lib/categoryPlaceholders';
 
 const formatPrice = (price) => `PKR ${price.toLocaleString('en-PK')}`;
 
@@ -44,7 +45,7 @@ const ShoppingCartPopup = ({ isOpen, onClose }) => {
               <div className="px-4 py-3 flex gap-3 hover:bg-gray-50 transition relative">
                 <div className="shrink-0 w-16 h-16 border border-gray-200 rounded overflow-hidden bg-white">
                   <Image
-                    src={item.image || '/laptop-category.jpg'}
+                    src={item.image || getCategoryPlaceholderImage(item.type, item.category)}
                     alt={item.name}
                     width={64}
                     height={64}

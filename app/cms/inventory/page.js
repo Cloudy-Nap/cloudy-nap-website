@@ -16,6 +16,7 @@ import {
   FiMaximize2,
 } from 'react-icons/fi';
 import { API_BASE } from '../../lib/apiBase';
+import { getCategoryPlaceholderImage } from '../../lib/categoryPlaceholders';
 
 const CLOUDYNAP_TYPES = new Set(['bed', 'accessory', 'furniture', 'sofacumbed']);
 
@@ -61,7 +62,7 @@ const sanitizeProduct = (item) => {
   if (!CLOUDYNAP_TYPES.has(resolvedType)) return null;
 
   const images = extractImageArray(item);
-  const image = images[0] || item.image || '/mnk-category.png';
+  const image = images[0] || item.image || getCategoryPlaceholderImage(resolvedType);
 
   let priceLabel = 'Price on request';
   if (resolvedType === 'furniture' || resolvedType === 'sofacumbed') {

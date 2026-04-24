@@ -14,6 +14,7 @@ import { openSans } from '../../Cx/Font/font';
 import { useCart } from '../../Cx/Providers/CartProvider';
 import { API_BASE } from '../../lib/apiBase';
 import { applyCategoryDiscount, discountsArrayToMap } from '../../lib/categoryDiscounts';
+import { getCategoryPlaceholderImage } from '../../lib/categoryPlaceholders';
 
 const DEFAULT_MEMORY_OPTIONS = ['8GB Unified Memory', '16GB Unified Memory', '24GB Unified Memory'];
 const DEFAULT_DISPLAY_OPTIONS = ['13-inch Retina Display', '14-inch Liquid Retina XDR', '16-inch Liquid Retina XDR'];
@@ -34,23 +35,6 @@ const normalizeToCatalogType = (raw) => {
   if (n.includes('sofa')) return 'sofacumbed';
   if (n === 'furniture') return 'furniture';
   return null;
-};
-
-const catalogFallbackImage = (type) => {
-  switch (type) {
-    case 'bed':
-      return '/headphone-category.png';
-    case 'accessory':
-      return '/headphone-category.png';
-    case 'furniture':
-      return '/toner-category.jpg';
-    case 'deal':
-      return '/laptop-category.jpg';
-    case 'sofacumbed':
-      return '/mnk-category.png';
-    default:
-      return '/headphone-category.png';
-  }
 };
 
 /** Case-insensitive pick of first non-empty column (Postgres often returns lowercase keys). */
@@ -444,12 +428,7 @@ const ProductPage = () => {
         return [v.trim()];
       }
     }
-    const placeholder =
-      type === 'printer'
-        ? '/printer-category.png'
-        : CATALOG_TYPES.includes(type)
-          ? catalogFallbackImage(type)
-          : '/big-laptop.png';
+    const placeholder = getCategoryPlaceholderImage(type);
     return [placeholder];
   };
 
@@ -551,14 +530,7 @@ const ProductPage = () => {
         const resolvedType =
           endpointType === DEAL_TYPE || data?.type === DEAL_TYPE ? DEAL_TYPE : resolveProductType(data, endpointType);
         const imageArray = extractImageArray(data, resolvedType);
-        const placeholder =
-          resolvedType === 'printer'
-            ? '/printer-category.png'
-            : resolvedType === 'scanner'
-              ? '/printer-category.png'
-              : CATALOG_TYPES.includes(resolvedType)
-                ? catalogFallbackImage(resolvedType)
-                : '/big-laptop.png';
+        const placeholder = getCategoryPlaceholderImage(resolvedType);
         const images = imageArray.length ? imageArray : [placeholder];
         const rawId =
           data.id !== null && data.id !== undefined && data.id.toString
@@ -805,13 +777,10 @@ const ProductPage = () => {
     const cartId = product.cartId || (product.type ? `${product.type}-${product.id}` : product.id);
     const imageSrc =
       product.image ||
-      (product.type === 'printer' || product.type === 'scanner'
-        ? '/printer-category.png'
-        : product.type === DEAL_TYPE
-          ? catalogFallbackImage('deal')
-          : CATALOG_TYPES.includes(product.type)
-            ? catalogFallbackImage(product.type)
-            : '/big-laptop.png');
+      getCategoryPlaceholderImage(
+        product.type === DEAL_TYPE ? 'deal' : product.type,
+        product.category,
+      );
     const cartPrice =
       discountInfo && !discountInfo.badgeOnly && discountInfo.discounted != null
         ? discountInfo.discounted
@@ -897,14 +866,10 @@ const ProductPage = () => {
 
   const isCatalogProduct =
     CATALOG_TYPES.includes(productType) || productType === DEAL_TYPE;
-  const primaryImageFallback =
-    product.type === 'printer' || product.type === 'scanner'
-      ? '/printer-category.png'
-      : product.type === DEAL_TYPE
-        ? catalogFallbackImage('deal')
-        : CATALOG_TYPES.includes(product.type)
-          ? catalogFallbackImage(product.type)
-          : '/big-laptop.png';
+  const primaryImageFallback = getCategoryPlaceholderImage(
+    product.type === DEAL_TYPE ? 'deal' : product.type,
+    product.category,
+  );
 
   return (
     <div className={`min-h-screen flex flex-col bg-white ${openSans.className}`}>
@@ -1413,148 +1378,19 @@ const ProductPage = () => {
           </div>
         </div>
 
-        {/* Related Products — legacy laptop placeholders only when viewing a laptop SKU */}
         <div className="mt-16 max-w-7xl mx-auto px-4">
-          {!showLaptopVariantUi ? (
-            <div className="rounded-sm border border-gray-200 bg-gray-50 px-6 py-10 text-center">
-              <h3 className="text-lg font-bold text-gray-900 mb-2">More products</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Browse the full catalog for beds, furniture, accessories, and more.
-              </p>
-              <Link
-                href="/all-products"
-                className="inline-flex items-center justify-center rounded-sm bg-[#00aeef] px-6 py-3 text-sm font-semibold text-white hover:bg-[#0099d9] transition"
-              >
-                View all products
-              </Link>
-            </div>
-          ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Column 1 - Related Product */}
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-4">RELATED PRODUCT</h3>
-              <div className="space-y-3">
-                <Link href="/product/hp-elitebook-840" className="flex gap-3 p-3 border border-gray-200 rounded-sm hover:shadow-md transition bg-white">
-                  <Image src="/laptop-category.jpg" alt="HP Elitebook 840" width={80} height={80} className="object-contain" />
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900 mb-1">HP Elitebook 840 Core i5</p>
-                    <p className="text-xs text-gray-600 mb-2">16GB RAM 512GB SSD</p>
-                    <p className="text-sm font-bold text-[#00aeef]">PKR 150,000</p>
-                  </div>
-                </Link>
-                <Link href="/product/dell-victus" className="flex gap-3 p-3 border border-gray-200 rounded-sm hover:shadow-md transition bg-white">
-                  <Image src="/laptop-category.jpg" alt="DELL VICTUS" width={80} height={80} className="object-contain" />
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900 mb-1">DELL VICTUS Core i7 13th Gen</p>
-                    <p className="text-xs text-gray-600 mb-2">32GB RAM, 1TB SSD</p>
-                    <p className="text-sm font-bold text-[#00aeef]">PKR 200,000</p>
-                  </div>
-                </Link>
-                <Link href="/product/macbook-m3" className="flex gap-3 p-3 border border-gray-200 rounded-sm hover:shadow-md transition bg-white">
-                  <Image src="/laptop-category.jpg" alt="Macbook M3" width={80} height={80} className="object-contain" />
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900 mb-1">Macbook M3</p>
-                    <p className="text-xs text-gray-600 mb-2">Latest M3 Chip</p>
-                    <p className="text-sm font-bold text-[#00aeef]">PKR 300,000</p>
-                  </div>
-                </Link>
-              </div>
-            </div>
-
-            {/* Column 2 - Product Accessories */}
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-4">PRODUCT ACCESSORIES</h3>
-              <div className="space-y-3">
-                <Link href="/product/logitech-b100" className="flex gap-3 p-3 border border-gray-200 rounded-sm hover:shadow-md transition bg-white">
-                  <Image src="/mnk-category.png" alt="Logitech B100 Mouse" width={80} height={80} className="object-contain" />
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900 mb-1">Logitech B100 Mouse</p>
-                    <p className="text-xs text-gray-600 mb-2">Wired Mouse</p>
-                    <p className="text-sm font-bold text-[#00aeef]">PKR 1,500</p>
-                  </div>
-                </Link>
-                <Link href="/product/gaming-mouse" className="flex gap-3 p-3 border border-gray-200 rounded-sm hover:shadow-md transition bg-white">
-                  <Image src="/mnk-category.png" alt="Gaming Mouse" width={80} height={80} className="object-contain" />
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900 mb-1">Gaming Mouse</p>
-                    <p className="text-xs text-gray-600 mb-2">RGB Gaming Mouse</p>
-                    <p className="text-sm font-bold text-[#00aeef]">PKR 10,500</p>
-                  </div>
-                </Link>
-                <Link href="/product/wireless-gaming-mouse" className="flex gap-3 p-3 border border-gray-200 rounded-sm hover:shadow-md transition bg-white">
-                  <Image src="/mnk-category.png" alt="Wireless Gaming Mouse" width={80} height={80} className="object-contain" />
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900 mb-1">Wireless Gaming Mouse</p>
-                    <p className="text-xs text-gray-600 mb-2">Wireless RGB Mouse</p>
-                    <p className="text-sm font-bold text-[#00aeef]">PKR 25,500</p>
-                  </div>
-                </Link>
-              </div>
-            </div>
-
-            {/* Column 3 - Apple Product */}
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-4">APPLE PRODUCT</h3>
-              <div className="space-y-3">
-                <Link href="/product/macbook-pro-2023" className="flex gap-3 p-3 border border-gray-200 rounded-sm hover:shadow-md transition bg-white">
-                  <Image src="/big-laptop.png" alt="2023 Macbook Pro" width={80} height={80} className="object-contain" />
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900 mb-1">2023 Macbook Pro</p>
-                    <p className="text-xs text-gray-600 mb-2">M2 Pro Chip</p>
-                    <p className="text-sm font-bold text-[#00aeef]">PKR 121,500</p>
-                  </div>
-                </Link>
-                <Link href="/product/macbook-air-2020" className="flex gap-3 p-3 border border-gray-200 rounded-sm hover:shadow-md transition bg-white">
-                  <Image src="/big-laptop.png" alt="2020 Macbook Air" width={80} height={80} className="object-contain" />
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900 mb-1">2020 Macbook Air</p>
-                    <p className="text-xs text-gray-600 mb-2">M1 Chip</p>
-                    <p className="text-sm font-bold text-[#00aeef]">PKR 121,500</p>
-                  </div>
-                </Link>
-                <Link href="/product/macbook-m3-shadow" className="flex gap-3 p-3 border border-gray-200 rounded-sm hover:shadow-md transition bg-white">
-                  <Image src="/big-laptop.png" alt="Macbook M3 Shadow Black" width={80} height={80} className="object-contain" />
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900 mb-1">Macbook M3 Shadow Black</p>
-                    <p className="text-xs text-gray-600 mb-2">M3 Chip, Space Black</p>
-                    <p className="text-sm font-bold text-[#00aeef]">PKR 221,500</p>
-                  </div>
-                </Link>
-              </div>
-            </div>
-
-            {/* Column 4 - Featured Products */}
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-4">FEATURED PRODUCTS</h3>
-              <div className="space-y-3">
-                <Link href="/product/lcd-screen-55" className="flex gap-3 p-3 border border-gray-200 rounded-sm hover:shadow-md transition bg-white">
-                  <Image src="/monitor-category.png" alt="55 Inch LCD Screen" width={80} height={80} className="object-contain" />
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900 mb-1">55" Wide LCD Screen</p>
-                    <p className="text-xs text-gray-600 mb-2">Smart TV Display</p>
-                    <p className="text-sm font-bold text-[#00aeef]">PKR 165,500</p>
-                  </div>
-                </Link>
-                <Link href="/product/sony-headphones" className="flex gap-3 p-3 border border-gray-200 rounded-sm hover:shadow-md transition bg-white">
-                  <Image src="/headphone-category.png" alt="Sony Headphones" width={80} height={80} className="object-contain" />
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900 mb-1">Sony DSCHXB Wireless Headphones</p>
-                    <p className="text-xs text-gray-600 mb-2">Wireless Over-Ear</p>
-                    <p className="text-sm font-bold text-[#00aeef]">PKR 60,500</p>
-                  </div>
-                </Link>
-                <Link href="/product/dell-optiplex-i5" className="flex gap-3 p-3 border border-gray-200 rounded-sm hover:shadow-md transition bg-white">
-                  <Image src="/laptop-category.jpg" alt="Dell Optiplex" width={80} height={80} className="object-contain" />
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900 mb-1">Dell Optiplex Core i5 11th Gen</p>
-                    <p className="text-xs text-gray-600 mb-2">16GB 512 GB</p>
-                    <p className="text-sm font-bold text-[#00aeef]">PKR 115,500</p>
-                  </div>
-                </Link>
-              </div>
-            </div>
+          <div className="rounded-sm border border-gray-200 bg-gray-50 px-6 py-10 text-center">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">More products</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Browse the full catalog for beds, furniture, accessories, and more.
+            </p>
+            <Link
+              href="/all-products"
+              className="inline-flex items-center justify-center rounded-sm bg-[#00aeef] px-6 py-3 text-sm font-semibold text-white hover:bg-[#0099d9] transition"
+            >
+              View all products
+            </Link>
           </div>
-          )}
         </div>
       </main>
 

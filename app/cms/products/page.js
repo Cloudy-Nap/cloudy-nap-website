@@ -21,6 +21,7 @@ import {
   FiCheck,
 } from 'react-icons/fi';
 import { API_BASE } from '../../lib/apiBase';
+import { getCategoryPlaceholderImage } from '../../lib/categoryPlaceholders';
 
 const CLOUDYNAP_TYPES = new Set(['bed', 'accessory', 'furniture', 'sofacumbed']);
 
@@ -66,7 +67,7 @@ const sanitizeProduct = (item) => {
   if (!CLOUDYNAP_TYPES.has(resolvedType)) return null;
 
   const images = extractImageArray(item);
-  const image = images[0] || item.image || '/mnk-category.png';
+  const image = images[0] || item.image || getCategoryPlaceholderImage(resolvedType);
 
   const desc =
     typeof item.description === 'string' && item.description.trim()
@@ -103,7 +104,8 @@ const sanitizeProduct = (item) => {
   };
 };
 
-const renderProductImage = (src, alt) => {
+const renderProductImage = (src, alt, catalogType = 'bed') => {
+  const fallback = getCategoryPlaceholderImage(catalogType);
   if (src?.startsWith?.('http')) {
     return (
       <img
@@ -115,7 +117,7 @@ const renderProductImage = (src, alt) => {
   }
   return (
     <img
-      src={src || '/mnk-category.png'}
+      src={src || fallback}
       alt={alt}
       className="h-28 w-full object-contain transition-transform duration-300 group-hover:scale-105"
     />
@@ -804,7 +806,7 @@ const CmsProductsPage = () => {
                     </div>
 
                     <div className="flex items-center justify-center bg-white/5 border border-white/10 rounded-xl p-4 h-36">
-                      {renderProductImage(product.image, product.name)}
+                      {renderProductImage(product.image, product.name, product.type)}
                     </div>
 
                     <div className="space-y-2">

@@ -2,60 +2,27 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { PiPackageThin } from "react-icons/pi";
 import { CiTrophy } from "react-icons/ci";
 import { CiCreditCard1 } from "react-icons/ci";
 import { CiHeadphones } from "react-icons/ci";
-import { FiArrowRight } from "react-icons/fi";
 import { openSans } from '../Font/font';
 
 const Hero = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  
-  const allBanners = [
-    {
-      src: '/banner-1.png',
-      alt: 'Banner 1',
-      hasOverlay: false,
-    },
-    {
-      src: '/banner-2.png',
-      alt: 'Banner 2',
-      hasOverlay: false,
-    },
-    {
-      src: '/banner-3.png',
-      alt: 'Banner 3',
-      hasOverlay: false,
-    },
+
+  const banners = [
+    { src: '/ban-1.png', alt: 'Promotional banner' },
+    { src: '/ban-2.png', alt: 'Promotional banner' },
+    { src: '/banner-2.png', alt: 'Promotional banner' },
   ];
 
-  // Filter banners based on screen size
-  const banners = isMobile ? allBanners.slice(1) : allBanners;
   const maxSlides = banners.length;
-
-  // Detect mobile screen size
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768); // md breakpoint
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Reset slide to 0 when switching between mobile/desktop
-  useEffect(() => {
-    setCurrentSlide(0);
-  }, [isMobile]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % maxSlides);
-    }, 3000); // Change slide every 3 seconds
+    }, 3000);
 
     return () => clearInterval(interval);
   }, [maxSlides]);
@@ -80,52 +47,6 @@ const Hero = () => {
                   sizes="100vw"
                 />
               </div>
-              
-              {/* Overlay for Banner 3 - Printers */}
-              {banner.hasOverlay && banner.overlayType === 'printers' && (
-                <div className="absolute inset-0 flex items-center justify-start">
-                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-16 w-full">
-                    <div className="max-w-md text-left">
-                      <h2 className="text-white text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold mb-1 md:mb-2">
-                        Print, Copy, Scan
-                      </h2>
-                      <h3 className="text-[#00aeef] text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black mb-3 md:mb-6 whitespace-nowrap">
-                        Workflow Heroes
-                      </h3>
-                      <Link
-                        href="/all-products"
-                        className="inline-flex items-center gap-2 bg-[#00aeef] hover:bg-[#0099d9] text-white px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 rounded-lg text-sm sm:text-base font-semibold transition-colors duration-200 shadow-lg"
-                      >
-                        SHOP NOW
-                        <FiArrowRight className="text-base sm:text-lg" />
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Overlay for Banner 2 - Monitors */}
-              {banner.hasOverlay && banner.overlayType === 'monitors' && (
-                <div className="absolute inset-0 flex items-center justify-start">
-                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-16 w-full">
-                    <div className="max-w-md text-left">
-                      <h2 className="text-gray-700 text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-semibold mb-1 md:mb-2">
-                        New & Refurbished
-                      </h2>
-                      <h3 className="text-[#00aeef] text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black mb-3 md:mb-6">
-                        LCD Monitors
-                      </h3>
-                      <Link
-                        href="/all-products"
-                        className="inline-flex items-center gap-2 bg-[#00aeef] hover:bg-[#0099d9] text-white px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 rounded-lg text-sm sm:text-base font-semibold transition-colors duration-200 shadow-lg"
-                      >
-                        SHOP NOW
-                        <FiArrowRight className="text-base sm:text-lg" />
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           ))}
         </div>
