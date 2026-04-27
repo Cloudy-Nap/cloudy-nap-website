@@ -12,9 +12,19 @@ import {
 } from 'react-icons/fi';
 import { API_BASE } from '../../../lib/apiBase';
 
+const CLOUDYNAP_CSV_HEADER_HINTS = {
+  bed: 'name, description, price, length, width, height, series, features, benefits, firmness, fabric, warranty, image, image_urls',
+  accessory:
+    'name, price, description, series, features, benefits, firmness, fabric, warranty, image, image_urls',
+  furniture:
+    'name, price, description, seats, material, warranty, image, image_urls, width, length, height, structure, fabric',
+  sofacumbed:
+    'name, description, price, series, features, benefits, firmness, fabric, warranty, image, image_urls',
+};
+
 const BulkAddProductsPage = () => {
   const router = useRouter();
-  const [category, setCategory] = useState('laptop');
+  const [category, setCategory] = useState('bed');
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -87,12 +97,15 @@ const BulkAddProductsPage = () => {
       formData.append('category', category);
       formData.append('file', file);
 
-      const response = await fetch(`${API_BASE}/api/products/bulk/csv`, {
+      const base = (API_BASE || '').replace(/\/$/, '');
+      const path = `${base}/api/products/bulk/csv?${new URLSearchParams({ category })}`;
+      const response = await fetch(path, {
         method: 'POST',
         headers: {
           'X-CMS-User-Id': cmsUser.id || '',
           'X-CMS-User-Name': cmsUser.username || cmsUser.name || '',
           'X-CMS-User-Role': cmsUser.role || '',
+          'X-Bulk-Category': category,
         },
         body: formData,
       });
@@ -128,8 +141,9 @@ const BulkAddProductsPage = () => {
             </Link>
             <h1 className="mt-3 text-3xl font-semibold text-white">Bulk CSV import</h1>
             <p className="mt-2 text-sm text-slate-300 max-w-2xl">
-              Optional tool for legacy laptop, printer, or scanner CSVs (old electronics schema). Your Cloudynap mattresses
-              and furniture catalog should use{' '}
+              Import multiple catalog rows from a CSV. Choose the table that matches your file (beds, accessories,
+              furniture, sofa cum bed) or a legacy laptop, printer, or scanner file. You can also add products one at a time
+              via{' '}
               <Link href="/cms/products/add-product" className="text-[#00aeef] hover:underline">
                 Add product
               </Link>
@@ -144,7 +158,7 @@ const BulkAddProductsPage = () => {
               <div className="space-y-6">
                 <div>
                   <label className="text-sm font-semibold text-white uppercase tracking-wide block mb-3">
-                    Legacy CSV category
+                    CSV target (table)
                   </label>
                   <div className="relative">
                     <select
@@ -152,15 +166,17 @@ const BulkAddProductsPage = () => {
                       onChange={(event) => setCategory(event.target.value)}
                       className="w-full appearance-none rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#00aeef]/60"
                     >
-                      <option className="text-slate-900" value="laptop">
-                        Laptop (legacy)
-                      </option>
-                      <option className="text-slate-900" value="printer">
-                        Printer (legacy)
-                      </option>
-                      <option className="text-slate-900" value="scanner">
-                        Scanner (legacy)
-                      </option>
+                      <optgroup className="text-slate-900" label="Cloudynap catalog">
+                        <option value="bed">Beds (mattresses)</option>
+                        <option value="accessory">Accessories</option>
+                        <option value="furniture">Furniture</option>
+                        <option value="sofacumbed">Sofa cum bed</option>
+                      </optgroup>
+                      <optgroup className="text-slate-900" label="Legacy electronics">
+                        <option value="laptop">Laptop (legacy)</option>
+                        <option value="printer">Printer (legacy)</option>
+                        <option value="scanner">Scanner (legacy)</option>
+                      </optgroup>
                     </select>
                     <FiInfo className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-[#00aeef]" />
                   </div>
@@ -168,12 +184,12 @@ const BulkAddProductsPage = () => {
 
                 <div>
                   <label className="text-sm font-semibold text-white uppercase tracking-wide block mb-3">
-                    Upload CSV / Excel
+                    Upload CSV
                   </label>
                   <div className="relative flex flex-col items-center justify-center gap-4 border border-dashed border-white/20 rounded-2xl px-6 py-10 bg-white/5 hover:border-[#00aeef]/60 transition">
                     <FiUpload className="text-3xl text-[#00aeef]" />
                     <div className="text-center text-sm text-slate-300">
-                      Drag & drop a file here, or click to browse.
+                      Drag & drop a <code className="text-slate-200">.csv</code> file here, or click to browse.
                     </div>
                     {fileName ? (
                       <div className="rounded-full bg-white/10 border border-white/10 px-3 py-1 text-xs text-slate-200">
@@ -183,7 +199,7 @@ const BulkAddProductsPage = () => {
                     <input
                       key={fileInputKey}
                       type="file"
-                      accept=".csv,.xlsx,.xls"
+                      accept=".csv"
                       className="absolute inset-0 opacity-0 cursor-pointer"
                       onChange={handleFileChange}
                     />
@@ -197,11 +213,26 @@ const BulkAddProductsPage = () => {
                     <FiInfo /> Quick tips
                   </div>
                   <p>
-                    - Headers must match the legacy table (e.g. <code>name</code>, <code>price</code>,{' '}
-                    <code>brand</code> for laptops).
+                    - Use column names that match your Supabase table. Cloudynap files use snake_case (e.g.{' '}
+                    <code>image_urls</code>), not the legacy <code>brand</code> field.
                   </p>
-                  <p>- Separate multiple image URLs with commas; the first becomes the cover image.</p>
-                  <p>- Use one CSV category per upload; this does not import Cloudynap bed/furniture tables.</p>
+                  {CLOUDYNAP_CSV_HEADER_HINTS[category] ? (
+                    <p className="wrap-break-word text-slate-200/90">
+                      <span className="text-[#00aeef] font-medium">Expected headers: </span>
+                      {CLOUDYNAP_CSV_HEADER_HINTS[category]}
+                    </p>
+                  ) : (
+                    <p>
+                      - Legacy files: <code>name</code>, <code>price</code>, <code>brand</code>, plus optional spec
+                      columns (see your legacy template).
+                    </p>
+                  )}
+                  <p>
+                    - Each row needs <code>name</code>, <code>price</code>, and a cover (column <code>image</code> or
+                    at least one URL in <code>image_urls</code>). Separate multiple image URLs with commas or
+                    semicolons; the first is the main image.
+                  </p>
+                  <p>- Use one target table per upload (do not mix beds and furniture in the same file).</p>
                 </div>
 
                 <div className="rounded-2xl border border-[#f97316]/30 bg-[#f97316]/10 p-5 text-xs text-amber-200 space-y-2">
@@ -219,13 +250,21 @@ const BulkAddProductsPage = () => {
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="text-xs text-slate-300">
-              Need a sample?{' '}
-              <Link
-                href="/bulk-products-template.csv"
-                className="text-[#00aeef] hover:underline font-semibold"
-              >
-                Download template
-              </Link>
+              {['laptop', 'printer', 'scanner'].includes(category) ? (
+                <>
+                  Need a sample?{' '}
+                  <Link
+                    href="/bulk-products-template.csv"
+                    className="text-[#00aeef] hover:underline font-semibold"
+                  >
+                    Legacy bulk template
+                  </Link>
+                </>
+              ) : (
+                <span className="text-slate-400">
+                  Create a UTF-8 CSV with the headers shown in Quick tips (no legacy template for Cloudynap).
+                </span>
+              )}
             </div>
             <div className="flex gap-3">
               <Link

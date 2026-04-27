@@ -142,12 +142,12 @@ const BulkAddScannersPage = () => {
               <div className="space-y-6">
                 <div>
                   <label className="text-sm font-semibold text-white uppercase tracking-wide block mb-3">
-                    Upload CSV / Excel
+                    Upload CSV
                   </label>
                   <div className="relative flex flex-col items-center justify-center gap-4 border border-dashed border-white/20 rounded-2xl px-6 py-10 bg-white/5 hover:border-[#38bdf8]/60 transition">
                     <FiUpload className="text-3xl text-[#38bdf8]" />
                     <div className="text-center text-sm text-slate-300">
-                      Drag & drop a file here, or click to browse.
+                      Drag & drop a <code className="text-slate-200">.csv</code> file here, or click to browse.
                     </div>
                     {fileName ? (
                       <div className="rounded-full bg-white/10 border border-white/10 px-3 py-1 text-xs text-slate-200">
@@ -157,7 +157,7 @@ const BulkAddScannersPage = () => {
                     <input
                       key={fileInputKey}
                       type="file"
-                      accept=".csv,.xlsx,.xls"
+                      accept=".csv"
                       className="absolute inset-0 opacity-0 cursor-pointer"
                       onChange={handleFileChange}
                     />

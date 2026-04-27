@@ -486,6 +486,22 @@ const pickBodyCategory = (body) => {
   return normalizeString(raw).toLowerCase();
 };
 
+/**
+ * Bulk CSV: `category` should be in the multipart body, but some proxies/clients drop text fields
+ * or leave body empty. Also accept `?category=bed` and `X-Bulk-Category: bed`.
+ */
+const readBulkImportCategory = (req) => {
+  const fromBody = pickBodyCategory(req.body);
+  if (fromBody) return fromBody;
+  const fromQuery = normalizeString(req.query?.category).toLowerCase();
+  if (fromQuery) return fromQuery;
+  const fromHeader = normalizeString(
+    req.get('x-bulk-category') || req.get('X-Bulk-Category'),
+  ).toLowerCase();
+  if (fromHeader) return fromHeader;
+  return '';
+};
+
 const resolvePostedCatalogCategory = (body) => {
   const raw = pickBodyCategory(body);
   if (!raw) return { cloud: null, legacy: null };
@@ -642,6 +658,102 @@ const REQUIRED_COLUMNS_LOOKUP = {
   laptop: LAPTOP_REQUIRED_COLUMNS,
   printer: PRINTER_REQUIRED_COLUMNS,
   scanner: SCANNER_REQUIRED_COLUMNS,
+};
+
+/** DB columns for bulk CSV (Supabase public.beds, accessories, furniture, sofacumbed). */
+const CLOUDYNAP_CSV_ALLOWED = {
+  bed: [
+    'name',
+    'description',
+    'price',
+    'length',
+    'width',
+    'height',
+    'series',
+    'features',
+    'benefits',
+    'firmness',
+    'fabric',
+    'warranty',
+    'image',
+    'image_urls',
+  ],
+  accessory: [
+    'name',
+    'price',
+    'description',
+    'series',
+    'features',
+    'benefits',
+    'firmness',
+    'fabric',
+    'warranty',
+    'image',
+    'image_urls',
+  ],
+  furniture: [
+    'name',
+    'price',
+    'description',
+    'seats',
+    'material',
+    'warranty',
+    'image',
+    'image_urls',
+    'width',
+    'length',
+    'height',
+    'structure',
+    'fabric',
+  ],
+  sofacumbed: [
+    'name',
+    'description',
+    'price',
+    'series',
+    'features',
+    'benefits',
+    'firmness',
+    'fabric',
+    'warranty',
+    'image',
+    'image_urls',
+  ],
+};
+
+const CLOUDYNAP_CSV_COLUMN_LOOKUPS = {
+  bed: buildColumnLookup(CLOUDYNAP_CSV_ALLOWED.bed),
+  accessory: buildColumnLookup(CLOUDYNAP_CSV_ALLOWED.accessory),
+  furniture: buildColumnLookup(CLOUDYNAP_CSV_ALLOWED.furniture),
+  sofacumbed: buildColumnLookup(CLOUDYNAP_CSV_ALLOWED.sofacumbed),
+};
+
+const cloudynapCsvHasPrice = (cloudCat, row) => {
+  const p = row?.price;
+  if (p === undefined || p === null) return false;
+  if (typeof p === 'string' && p.trim() === '') return false;
+  if (cloudCat === 'bed' || cloudCat === 'accessory') {
+    return coercePriceValue(p) !== null;
+  }
+  return normalizeString(p) !== '';
+};
+
+const cloudynapCsvHasImage = (row) => {
+  const cover = normalizeString(row?.image);
+  if (cover) return true;
+  return Array.isArray(row?.image_urls) && row.image_urls.length > 0;
+};
+
+const buildCloudynapRowFromCsv = (cloudCat, sanitized) => {
+  let coverUrl = normalizeString(sanitized.image);
+  const urls = Array.isArray(sanitized.image_urls) ? [...sanitized.image_urls] : [];
+  if (!coverUrl && urls.length) {
+    coverUrl = normalizeString(urls[0]);
+  }
+  if (!urls.length && coverUrl) {
+    urls.push(coverUrl);
+  }
+  return buildCloudynapRow(cloudCat, sanitized, sanitized, coverUrl, urls);
 };
 
 const uploadImages = async (category, files) => {
@@ -893,9 +1005,15 @@ router.post('/bulk/csv', upload.single('file'), async (req, res) => {
     if (!supabase) {
       return res.status(503).json({ error: 'Database not configured' });
     }
-    const category = normalizeString(req.body.category).toLowerCase();
-    if (!['laptop', 'printer', 'scanner'].includes(category)) {
-      return res.status(400).json({ error: 'Invalid or missing category. Use laptop, printer, or scanner.' });
+    const rawCategory = readBulkImportCategory(req);
+    const cloudCat = resolveCloudynapCategoryParam(rawCategory);
+    const legacyCat = ['laptop', 'printer', 'scanner'].includes(rawCategory) ? rawCategory : null;
+
+    if (!cloudCat && !legacyCat) {
+      return res.status(400).json({
+        error:
+          'Invalid or missing category. Cloudynap: bed, accessory, furniture, sofacumbed (or beds, accessories, sofa-cum-bed). Legacy: laptop, printer, scanner.',
+      });
     }
 
     if (!req.file || !req.file.buffer || !req.file.buffer.length) {
@@ -920,6 +1038,127 @@ router.post('/bulk/csv', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'CSV file does not contain any rows.' });
     }
 
+    /** Cloudynap catalog CSV: column names match DB (beds, accessories, furniture, sofacumbed). */
+    if (cloudCat) {
+      const columnLookup = CLOUDYNAP_CSV_COLUMN_LOOKUPS[cloudCat];
+      const tableName = CLOUDYNAP_TABLE[cloudCat];
+
+      const sanitizedRows = [];
+      const rowErrors = [];
+
+      records.forEach((row, index) => {
+        const rowNumber = index + 2;
+        const sanitized = sanitizeCsvRow(row, columnLookup);
+        const displayName = sanitized.name || row.name || null;
+
+        if (Array.isArray(sanitized.image_urls) && sanitized.image_urls.length) {
+          if (!sanitized.image || typeof sanitized.image !== 'string' || !sanitized.image.trim()) {
+            sanitized.image = sanitized.image_urls[0];
+          }
+        }
+
+        if (!Object.keys(sanitized).length) {
+          rowErrors.push({
+            row: rowNumber,
+            name: displayName,
+            error: 'Row does not contain any recognized columns.',
+          });
+          return;
+        }
+
+        const missing = [];
+        if (!normalizeString(sanitized.name)) missing.push('name');
+        if (!cloudynapCsvHasPrice(cloudCat, sanitized)) missing.push('price');
+        if (!cloudynapCsvHasImage(sanitized)) missing.push('image or image_urls');
+
+        if (missing.length) {
+          rowErrors.push({
+            row: rowNumber,
+            name: displayName,
+            error: `Missing required: ${missing.join(', ')}`,
+          });
+          return;
+        }
+
+        sanitizedRows.push({
+          payload: sanitized,
+          rowNumber,
+          displayName,
+        });
+      });
+
+      if (!sanitizedRows.length) {
+        return res.status(400).json({
+          error: 'No valid rows found in CSV.',
+          details: rowErrors,
+        });
+      }
+
+      const insertedRows = [];
+      const insertionErrors = [];
+
+      for (const row of sanitizedRows) {
+        try {
+          const insertPayload = buildCloudynapRowFromCsv(cloudCat, row.payload);
+          const { data, error } = await supabase
+            .from(tableName)
+            .insert(insertPayload)
+            .select('*')
+            .single();
+
+          if (error) {
+            throw error;
+          }
+
+          insertedRows.push({
+            row: row.rowNumber,
+            name: row.displayName || data?.name || null,
+            record: data,
+          });
+        } catch (error) {
+          insertionErrors.push({
+            row: row.rowNumber,
+            name: row.displayName,
+            error: error?.message || error?.details || 'Failed to insert row.',
+          });
+        }
+      }
+
+      if (insertedRows.length > 0) {
+        await logActivity(
+          {
+            type: 'bulk_import',
+            action: `Imported ${insertedRows.length} new ${cloudCat} catalog row(s) via bulk CSV`,
+            entityType: 'product',
+            entityId: null,
+            entityName: `${insertedRows.length} ${cloudCat}(s)`,
+            details: {
+              category: cloudCat,
+              table: tableName,
+              count: insertedRows.length,
+              attempted: records.length,
+              failed: rowErrors.length + insertionErrors.length,
+            },
+          },
+          req,
+        );
+      }
+
+      return res.json({
+        summary: {
+          category: cloudCat,
+          attempted: records.length,
+          processed: sanitizedRows.length,
+          inserted: insertedRows.length,
+          failed: rowErrors.length + insertionErrors.length,
+        },
+        inserted: insertedRows,
+        rowValidationErrors: rowErrors,
+        insertionErrors,
+      });
+    }
+
+    const category = legacyCat;
     let columnLookup;
     if (category === 'printer') {
       columnLookup = PRINTER_COLUMN_LOOKUP;
@@ -1030,19 +1269,22 @@ router.post('/bulk/csv', upload.single('file'), async (req, res) => {
 
     // Log activity for bulk import
     if (insertedRows.length > 0) {
-      await logActivity({
-        type: 'bulk_import',
-        action: `Imported ${insertedRows.length} new ${category}${insertedRows.length > 1 ? 's' : ''} via bulk upload`,
-        entityType: 'product',
-        entityId: null,
-        entityName: `${insertedRows.length} ${category}${insertedRows.length > 1 ? 's' : ''}`,
-        details: {
-          category,
-          count: insertedRows.length,
-          attempted: records.length,
-          failed: rowErrors.length + insertionErrors.length,
+      await logActivity(
+        {
+          type: 'bulk_import',
+          action: `Imported ${insertedRows.length} new ${category}${insertedRows.length > 1 ? 's' : ''} via bulk upload`,
+          entityType: 'product',
+          entityId: null,
+          entityName: `${insertedRows.length} ${category}${insertedRows.length > 1 ? 's' : ''}`,
+          details: {
+            category,
+            count: insertedRows.length,
+            attempted: records.length,
+            failed: rowErrors.length + insertionErrors.length,
+          },
         },
-      }, req);
+        req,
+      );
     }
 
     return res.json({
