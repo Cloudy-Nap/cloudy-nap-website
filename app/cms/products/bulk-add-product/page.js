@@ -217,7 +217,7 @@ const BulkAddProductsPage = () => {
                     <code>image_urls</code>), not the legacy <code>brand</code> field.
                   </p>
                   {CLOUDYNAP_CSV_HEADER_HINTS[category] ? (
-                    <p className="wrap-break-word text-slate-200/90">
+                    <p className="wrap-break-word text-slate-700">
                       <span className="text-blue-600 font-medium">Expected headers: </span>
                       {CLOUDYNAP_CSV_HEADER_HINTS[category]}
                     </p>
@@ -235,8 +235,8 @@ const BulkAddProductsPage = () => {
                   <p>- Use one target table per upload (do not mix beds and furniture in the same file).</p>
                 </div>
 
-                <div className="rounded-2xl border border-[#f97316]/30 bg-[#f97316]/10 p-5 text-xs text-amber-200 space-y-2">
-                  <div className="flex items-center gap-2 font-semibold uppercase tracking-wide text-amber-300">
+                <div className="rounded-2xl border border-[#f97316]/30 bg-[#f97316]/10 p-5 text-xs text-amber-950 space-y-2">
+                  <div className="flex items-center gap-2 font-semibold uppercase tracking-wide text-amber-900">
                     <FiAlertCircle /> Validation
                   </div>
                   <p>

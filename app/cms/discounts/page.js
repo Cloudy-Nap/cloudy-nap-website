@@ -261,7 +261,7 @@ const CmsDiscountsPage = () => {
             type="button"
             onClick={loadDiscounts}
             disabled={loading}
-            className="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold hover:bg-slate-200/80"
+            className="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 bg-white hover:bg-slate-100 transition disabled:opacity-50"
           >
             <FiRefreshCw className={loading ? 'animate-spin' : ''} /> Refresh
           </button>
@@ -278,7 +278,7 @@ const CmsDiscountsPage = () => {
                 className={`w-full text-left px-4 py-3 rounded-xl border text-sm font-medium transition ${
                   selectedId === c.id
                     ? 'bg-blue-100 border-blue-500/50 text-slate-900'
-                    : 'bg-slate-50 border-slate-200 text-slate-200 hover:bg-slate-200/80'
+                    : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                 }`}
               >
                 {c.label}
@@ -314,7 +314,7 @@ const CmsDiscountsPage = () => {
                       onChange={(e) => setField('start_immediate', e.target.checked)}
                       className="rounded border-white/40"
                     />
-                    <span className="text-sm text-slate-200">Start immediately</span>
+                    <span className="text-sm text-slate-700">Start immediately</span>
                   </label>
 
                   {!form.start_immediate && (
@@ -343,8 +343,8 @@ const CmsDiscountsPage = () => {
                     <div
                       className={`flex items-start gap-2 text-sm px-4 py-3 rounded-lg border ${
                         message.type === 'success'
-                          ? 'bg-emerald-500/10 border-emerald-400/40 text-emerald-200'
-                          : 'bg-red-500/10 border-red-400/40 text-red-200'
+                          ? 'bg-emerald-500/10 border-emerald-400/40 text-emerald-900'
+                          : 'bg-red-500/10 border-red-400/40 text-red-900'
                       }`}
                     >
                       {message.type === 'success' ? <FiCheck className="mt-0.5 shrink-0" /> : <FiAlertTriangle className="mt-0.5 shrink-0" />}
@@ -365,7 +365,7 @@ const CmsDiscountsPage = () => {
                         type="button"
                         onClick={handleClear}
                         disabled={saving}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-red-400/50 text-red-200 text-sm font-semibold hover:bg-red-500/10 disabled:opacity-60"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-red-400/50 text-red-800 text-sm font-semibold hover:bg-red-50 disabled:opacity-60"
                       >
                         <FiTrash2 /> Clear
                       </button>

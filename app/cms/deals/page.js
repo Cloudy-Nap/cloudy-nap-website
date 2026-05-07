@@ -403,7 +403,7 @@ const CmsDealsPage = () => {
                   onChange={(e) => setIsActive(e.target.checked)}
                   className="rounded border-white/30"
                 />
-                <span className="text-sm text-slate-200">Active on storefront</span>
+                <span className="text-sm text-slate-700">Active on storefront</span>
               </label>
             </div>
 

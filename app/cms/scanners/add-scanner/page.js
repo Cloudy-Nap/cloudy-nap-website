@@ -268,7 +268,7 @@ const CmsAddScannerPage = () => {
             <div className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <label className="flex flex-col">
-                  <span className="text-xs font-semibold text-slate-200 uppercase tracking-wide mb-2">Description</span>
+                  <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Description</span>
                   <textarea
                     name="description"
                     value={details.description}
@@ -283,7 +283,7 @@ const CmsAddScannerPage = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {GENERAL_FIELD_CONFIG.map((field) => (
                   <label key={field.id} className="flex flex-col">
-                    <span className="text-xs font-semibold text-slate-200 uppercase tracking-wide mb-2">
+                    <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
                       {field.label}
                     </span>
                     <input
@@ -317,7 +317,7 @@ const CmsAddScannerPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {scannerSpecs.map((field) => (
                 <label key={field.id} className="flex flex-col bg-slate-50 border border-slate-200 rounded-xl p-4">
-                  <span className="text-xs font-semibold text-slate-200 uppercase tracking-wide mb-2">{field.label}</span>
+                  <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">{field.label}</span>
                   <input
                     name={field.id}
                     value={specs[field.id] || ''}
@@ -392,8 +392,8 @@ const CmsAddScannerPage = () => {
             <div
               className={`text-sm px-4 py-3 rounded-lg border ${
                 status.type === 'success'
-                  ? 'bg-emerald-500/10 border-emerald-400/40 text-emerald-200'
-                  : 'bg-red-500/10 border-red-400/40 text-red-200'
+                  ? 'bg-emerald-500/10 border-emerald-400/40 text-emerald-900'
+                  : 'bg-red-500/10 border-red-400/40 text-red-900'
               }`}
             >
               {status.message}

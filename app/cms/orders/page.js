@@ -573,14 +573,14 @@ const CmsOrdersPage = () => {
 
           <div className="grid grid-cols-1 gap-5">
             {loading && (
-              <div className="flex flex-col items-center justify-center gap-3 py-20 text-slate-200">
+              <div className="flex flex-col items-center justify-center gap-3 py-20 text-slate-600">
                 <FiRefreshCw className="animate-spin text-2xl" />
                 <p className="text-sm">Loading order data...</p>
               </div>
             )}
 
             {error && !loading && (
-              <div className="border border-red-400/30 bg-red-500/10 text-red-100 rounded-2xl p-6 flex gap-3 items-start">
+              <div className="border border-red-400/30 bg-red-500/10 text-red-800 rounded-2xl p-6 flex gap-3 items-start">
                 <FiAlertTriangle className="mt-1 text-xl" />
                 <div>
                   <p className="text-sm font-semibold">Unable to load orders</p>
@@ -717,7 +717,7 @@ const CmsOrdersPage = () => {
             </div>
 
             {detailLoading ? (
-              <div className="px-6 py-16 text-center text-slate-200">
+              <div className="px-6 py-16 text-center text-slate-600">
                 <FiRefreshCw className="mx-auto mb-4 text-2xl animate-spin" />
                 Loading order details...
               </div>
@@ -843,7 +843,7 @@ const CmsOrdersPage = () => {
                 </div>
               </div>
             ) : (
-              <div className="px-6 py-16 text-center text-slate-200">
+              <div className="px-6 py-16 text-center text-slate-600">
                 Failed to load order information.
               </div>
             )}

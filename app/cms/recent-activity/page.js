@@ -229,7 +229,7 @@ const CmsRecentActivityPage = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="rounded-2xl border border-red-400/30 bg-red-500/10 text-red-100 p-4 flex gap-3 items-start">
+          <div className="rounded-2xl border border-red-400/30 bg-red-500/10 text-red-800 p-4 flex gap-3 items-start">
             <FiXCircle className="mt-1 text-xl shrink-0" />
             <div>
               <p className="text-sm font-semibold">Error</p>
@@ -241,7 +241,7 @@ const CmsRecentActivityPage = () => {
         {/* Activities List */}
         <section className="rounded-3xl border border-slate-200 bg-slate-100 backdrop-blur-3xl shadow-2xl p-6 sm:p-8">
           {loading ? (
-            <div className="flex flex-col items-center justify-center gap-3 py-16 text-slate-200">
+            <div className="flex flex-col items-center justify-center gap-3 py-16 text-slate-600">
               <FiRefreshCw className="animate-spin text-2xl" />
               <p className="text-sm">Loading activities...</p>
             </div>

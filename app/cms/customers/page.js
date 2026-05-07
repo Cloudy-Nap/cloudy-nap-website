@@ -222,14 +222,14 @@ const CmsCustomersPage = () => {
 
           <div className="space-y-4">
             {loading && (
-              <div className="flex flex-col items-center justify-center gap-3 py-16 text-slate-200">
+              <div className="flex flex-col items-center justify-center gap-3 py-16 text-slate-600">
                 <FiRefreshCw className="animate-spin text-2xl" />
                 <p className="text-sm">Loading customers...</p>
               </div>
             )}
 
             {error && !loading && (
-              <div className="border border-red-400/30 bg-red-500/10 text-red-100 rounded-2xl p-6 flex gap-3 items-start">
+              <div className="border border-red-400/30 bg-red-500/10 text-red-800 rounded-2xl p-6 flex gap-3 items-start">
                 <FiAlertTriangle className="mt-1 text-xl" />
                 <div>
                   <p className="text-sm font-semibold">Unable to load customers</p>

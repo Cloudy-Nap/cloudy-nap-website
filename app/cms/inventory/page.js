@@ -220,7 +220,7 @@ const CmsInventoryPage = () => {
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition inline-flex items-center gap-2 ${
                   filter === 'all'
                     ? 'bg-linear-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/20'
-                    : 'bg-white/10 text-slate-200 hover:bg-slate-200'
+                    : 'border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-100'
                 }`}
               >
                 <FiFilter />
@@ -239,7 +239,7 @@ const CmsInventoryPage = () => {
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
                     filter === id
                       ? 'bg-linear-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/20'
-                      : 'bg-white/10 text-slate-200 hover:bg-slate-200'
+                      : 'border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-100'
                   }`}
                 >
                   {label}
@@ -250,14 +250,14 @@ const CmsInventoryPage = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
             {loading && (
-              <div className="col-span-full flex flex-col items-center justify-center gap-3 py-20 text-slate-200">
+              <div className="col-span-full flex flex-col items-center justify-center gap-3 py-20 text-slate-600">
                 <FiRefreshCw className="animate-spin text-2xl" />
                 <p className="text-sm">Loading…</p>
               </div>
             )}
 
             {error && !loading && (
-              <div className="col-span-full border border-red-400/30 bg-red-500/10 text-red-100 rounded-2xl p-6 flex gap-3 items-start">
+              <div className="col-span-full border border-red-400/30 bg-red-500/10 text-red-800 rounded-2xl p-6 flex gap-3 items-start">
                 <FiAlertTriangle className="mt-1 text-xl" />
                 <div>
                   <p className="text-sm font-semibold">Unable to load inventory</p>
