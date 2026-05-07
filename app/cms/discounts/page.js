@@ -239,20 +239,20 @@ const CmsDiscountsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
+    <div className="min-h-screen text-slate-900">
       <div className="max-w-5xl mx-auto px-6 py-10">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
             <Link
               href="/cms/dashboard"
-              className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-2"
+              className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-blue-600 mb-2"
             >
               <FiArrowLeft /> Dashboard
             </Link>
-            <h1 className="text-3xl font-semibold text-white flex items-center gap-2">
-              <FiPercent className="text-[#00aeef]" /> Batch discounts
+            <h1 className="text-3xl font-semibold text-slate-900 flex items-center gap-2">
+              <FiPercent className="text-blue-600" /> Batch discounts
             </h1>
-            <p className="text-sm text-slate-300 mt-1 max-w-xl">
+            <p className="text-sm text-slate-600 mt-1 max-w-xl">
               Apply a percentage off every product in a category for a date range. The storefront shows a badge and
               strikethrough pricing when the promotion is active.
             </p>
@@ -261,7 +261,7 @@ const CmsDiscountsPage = () => {
             type="button"
             onClick={loadDiscounts}
             disabled={loading}
-            className="inline-flex items-center gap-2 px-4 py-2.5 border border-white/20 rounded-lg text-sm font-semibold hover:bg-white/10"
+            className="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold hover:bg-slate-200/80"
           >
             <FiRefreshCw className={loading ? 'animate-spin' : ''} /> Refresh
           </button>
@@ -277,8 +277,8 @@ const CmsDiscountsPage = () => {
                 onClick={() => setSelectedId(c.id)}
                 className={`w-full text-left px-4 py-3 rounded-xl border text-sm font-medium transition ${
                   selectedId === c.id
-                    ? 'bg-[#00aeef]/20 border-[#00aeef]/50 text-white'
-                    : 'bg-white/5 border-white/10 text-slate-200 hover:bg-white/10'
+                    ? 'bg-blue-100 border-blue-500/50 text-slate-900'
+                    : 'bg-slate-50 border-slate-200 text-slate-200 hover:bg-slate-200/80'
                 }`}
               >
                 {c.label}
@@ -286,7 +286,7 @@ const CmsDiscountsPage = () => {
             ))}
           </div>
 
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8">
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 sm:p-8">
             {loading ? (
               <p className="text-slate-400 text-sm">Loading…</p>
             ) : (
@@ -294,7 +294,7 @@ const CmsDiscountsPage = () => {
                 <p className="text-xs text-slate-400 mb-4">{statusLabel}</p>
                 <form onSubmit={handleSave} className="space-y-5">
                   <label className="block">
-                    <span className="text-xs font-semibold text-slate-300 uppercase tracking-wide">Discount %</span>
+                    <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Discount %</span>
                     <input
                       type="number"
                       min="0.01"
@@ -302,7 +302,7 @@ const CmsDiscountsPage = () => {
                       step="0.01"
                       value={form.discount_percent}
                       onChange={(e) => setField('discount_percent', e.target.value)}
-                      className="mt-2 w-full rounded-lg bg-white/10 border border-white/20 px-4 py-3 text-white"
+                      className="mt-2 w-full rounded-lg bg-slate-100 border border-slate-200 px-4 py-3 text-slate-900"
                       placeholder="e.g. 25"
                     />
                   </label>
@@ -319,23 +319,23 @@ const CmsDiscountsPage = () => {
 
                   {!form.start_immediate && (
                     <label className="block">
-                      <span className="text-xs font-semibold text-slate-300 uppercase tracking-wide">Start date</span>
+                      <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Start date</span>
                       <input
                         type="datetime-local"
                         value={form.starts_at}
                         onChange={(e) => setField('starts_at', e.target.value)}
-                        className="mt-2 w-full rounded-lg bg-white/10 border border-white/20 px-4 py-3 text-white"
+                        className="mt-2 w-full rounded-lg bg-slate-100 border border-slate-200 px-4 py-3 text-slate-900"
                       />
                     </label>
                   )}
 
                   <label className="block">
-                    <span className="text-xs font-semibold text-slate-300 uppercase tracking-wide">End date</span>
+                    <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">End date</span>
                     <input
                       type="datetime-local"
                       value={form.ends_at}
                       onChange={(e) => setField('ends_at', e.target.value)}
-                      className="mt-2 w-full rounded-lg bg-white/10 border border-white/20 px-4 py-3 text-white"
+                      className="mt-2 w-full rounded-lg bg-slate-100 border border-slate-200 px-4 py-3 text-slate-900"
                     />
                   </label>
 
@@ -356,7 +356,7 @@ const CmsDiscountsPage = () => {
                     <button
                       type="submit"
                       disabled={saving}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-linear-to-r from-[#00aeef] to-[#0284c7] text-sm font-semibold text-white disabled:opacity-60"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-linear-to-r from-blue-600 to-blue-700 text-sm font-semibold text-white disabled:opacity-60"
                     >
                       <FiSave /> {saving ? 'Saving…' : 'Save promotion'}
                     </button>

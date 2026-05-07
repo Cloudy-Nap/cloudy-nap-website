@@ -127,13 +127,10 @@ const buildCloudynapRow = (category, body, specs, coverUrl, urls) => {
   };
 
   if (category === 'bed') {
-    const p = coercePriceValue(body.price);
+    /** Sizes & PKR live in `product_variants_bed`; parent row is marketing + media only. */
     return {
       ...base,
-      price: p !== null ? Math.round(p) : null,
-      length: pickCloudynapInt(specs, body, 'length'),
-      width: pickCloudynapInt(specs, body, 'width'),
-      height: pickCloudynapInt(specs, body, 'height'),
+      brand: pickCloudynapStr(specs, body, 'brand'),
       series: pickCloudynapStr(specs, body, 'series'),
       features: pickCloudynapStr(specs, body, 'features'),
       benefits: pickCloudynapStr(specs, body, 'benefits'),
@@ -174,15 +171,13 @@ const buildCloudynapRow = (category, body, specs, coverUrl, urls) => {
   }
 
   if (category === 'sofacumbed') {
-    const priceText = normalizeString(body.price);
+    /** PKR + fabric live in `product_variants_sofacumbed`. */
     return {
       ...base,
-      price: priceText || null,
       series: pickCloudynapStr(specs, body, 'series'),
       features: pickCloudynapStr(specs, body, 'features'),
       benefits: pickCloudynapStr(specs, body, 'benefits'),
       firmness: pickCloudynapStr(specs, body, 'firmness'),
-      fabric: pickCloudynapStr(specs, body, 'fabric'),
       warranty: pickCloudynapStr(specs, body, 'warranty'),
     };
   }
@@ -221,6 +216,152 @@ const resolveCloudynapPlans = (subRaw, legacyCategoryRaw) => {
   }
 
   return CLOUDYNAP_SOURCES.slice();
+};
+
+/** Attach `variants`, expose listing `price` as minimum variant PKR for sorting/cards. */
+const enrichBedCatalogRow = (row) => {
+  if (!row || typeof row !== 'object') return row;
+  const variants = Array.isArray(row.product_variants_bed) ? row.product_variants_bed : [];
+  const rest = { ...row };
+  delete rest.product_variants_bed;
+  const prices = variants
+    .map((v) => coercePriceValue(v?.price))
+    .filter((n) => n !== null && Number.isFinite(n));
+  const minPrice = prices.length ? Math.min(...prices) : null;
+  return { ...rest, variants, price: minPrice };
+};
+
+const enrichSofacumbedCatalogRow = (row) => {
+  if (!row || typeof row !== 'object') return row;
+  const raw = row.product_variants_sofacumbed;
+  let variants = [];
+  if (Array.isArray(raw)) variants = raw;
+  else if (raw && typeof raw === 'object') variants = [raw];
+  const rest = { ...row };
+  delete rest.product_variants_sofacumbed;
+  const prices = variants
+    .map((v) => coercePriceValue(v?.price))
+    .filter((n) => n !== null && Number.isFinite(n));
+  const minPrice = prices.length ? Math.min(...prices) : null;
+  return { ...rest, variants, price: minPrice };
+};
+
+const parseBedVariantsFromInputs = (specsPayload, body) => {
+  let raw = specsPayload?.variants;
+  if (raw === undefined && body?.variants !== undefined) {
+    const v = body.variants;
+    if (typeof v === 'string') {
+      try {
+        const parsed = JSON.parse(v);
+        raw = parsed;
+      } catch {
+        raw = undefined;
+      }
+    } else if (Array.isArray(v)) {
+      raw = v;
+    }
+  }
+  return Array.isArray(raw) ? raw.filter(Boolean) : [];
+};
+
+const normalizeBedVariantForDb = (entry) => {
+  if (!entry || typeof entry !== 'object') return null;
+  const price = coercePriceValue(entry.price);
+  if (price === null) return null;
+  return {
+    width: pickCloudynapInt(entry, entry, 'width'),
+    height: pickCloudynapInt(entry, entry, 'height'),
+    length: pickCloudynapInt(entry, entry, 'length'),
+    price: Math.round(price),
+  };
+};
+
+const replaceBedVariants = async (productId, normalizedVariants) => {
+  const { error: delErr } = await supabase.from('product_variants_bed').delete().eq('product_id', productId);
+  if (delErr) throw delErr;
+  if (!normalizedVariants.length) return;
+  const rows = normalizedVariants.map((v) => ({
+    product_id: productId,
+    width: v.width,
+    height: v.height,
+    length: v.length,
+    price: v.price,
+  }));
+  const { error: insErr } = await supabase.from('product_variants_bed').insert(rows);
+  if (insErr) throw insErr;
+};
+
+const fetchBedWithVariants = async (id) => {
+  const { data, error } = await supabase
+    .from('beds')
+    .select('*, product_variants_bed(*)')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw error;
+  return enrichBedCatalogRow(data);
+};
+
+const sanitizedRowToBedVariant = (sanitized) => {
+  const price = coercePriceValue(sanitized.price);
+  if (price === null) return null;
+  return {
+    width: pickCloudynapInt(sanitized, sanitized, 'width'),
+    height: pickCloudynapInt(sanitized, sanitized, 'height'),
+    length: pickCloudynapInt(sanitized, sanitized, 'length'),
+    price: Math.round(price),
+  };
+};
+
+const normalizeSofacumbedVariantForDb = (entry) => {
+  if (!entry || typeof entry !== 'object') return null;
+  const price = coercePriceValue(entry.price);
+  if (price === null) return null;
+  const fabricRaw = normalizeString(entry.fabric);
+  return {
+    price: Math.round(price),
+    fabric: fabricRaw || null,
+  };
+};
+
+const replaceSofacumbedVariants = async (productId, normalizedVariants) => {
+  const { error: delErr } = await supabase
+    .from('product_variants_sofacumbed')
+    .delete()
+    .eq('product_id', productId);
+  if (delErr) throw delErr;
+  if (!normalizedVariants.length) return;
+  const rows = normalizedVariants.map((v) => ({
+    product_id: productId,
+    price: v.price,
+    fabric: v.fabric,
+  }));
+  const { error: insErr } = await supabase.from('product_variants_sofacumbed').insert(rows);
+  if (insErr) throw insErr;
+};
+
+const fetchSofacumbedWithVariants = async (id) => {
+  const { data: row, error: rowErr } = await supabase.from('sofacumbed').select('*').eq('id', id).maybeSingle();
+  if (rowErr) throw rowErr;
+  if (!row) return null;
+  const { data: variantRows, error: varErr } = await supabase
+    .from('product_variants_sofacumbed')
+    .select('*')
+    .eq('product_id', id);
+  if (varErr) throw varErr;
+  return enrichSofacumbedCatalogRow({
+    ...row,
+    product_variants_sofacumbed: Array.isArray(variantRows) ? variantRows : [],
+  });
+};
+
+const sanitizedRowToSofacumbedVariant = (sanitized) => {
+  const price = coercePriceValue(sanitized.price);
+  if (price === null) return null;
+  const fabricRaw = normalizeString(sanitized.fabric);
+  return {
+    price: Math.round(price),
+    fabric: fabricRaw || null,
+  };
 };
 
 router.get('/', async (req, res) => {
@@ -272,7 +413,15 @@ router.get('/', async (req, res) => {
     }
 
     const responses = await Promise.all(
-      plans.map(({ table }) => supabase.from(table).select('*')),
+      plans.map(({ table }) => {
+        if (table === 'beds') {
+          return supabase.from('beds').select('*, product_variants_bed(*)');
+        }
+        if (table === 'sofacumbed') {
+          return supabase.from('sofacumbed').select('*');
+        }
+        return supabase.from(table).select('*');
+      }),
     );
 
     let combined = [];
@@ -286,6 +435,35 @@ router.get('/', async (req, res) => {
       }
 
       let rows = attachType(data || [], type);
+      if (table === 'beds') {
+        rows = rows.map((r) => enrichBedCatalogRow(r));
+      }
+      if (table === 'sofacumbed') {
+        const parents = data || [];
+        const ids = parents.map((p) => p.id).filter((pid) => pid != null);
+        const variantByProductId = {};
+        if (ids.length) {
+          const { data: allVar, error: varErr } = await supabase
+            .from('product_variants_sofacumbed')
+            .select('*')
+            .in('product_id', ids);
+          if (varErr) {
+            console.error(`Failed to fetch ${table} variants:`, varErr);
+            return res.status(500).json({ error: 'Failed to fetch products' });
+          }
+          for (const v of allVar || []) {
+            const pid = v.product_id;
+            if (!variantByProductId[pid]) variantByProductId[pid] = [];
+            variantByProductId[pid].push(v);
+          }
+        }
+        rows = attachType(parents, type).map((r) =>
+          enrichSofacumbedCatalogRow({
+            ...r,
+            product_variants_sofacumbed: variantByProductId[r.id] || [],
+          }),
+        );
+      }
       /** `pillows` and `accessories` both resolve to the `accessories` table above — no extra name filter. */
       combined = combined.concat(rows);
     }
@@ -666,6 +844,7 @@ const CLOUDYNAP_CSV_ALLOWED = {
     'name',
     'description',
     'price',
+    'brand',
     'length',
     'width',
     'height',
@@ -732,7 +911,7 @@ const cloudynapCsvHasPrice = (cloudCat, row) => {
   const p = row?.price;
   if (p === undefined || p === null) return false;
   if (typeof p === 'string' && p.trim() === '') return false;
-  if (cloudCat === 'bed' || cloudCat === 'accessory') {
+  if (cloudCat === 'bed' || cloudCat === 'accessory' || cloudCat === 'sofacumbed') {
     return coercePriceValue(p) !== null;
   }
   return normalizeString(p) !== '';
@@ -814,6 +993,175 @@ router.post('/', upload.array('images', 10), async (req, res) => {
     if (cloudCategory) {
       const category = cloudCategory;
       const name = normalizeString(req.body.name);
+
+      if (category === 'bed') {
+        if (!name) {
+          return res.status(400).json({ error: 'Product name is required.' });
+        }
+
+        const specsPayload = parseSpecsPayload(req.body.specs);
+        const variantEntries = parseBedVariantsFromInputs(specsPayload, req.body)
+          .map(normalizeBedVariantForDb)
+          .filter(Boolean);
+        if (!variantEntries.length) {
+          return res.status(400).json({
+            error: 'Add at least one mattress size with a valid price (PKR).',
+          });
+        }
+
+        const files = req.files || [];
+        if (!files.length) {
+          return res.status(400).json({ error: 'Please upload at least one product image.' });
+        }
+
+        const { urls, coverUrl } = await uploadImages(category, files);
+        if (!coverUrl) {
+          return res.status(500).json({ error: 'Unable to determine cover image URL.' });
+        }
+
+        const insertPayload = buildCloudynapRow(category, req.body, specsPayload, coverUrl, urls);
+
+        const { data, error } = await supabase.from('beds').insert(insertPayload).select('*').single();
+
+        if (error) {
+          console.error('Failed to create Cloudynap product:', error);
+          return res.status(500).json({
+            error:
+              error?.message ||
+              error?.details ||
+              error?.hint ||
+              'Failed to create product. Check column types and Storage: set SUPABASE_STORAGE_CATALOG_BUCKET to your bucket id, bucket must exist and allow uploads.',
+          });
+        }
+
+        try {
+          await replaceBedVariants(data.id, variantEntries);
+        } catch (variantErr) {
+          console.error('Failed to insert mattress variants:', variantErr);
+          await supabase.from('beds').delete().eq('id', data.id);
+          return res.status(500).json({
+            error: variantErr?.message || 'Failed to save mattress variants.',
+          });
+        }
+
+        let full;
+        try {
+          full = await fetchBedWithVariants(data.id);
+        } catch (fetchErr) {
+          console.error('Failed to load mattress after create:', fetchErr);
+          full = { ...data, variants: [], price: null };
+        }
+
+        const userFromBody = req.body?.cmsUserId || req.body?.cmsUserName || req.body?.cmsUserRole
+          ? {
+              userId: req.body.cmsUserId,
+              userName: req.body.cmsUserName,
+              userRole: req.body.cmsUserRole,
+            }
+          : null;
+
+        await logActivity(
+          {
+            type: 'product_created',
+            action: `Created new ${category}: ${full.name || name}`,
+            entityType: 'product',
+            entityId: full.id,
+            entityName: full.name || name,
+            details: { category, price: full.price },
+            userId: userFromBody?.userId,
+            userName: userFromBody?.userName,
+            userRole: userFromBody?.userRole,
+          },
+          req,
+        );
+
+        return res.status(201).json({ product: { ...full, type: category } });
+      }
+
+      if (category === 'sofacumbed') {
+        if (!name) {
+          return res.status(400).json({ error: 'Product name is required.' });
+        }
+
+        const specsPayload = parseSpecsPayload(req.body.specs);
+        const variantEntries = parseBedVariantsFromInputs(specsPayload, req.body)
+          .map(normalizeSofacumbedVariantForDb)
+          .filter(Boolean);
+        if (!variantEntries.length) {
+          return res.status(400).json({
+            error: 'Add at least one sofa cum bed option with a valid price (PKR).',
+          });
+        }
+
+        const files = req.files || [];
+        if (!files.length) {
+          return res.status(400).json({ error: 'Please upload at least one product image.' });
+        }
+
+        const { urls, coverUrl } = await uploadImages(category, files);
+        if (!coverUrl) {
+          return res.status(500).json({ error: 'Unable to determine cover image URL.' });
+        }
+
+        const insertPayload = buildCloudynapRow(category, req.body, specsPayload, coverUrl, urls);
+
+        const { data, error } = await supabase.from('sofacumbed').insert(insertPayload).select('*').single();
+
+        if (error) {
+          console.error('Failed to create Cloudynap product:', error);
+          return res.status(500).json({
+            error:
+              error?.message ||
+              error?.details ||
+              error?.hint ||
+              'Failed to create product. Check column types and Storage: set SUPABASE_STORAGE_CATALOG_BUCKET to your bucket id, bucket must exist and allow uploads.',
+          });
+        }
+
+        try {
+          await replaceSofacumbedVariants(data.id, variantEntries);
+        } catch (variantErr) {
+          console.error('Failed to insert sofa cum bed variants:', variantErr);
+          await supabase.from('sofacumbed').delete().eq('id', data.id);
+          return res.status(500).json({
+            error: variantErr?.message || 'Failed to save sofa cum bed variants.',
+          });
+        }
+
+        let full;
+        try {
+          full = await fetchSofacumbedWithVariants(data.id);
+        } catch (fetchErr) {
+          console.error('Failed to load sofa cum bed after create:', fetchErr);
+          full = { ...data, variants: [], price: null };
+        }
+
+        const userFromBody = req.body?.cmsUserId || req.body?.cmsUserName || req.body?.cmsUserRole
+          ? {
+              userId: req.body.cmsUserId,
+              userName: req.body.cmsUserName,
+              userRole: req.body.cmsUserRole,
+            }
+          : null;
+
+        await logActivity(
+          {
+            type: 'product_created',
+            action: `Created new ${category}: ${full.name || name}`,
+            entityType: 'product',
+            entityId: full.id,
+            entityName: full.name || name,
+            details: { category, price: full.price },
+            userId: userFromBody?.userId,
+            userName: userFromBody?.userName,
+            userRole: userFromBody?.userRole,
+          },
+          req,
+        );
+
+        return res.status(201).json({ product: { ...full, type: category } });
+      }
+
       const priceRaw = normalizeString(req.body.price);
       if (!name || !priceRaw) {
         return res.status(400).json({ error: 'Product name and price are required.' });
@@ -1043,8 +1391,315 @@ router.post('/bulk/csv', upload.single('file'), async (req, res) => {
       const columnLookup = CLOUDYNAP_CSV_COLUMN_LOOKUPS[cloudCat];
       const tableName = CLOUDYNAP_TABLE[cloudCat];
 
-      const sanitizedRows = [];
       const rowErrors = [];
+
+      if (cloudCat === 'bed') {
+        const parsedRows = [];
+
+        records.forEach((row, index) => {
+          const rowNumber = index + 2;
+          const sanitized = sanitizeCsvRow(row, columnLookup);
+          const displayName = sanitized.name || row.name || null;
+
+          if (Array.isArray(sanitized.image_urls) && sanitized.image_urls.length) {
+            if (!sanitized.image || typeof sanitized.image !== 'string' || !sanitized.image.trim()) {
+              sanitized.image = sanitized.image_urls[0];
+            }
+          }
+
+          if (!Object.keys(sanitized).length) {
+            rowErrors.push({
+              row: rowNumber,
+              name: displayName,
+              error: 'Row does not contain any recognized columns.',
+            });
+            return;
+          }
+
+          const missing = [];
+          if (!normalizeString(sanitized.name)) missing.push('name');
+          if (!cloudynapCsvHasPrice('bed', sanitized)) missing.push('price');
+
+          if (missing.length) {
+            rowErrors.push({
+              row: rowNumber,
+              name: displayName,
+              error: `Missing required: ${missing.join(', ')}`,
+            });
+            return;
+          }
+
+          parsedRows.push({
+            payload: sanitized,
+            rowNumber,
+            displayName,
+          });
+        });
+
+        if (!parsedRows.length) {
+          return res.status(400).json({
+            error: 'No valid rows found in CSV.',
+            details: rowErrors,
+          });
+        }
+
+        const groups = new Map();
+        for (const entry of parsedRows) {
+          const key = normalizeString(entry.payload.name).toLowerCase();
+          if (!groups.has(key)) groups.set(key, []);
+          groups.get(key).push(entry);
+        }
+
+        const insertedRows = [];
+        const insertionErrors = [];
+
+        for (const [, groupRows] of groups) {
+          groupRows.sort((a, b) => a.rowNumber - b.rowNumber);
+
+          let masterPayload = { ...groupRows[0].payload };
+          let mergedImages = false;
+          for (const gr of groupRows) {
+            if (cloudynapCsvHasImage(gr.payload)) {
+              masterPayload = { ...masterPayload, ...gr.payload };
+              mergedImages = true;
+              break;
+            }
+          }
+
+          if (!mergedImages) {
+            groupRows.forEach((gr) => {
+              rowErrors.push({
+                row: gr.rowNumber,
+                name: gr.displayName,
+                error:
+                  'Missing required: image or image_urls (provide on at least one row per product name).',
+              });
+            });
+            continue;
+          }
+
+          const variants = groupRows.map((gr) => sanitizedRowToBedVariant(gr.payload)).filter(Boolean);
+          if (variants.length !== groupRows.length) {
+            groupRows.forEach((gr) => {
+              rowErrors.push({
+                row: gr.rowNumber,
+                name: gr.displayName,
+                error: 'Invalid variant price.',
+              });
+            });
+            continue;
+          }
+
+          try {
+            const insertPayload = buildCloudynapRowFromCsv('bed', masterPayload);
+            const { data, error } = await supabase.from('beds').insert(insertPayload).select('*').single();
+            if (error) throw error;
+            await replaceBedVariants(data.id, variants);
+            const enriched = await fetchBedWithVariants(data.id);
+            insertedRows.push({
+              row: groupRows[0].rowNumber,
+              name: enriched?.name || masterPayload.name,
+              record: enriched,
+              variantRows: groupRows.map((g) => g.rowNumber),
+              variantCount: variants.length,
+            });
+          } catch (error) {
+            insertionErrors.push({
+              row: groupRows[0].rowNumber,
+              name: groupRows[0].displayName,
+              error: error?.message || error?.details || 'Failed to insert grouped mattress rows.',
+            });
+          }
+        }
+
+        if (insertedRows.length > 0) {
+          await logActivity(
+            {
+              type: 'bulk_import',
+              action: `Imported ${insertedRows.length} mattress product(s) (${parsedRows.length} CSV row(s)) via bulk CSV`,
+              entityType: 'product',
+              entityId: null,
+              entityName: `${insertedRows.length} bed(s)`,
+              details: {
+                category: cloudCat,
+                table: tableName,
+                count: insertedRows.length,
+                attempted: records.length,
+                failed: rowErrors.length + insertionErrors.length,
+              },
+            },
+            req,
+          );
+        }
+
+        return res.json({
+          summary: {
+            category: cloudCat,
+            attempted: records.length,
+            processed: parsedRows.length,
+            inserted: insertedRows.length,
+            failed: rowErrors.length + insertionErrors.length,
+          },
+          inserted: insertedRows,
+          rowValidationErrors: rowErrors,
+          insertionErrors,
+        });
+      }
+
+      if (cloudCat === 'sofacumbed') {
+        const parsedRows = [];
+
+        records.forEach((row, index) => {
+          const rowNumber = index + 2;
+          const sanitized = sanitizeCsvRow(row, columnLookup);
+          const displayName = sanitized.name || row.name || null;
+
+          if (Array.isArray(sanitized.image_urls) && sanitized.image_urls.length) {
+            if (!sanitized.image || typeof sanitized.image !== 'string' || !sanitized.image.trim()) {
+              sanitized.image = sanitized.image_urls[0];
+            }
+          }
+
+          if (!Object.keys(sanitized).length) {
+            rowErrors.push({
+              row: rowNumber,
+              name: displayName,
+              error: 'Row does not contain any recognized columns.',
+            });
+            return;
+          }
+
+          const missing = [];
+          if (!normalizeString(sanitized.name)) missing.push('name');
+          if (!cloudynapCsvHasPrice('sofacumbed', sanitized)) missing.push('price');
+
+          if (missing.length) {
+            rowErrors.push({
+              row: rowNumber,
+              name: displayName,
+              error: `Missing required: ${missing.join(', ')}`,
+            });
+            return;
+          }
+
+          parsedRows.push({
+            payload: sanitized,
+            rowNumber,
+            displayName,
+          });
+        });
+
+        if (!parsedRows.length) {
+          return res.status(400).json({
+            error: 'No valid rows found in CSV.',
+            details: rowErrors,
+          });
+        }
+
+        const groups = new Map();
+        for (const entry of parsedRows) {
+          const key = normalizeString(entry.payload.name).toLowerCase();
+          if (!groups.has(key)) groups.set(key, []);
+          groups.get(key).push(entry);
+        }
+
+        const insertedRows = [];
+        const insertionErrors = [];
+
+        for (const [, groupRows] of groups) {
+          groupRows.sort((a, b) => a.rowNumber - b.rowNumber);
+
+          let masterPayload = { ...groupRows[0].payload };
+          let mergedImages = false;
+          for (const gr of groupRows) {
+            if (cloudynapCsvHasImage(gr.payload)) {
+              masterPayload = { ...masterPayload, ...gr.payload };
+              mergedImages = true;
+              break;
+            }
+          }
+
+          if (!mergedImages) {
+            groupRows.forEach((gr) => {
+              rowErrors.push({
+                row: gr.rowNumber,
+                name: gr.displayName,
+                error:
+                  'Missing required: image or image_urls (provide on at least one row per product name).',
+              });
+            });
+            continue;
+          }
+
+          const variants = groupRows.map((gr) => sanitizedRowToSofacumbedVariant(gr.payload)).filter(Boolean);
+          if (variants.length !== groupRows.length) {
+            groupRows.forEach((gr) => {
+              rowErrors.push({
+                row: gr.rowNumber,
+                name: gr.displayName,
+                error: 'Invalid variant price.',
+              });
+            });
+            continue;
+          }
+
+          try {
+            const insertPayload = buildCloudynapRowFromCsv('sofacumbed', masterPayload);
+            const { data, error } = await supabase.from('sofacumbed').insert(insertPayload).select('*').single();
+            if (error) throw error;
+            await replaceSofacumbedVariants(data.id, variants);
+            const enriched = await fetchSofacumbedWithVariants(data.id);
+            insertedRows.push({
+              row: groupRows[0].rowNumber,
+              name: enriched?.name || masterPayload.name,
+              record: enriched,
+              variantRows: groupRows.map((g) => g.rowNumber),
+              variantCount: variants.length,
+            });
+          } catch (error) {
+            insertionErrors.push({
+              row: groupRows[0].rowNumber,
+              name: groupRows[0].displayName,
+              error: error?.message || error?.details || 'Failed to insert grouped sofa cum bed rows.',
+            });
+          }
+        }
+
+        if (insertedRows.length > 0) {
+          await logActivity(
+            {
+              type: 'bulk_import',
+              action: `Imported ${insertedRows.length} sofa cum bed product(s) (${parsedRows.length} CSV row(s)) via bulk CSV`,
+              entityType: 'product',
+              entityId: null,
+              entityName: `${insertedRows.length} sofa cum bed listing(s)`,
+              details: {
+                category: cloudCat,
+                table: tableName,
+                count: insertedRows.length,
+                attempted: records.length,
+                failed: rowErrors.length + insertionErrors.length,
+              },
+            },
+            req,
+          );
+        }
+
+        return res.json({
+          summary: {
+            category: cloudCat,
+            attempted: records.length,
+            processed: parsedRows.length,
+            inserted: insertedRows.length,
+            failed: rowErrors.length + insertionErrors.length,
+          },
+          inserted: insertedRows,
+          rowValidationErrors: rowErrors,
+          insertionErrors,
+        });
+      }
+
+      const sanitizedRows = [];
 
       records.forEach((row, index) => {
         const rowNumber = index + 2;
@@ -1327,15 +1982,215 @@ router.patch('/:category/:id', upload.array('images', 10), async (req, res) => {
       }
 
       const name = normalizeString(req.body.name);
-      const priceRaw = normalizeString(req.body.price);
       if (!name) {
         return res.status(400).json({ error: 'Product name is required.' });
       }
+
+      const specsPayload = parseSpecsPayload(req.body.specs);
+
+      if (cloudCat === 'bed') {
+        const variantEntries = parseBedVariantsFromInputs(specsPayload, req.body)
+          .map(normalizeBedVariantForDb)
+          .filter(Boolean);
+        if (!variantEntries.length) {
+          return res.status(400).json({
+            error: 'At least one mattress size with a valid price (PKR) is required.',
+          });
+        }
+
+        const existingImages = parseExistingImages(req.body.existingImages);
+        const files = req.files || [];
+
+        let uploadedUrls = [];
+        if (files.length) {
+          const uploads = await uploadImages(cloudCat, files);
+          uploadedUrls = uploads.urls;
+        }
+
+        let finalImages = [...existingImages, ...uploadedUrls]
+          .map((url) => (typeof url === 'string' ? url.trim() : ''))
+          .filter((url, index, array) => url && array.indexOf(url) === index);
+
+        if (!finalImages.length) {
+          return res.status(400).json({ error: 'At least one product image is required.' });
+        }
+
+        const coverExisting = normalizeString(req.body.coverExisting);
+        const coverNewIndex =
+          req.body.coverNewIndex !== undefined && req.body.coverNewIndex !== null
+            ? Number(req.body.coverNewIndex)
+            : null;
+
+        let coverImage = '';
+        if (coverExisting && finalImages.includes(coverExisting)) {
+          coverImage = coverExisting;
+        } else if (
+          Number.isInteger(coverNewIndex) &&
+          coverNewIndex >= 0 &&
+          coverNewIndex < uploadedUrls.length
+        ) {
+          coverImage = uploadedUrls[coverNewIndex];
+        } else if (existingImages.length && finalImages.includes(existingImages[0])) {
+          coverImage = existingImages[0];
+        } else {
+          coverImage = finalImages[0];
+        }
+
+        const updatePayload = buildCloudynapRow(cloudCat, req.body, specsPayload, coverImage, finalImages);
+
+        const { data, error } = await supabase
+          .from('beds')
+          .update(updatePayload)
+          .eq('id', lookupId)
+          .select('*')
+          .single();
+
+        if (error) {
+          console.error('Failed to update Cloudynap product:', error);
+          return res.status(500).json({
+            error:
+              error?.message ||
+              error?.details ||
+              error?.hint ||
+              'Failed to update product.',
+          });
+        }
+
+        try {
+          await replaceBedVariants(lookupId, variantEntries);
+        } catch (variantErr) {
+          console.error('Failed to update mattress variants:', variantErr);
+          return res.status(500).json({
+            error: variantErr?.message || 'Failed to update mattress variants.',
+          });
+        }
+
+        let full;
+        try {
+          full = await fetchBedWithVariants(lookupId);
+        } catch (fetchErr) {
+          full = { ...data, variants: [], price: null };
+        }
+
+        await logActivity(
+          {
+            type: 'product_updated',
+            action: `Updated ${cloudCat}: ${full.name || name}`,
+            entityType: 'product',
+            entityId: lookupId,
+            entityName: full.name || name,
+            details: { category: cloudCat },
+          },
+          req,
+        );
+
+        return res.json({ product: { ...full, type: cloudCat } });
+      }
+
+      if (cloudCat === 'sofacumbed') {
+        const variantEntries = parseBedVariantsFromInputs(specsPayload, req.body)
+          .map(normalizeSofacumbedVariantForDb)
+          .filter(Boolean);
+        if (!variantEntries.length) {
+          return res.status(400).json({
+            error: 'At least one sofa cum bed option with a valid price (PKR) is required.',
+          });
+        }
+
+        const existingImages = parseExistingImages(req.body.existingImages);
+        const files = req.files || [];
+
+        let uploadedUrls = [];
+        if (files.length) {
+          const uploads = await uploadImages(cloudCat, files);
+          uploadedUrls = uploads.urls;
+        }
+
+        let finalImages = [...existingImages, ...uploadedUrls]
+          .map((url) => (typeof url === 'string' ? url.trim() : ''))
+          .filter((url, index, array) => url && array.indexOf(url) === index);
+
+        if (!finalImages.length) {
+          return res.status(400).json({ error: 'At least one product image is required.' });
+        }
+
+        const coverExisting = normalizeString(req.body.coverExisting);
+        const coverNewIndex =
+          req.body.coverNewIndex !== undefined && req.body.coverNewIndex !== null
+            ? Number(req.body.coverNewIndex)
+            : null;
+
+        let coverImage = '';
+        if (coverExisting && finalImages.includes(coverExisting)) {
+          coverImage = coverExisting;
+        } else if (
+          Number.isInteger(coverNewIndex) &&
+          coverNewIndex >= 0 &&
+          coverNewIndex < uploadedUrls.length
+        ) {
+          coverImage = uploadedUrls[coverNewIndex];
+        } else if (existingImages.length && finalImages.includes(existingImages[0])) {
+          coverImage = existingImages[0];
+        } else {
+          coverImage = finalImages[0];
+        }
+
+        const updatePayload = buildCloudynapRow(cloudCat, req.body, specsPayload, coverImage, finalImages);
+
+        const { data, error } = await supabase
+          .from('sofacumbed')
+          .update(updatePayload)
+          .eq('id', lookupId)
+          .select('*')
+          .single();
+
+        if (error) {
+          console.error('Failed to update Cloudynap product:', error);
+          return res.status(500).json({
+            error:
+              error?.message ||
+              error?.details ||
+              error?.hint ||
+              'Failed to update product.',
+          });
+        }
+
+        try {
+          await replaceSofacumbedVariants(lookupId, variantEntries);
+        } catch (variantErr) {
+          console.error('Failed to update sofa cum bed variants:', variantErr);
+          return res.status(500).json({
+            error: variantErr?.message || 'Failed to update sofa cum bed variants.',
+          });
+        }
+
+        let full;
+        try {
+          full = await fetchSofacumbedWithVariants(lookupId);
+        } catch (fetchErr) {
+          full = { ...data, variants: [], price: null };
+        }
+
+        await logActivity(
+          {
+            type: 'product_updated',
+            action: `Updated ${cloudCat}: ${full.name || name}`,
+            entityType: 'product',
+            entityId: lookupId,
+            entityName: full.name || name,
+            details: { category: cloudCat },
+          },
+          req,
+        );
+
+        return res.json({ product: { ...full, type: cloudCat } });
+      }
+
+      const priceRaw = normalizeString(req.body.price);
       if (!priceRaw) {
         return res.status(400).json({ error: 'Price is required.' });
       }
 
-      const specsPayload = parseSpecsPayload(req.body.specs);
       const existingImages = parseExistingImages(req.body.existingImages);
       const files = req.files || [];
 

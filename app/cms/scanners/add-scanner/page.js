@@ -222,27 +222,27 @@ const CmsAddScannerPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-[#0f172a] via-[#1e1b4b] to-[#020617] text-slate-100">
-      <header className="bg-linear-to-r from-[#111827]/85 via-[#1f2937]/85 to-[#111827]/85 border-b border-white/10">
+    <div className="min-h-screen text-slate-900">
+      <header className="bg-linear-to-r from-[#111827]/85 via-[#1f2937]/85 to-[#111827]/85 border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-300">Catalog</p>
-            <h1 className="mt-2 text-3xl font-semibold text-white">Add Scanner</h1>
-            <p className="text-sm text-slate-300 mt-2">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-600">Catalog</p>
+            <h1 className="mt-2 text-3xl font-semibold text-slate-900">Add Scanner</h1>
+            <p className="text-sm text-slate-600 mt-2">
               Fill in the scanner details and upload multiple product photos before submitting.
             </p>
           </div>
           <div className="flex gap-3">
             <Link
               href="/cms/products"
-              className="inline-flex items-center gap-2 px-4 py-2.5 border border-white/20 rounded-lg text-sm font-semibold text-white hover:bg-white/10 transition shadow-lg shadow-black/10"
+              className="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 hover:bg-slate-100 transition shadow-lg shadow-black/10"
             >
               <FiArrowLeft /> Back to products
             </Link>
             <button
               type="button"
               onClick={() => router.push('/cms/dashboard')}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-[#38bdf8] to-[#6366f1] hover:from-[#0ea5e9] hover:to-[#4338ca] text-sm font-semibold text-white rounded-lg shadow-lg shadow-[#6366f1]/40"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-sm font-semibold text-slate-900 rounded-lg shadow-lg shadow-blue-500/25"
             >
               Dashboard
             </button>
@@ -253,15 +253,15 @@ const CmsAddScannerPage = () => {
       <main className="max-w-6xl mx-auto px-6 py-10">
         <form
           onSubmit={handleSubmit}
-          className="space-y-10 bg-white/10 border border-white/10 rounded-3xl backdrop-blur-xl shadow-2xl px-6 sm:px-10 py-10"
+          className="space-y-10 bg-slate-100 border border-slate-200 rounded-3xl backdrop-blur-xl shadow-2xl px-6 sm:px-10 py-10"
         >
           <section className="grid grid-cols-1 lg:grid-cols-[280px,1fr] gap-6">
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <p className="text-sm font-semibold text-white flex items-center gap-2">
-                <FiPlusCircle className="text-[#38bdf8]" />
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+              <p className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                <FiPlusCircle className="text-blue-600" />
                 Scanner Details
               </p>
-              <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+              <p className="text-xs text-slate-600 mt-2 leading-relaxed">
                 Fill in the basic information about the scanner product.
               </p>
             </div>
@@ -275,7 +275,7 @@ const CmsAddScannerPage = () => {
                     onChange={handleGeneralChange}
                     rows={3}
                     placeholder="High-level marketing copy or key highlights."
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#38bdf8]/60 resize-none"
+                    className="w-full bg-slate-100 border border-slate-200 rounded-lg px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none"
                   />
                 </label>
               </div>
@@ -293,7 +293,7 @@ const CmsAddScannerPage = () => {
                       value={details[field.id]}
                       onChange={handleGeneralChange}
                       placeholder={field.placeholder}
-                      className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#38bdf8]/60"
+                      className="w-full bg-slate-100 border border-slate-200 rounded-lg px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                     />
                   </label>
                 ))}
@@ -304,11 +304,11 @@ const CmsAddScannerPage = () => {
           <section className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold text-white flex items-center gap-2">
-                  <FiPrinter className="text-[#38bdf8]" />
+                <p className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                  <FiPrinter className="text-blue-600" />
                   Scanner Specification Sheet
                 </p>
-                <p className="text-xs text-slate-300 mt-1">
+                <p className="text-xs text-slate-600 mt-1">
                   Fill in each spec exactly how you would like it to appear on the product page.
                 </p>
               </div>
@@ -316,14 +316,14 @@ const CmsAddScannerPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {scannerSpecs.map((field) => (
-                <label key={field.id} className="flex flex-col bg-white/5 border border-white/10 rounded-xl p-4">
+                <label key={field.id} className="flex flex-col bg-slate-50 border border-slate-200 rounded-xl p-4">
                   <span className="text-xs font-semibold text-slate-200 uppercase tracking-wide mb-2">{field.label}</span>
                   <input
                     name={field.id}
                     value={specs[field.id] || ''}
                     onChange={handleSpecChange}
                     placeholder={field.placeholder}
-                    className="bg-transparent border border-white/20 focus:border-[#38bdf8] focus:ring-2 focus:ring-[#38bdf8]/50 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-400"
+                    className="bg-transparent border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/40 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
                   />
                 </label>
               ))}
@@ -333,11 +333,11 @@ const CmsAddScannerPage = () => {
           <section className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-white flex items-center gap-2">
-                  <FiUploadCloud className="text-[#38bdf8]" />
+                <p className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                  <FiUploadCloud className="text-blue-600" />
                   Product Images
                 </p>
-                <p className="text-xs text-slate-300 mt-1">
+                <p className="text-xs text-slate-600 mt-1">
                   Upload multiple angles or lifestyle shots. First image becomes the cover.
                 </p>
               </div>
@@ -345,12 +345,12 @@ const CmsAddScannerPage = () => {
 
             <label
               htmlFor="scanner-images"
-              className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-white/20 rounded-2xl px-6 py-10 bg-white/5 hover:border-[#38bdf8]/60 transition cursor-pointer text-center"
+              className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-slate-200 rounded-2xl px-6 py-10 bg-slate-50 hover:border-blue-500/60 transition cursor-pointer text-center"
             >
-              <FiUploadCloud className="text-3xl text-[#38bdf8]" />
+              <FiUploadCloud className="text-3xl text-blue-600" />
               <div>
-                <p className="text-sm font-semibold text-white">Click to upload images</p>
-                <p className="text-xs text-slate-300 mt-1">PNG, JPG up to 5MB each. Hold Ctrl/Shift for multi-select.</p>
+                <p className="text-sm font-semibold text-slate-900">Click to upload images</p>
+                <p className="text-xs text-slate-600 mt-1">PNG, JPG up to 5MB each. Hold Ctrl/Shift for multi-select.</p>
               </div>
               <input
                 id="scanner-images"
@@ -367,13 +367,13 @@ const CmsAddScannerPage = () => {
                 {images.map((item) => (
                   <div
                     key={item.id}
-                    className="relative bg-white/10 border border-white/15 rounded-xl overflow-hidden shadow-lg"
+                    className="relative bg-slate-100 border border-slate-300 rounded-xl overflow-hidden shadow-lg"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={item.preview} alt={item.file.name} className="h-44 w-full object-cover" />
                     <div className="p-3 space-y-2">
-                      <p className="text-sm font-semibold text-white truncate">{item.file.name}</p>
-                      <p className="text-xs text-slate-300">{(item.file.size / (1024 * 1024)).toFixed(2)} MB</p>
+                      <p className="text-sm font-semibold text-slate-900 truncate">{item.file.name}</p>
+                      <p className="text-xs text-slate-600">{(item.file.size / (1024 * 1024)).toFixed(2)} MB</p>
                       <button
                         type="button"
                         onClick={() => removeImage(item.id)}
@@ -405,14 +405,14 @@ const CmsAddScannerPage = () => {
               type="button"
               onClick={handleReset}
               disabled={submitting}
-              className="px-4 py-2.5 border border-white/20 rounded-lg text-sm font-semibold text-white hover:bg-white/10 transition disabled:opacity-60 disabled:cursor-not-allowed"
+              className="px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 hover:bg-slate-100 transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Reset form
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2.5 bg-linear-to-r from-[#38bdf8] to-[#6366f1] hover:from-[#0ea5e9] hover:to-[#4338ca] text-sm font-semibold text-white rounded-lg shadow-lg shadow-[#6366f1]/40 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="px-5 py-2.5 bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-sm font-semibold text-slate-900 rounded-lg shadow-lg shadow-blue-500/25 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {submitting ? 'Saving scanner…' : 'Save scanner'}
             </button>

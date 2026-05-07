@@ -122,7 +122,18 @@ const sanitizeProduct = (input) => {
     input.image ||
     getCategoryPlaceholderImage(type === DEAL_TYPE ? 'deal' : type, category);
 
-  const numericPrice = toNumber(type === DEAL_TYPE ? input.deal_price ?? input.price : input.price, 0);
+  const numericPriceRaw = toNumber(type === DEAL_TYPE ? input.deal_price ?? input.price : input.price, 0);
+  let numericPrice = numericPriceRaw;
+  if (
+    CATALOG_TYPES.includes(type) &&
+    (type === 'bed' || type === 'sofacumbed') &&
+    (!numericPrice || numericPrice <= 0) &&
+    Array.isArray(input.variants) &&
+    input.variants.length
+  ) {
+    const nums = input.variants.map((v) => toNumber(v?.price, 0)).filter((n) => n > 0);
+    if (nums.length) numericPrice = Math.min(...nums);
+  }
   return {
     ...input,
     id: rawId || input.id,

@@ -38,25 +38,25 @@ const buildStatsFromMetrics = (metrics) => [
   {
     label: 'Total Products',
     value: metrics.products,
-    accent: 'from-[#00aeef] to-[#0284c7]',
+    iconWrap: 'bg-blue-100 text-blue-600',
     icon: FiBox,
   },
   {
     label: 'Pending Orders',
     value: metrics.pendingOrders,
-    accent: 'from-[#f97316] to-[#fb7185]',
+    iconWrap: 'bg-amber-100 text-amber-700',
     icon: FiClipboard,
   },
   {
     label: 'Fulfilled Orders',
     value: metrics.fulfilledOrders,
-    accent: 'from-[#22c55e] to-[#10b981]',
+    iconWrap: 'bg-emerald-100 text-emerald-700',
     icon: FiTrendingUp,
   },
   {
     label: 'Registered Customers',
     value: metrics.customers,
-    accent: 'from-[#a855f7] to-[#6366f1]',
+    iconWrap: 'bg-indigo-100 text-indigo-700',
     icon: FiUsers,
   },
 ];
@@ -86,7 +86,8 @@ const quickActions = [
     label: 'Add new product',
     href: '/cms/products/add-product',
     description: 'Create and publish a product listing',
-    accent: 'from-[#0ea5e9] to-[#38bdf8]',
+    accent: 'border-blue-200 bg-blue-50 hover:bg-blue-100/90',
+    iconClass: 'text-blue-600',
     icon: FiBox,
   },
   {
@@ -94,7 +95,8 @@ const quickActions = [
     label: 'Review latest orders',
     href: '/cms/orders',
     description: 'Track new and pending purchases',
-    accent: 'from-[#f97316] to-[#fb7185]',
+    accent: 'border-amber-200 bg-amber-50 hover:bg-amber-100/90',
+    iconClass: 'text-amber-700',
     icon: FiShoppingCart,
   },
   {
@@ -102,7 +104,8 @@ const quickActions = [
     label: 'Catalog overview',
     href: '/cms/inventory',
     description: 'Review Cloudynap SKUs and pricing',
-    accent: 'from-[#22c55e] to-[#10b981]',
+    accent: 'border-emerald-200 bg-emerald-50 hover:bg-emerald-100/90',
+    iconClass: 'text-emerald-700',
     icon: FiPackage,
   },
   {
@@ -110,7 +113,8 @@ const quickActions = [
     label: 'Accounts',
     href: '/cms/settings',
     description: 'Manage CMS accounts',
-    accent: 'from-[#a855f7] to-[#6366f1]',
+    accent: 'border-indigo-200 bg-indigo-50 hover:bg-indigo-100/90',
+    iconClass: 'text-indigo-700',
     icon: FiUsers,
   },
 ];
@@ -290,27 +294,24 @@ const CmsDashboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-[#0f172a] via-[#1e1b4b] to-[#020617] text-slate-100">
+    <div className="min-h-screen text-slate-900">
       <div className="flex">
-        <aside className="hidden lg:flex flex-col w-72 bg-linear-to-b from-[#111827]/80 via-[#312e81]/95 to-[#1e1b4b]/95 backdrop-blur-xl border-r border-white/10 min-h-screen sticky top-0">
-          <div className="px-7 py-8 border-b border-white/10">
-            <p className="flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-slate-300">
-              <FiBell className="text-[#38bdf8]" />
+        <aside className="hidden lg:flex flex-col w-72 bg-white border-r border-slate-200 min-h-screen sticky top-0 shadow-sm">
+          <div className="px-7 py-8 border-b border-slate-200">
+            <p className="flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-slate-500">
+              <FiBell className="text-blue-600" />
               Control Center
             </p>
-            <h1 className="mt-2 text-2xl font-bold text-white">CMS Dashboard</h1>
-            <p className="text-xs text-slate-400 mt-2">Manage products, orders, and insights with ease.</p>
+            <h1 className="mt-2 text-2xl font-bold text-slate-900">CMS Dashboard</h1>
+            <p className="text-xs text-slate-500 mt-2">Manage products, orders, and insights with ease.</p>
           </div>
 
           <nav className="flex-1 px-3 py-6 space-y-1">
             {navigationItems
               .filter((item) => {
-                // If no user loaded yet, show all (will be filtered once user loads)
                 if (!cmsUser) return true;
-                // Admin has access to all pages (case-insensitive check)
                 const userRole = (cmsUser.role || '').toLowerCase();
                 if (userRole === 'admin') return true;
-                // Check if user has access to this page
                 const accessPages = Array.isArray(cmsUser.accesspages) ? cmsUser.accesspages : [];
                 return accessPages.includes(item.page);
               })
@@ -318,57 +319,61 @@ const CmsDashboardPage = () => {
                 const isActive = activeItem === item.id;
                 const Icon = item.icon;
                 return (
-                  <Link key={key} href={item.href}><button
-                    key={item.id}
-                    onClick={() => setActiveItem(item.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition text-sm font-medium ${
-                      isActive
-                        ? 'bg-linear-to-r from-[#38bdf8] to-[#6366f1] text-white shadow-lg shadow-[#6366f1]/40'
-                        : 'text-slate-200 hover:bg-white/10 hover:text-white'
-                    }`}
-                  >
-                    <Icon className="text-lg" />
-                    <span>{item.label}</span>
-                  </button></Link>
+                  <Link key={key} href={item.href}>
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setActiveItem(item.id)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition text-sm font-medium ${
+                        isActive
+                          ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      <Icon className="text-lg" />
+                      <span>{item.label}</span>
+                    </button>
+                  </Link>
                 );
               })}
           </nav>
 
-          <div className="px-7 py-6 border-t border-white/10">
+          <div className="px-7 py-6 border-t border-slate-200">
             <div className="flex items-center gap-3">
-              <div className="h-11 w-11 rounded-full bg-linear-to-br from-[#38bdf8] to-[#6366f1] text-white font-semibold flex items-center justify-center shadow-lg shadow-[#38bdf8]/40">
+              <div className="h-11 w-11 rounded-full bg-blue-100 text-blue-700 font-semibold flex items-center justify-center border border-blue-200">
                 {displayName.charAt(0).toUpperCase()}
               </div>
               <div>
-                <p className="text-sm font-semibold text-white">{displayName}</p>
-                <p className="text-xs text-slate-300">Administrator</p>
+                <p className="text-sm font-semibold text-slate-900">{displayName}</p>
+                <p className="text-xs text-slate-500">Administrator</p>
               </div>
             </div>
-            
           </div>
         </aside>
 
-        <div className="flex-1">
-          <header className="bg-linear-to-r from-[#1f2937]/80 via-[#312e81]/80 to-[#1f2937]/80 backdrop-blur-md border-b border-white/10 shadow-lg">
+        <div className="flex-1 min-w-0">
+          <header className="bg-white border-b border-slate-200 shadow-sm">
             <div className="px-6 py-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-300">Today</p>
-                <h2 className="mt-1 text-3xl font-semibold text-white">Dashboard Overview</h2>
-                <p className="text-sm text-slate-200 mt-2">
-                  Welcome back, <span className="font-semibold text-white">{displayName}</span>. Let’s keep everything running smoothly.
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Today</p>
+                <h2 className="mt-1 text-3xl font-semibold text-slate-900">Dashboard Overview</h2>
+                <p className="text-sm text-slate-600 mt-2">
+                  Welcome back, <span className="font-semibold text-slate-900">{displayName}</span>. Let’s keep everything
+                  running smoothly.
                 </p>
               </div>
               <div className="flex gap-3 items-center">
                 <button
                   type="button"
                   onClick={() => router.push('/')}
-                  className="px-4 py-2.5 border border-white/20 rounded-lg text-sm font-semibold text-white hover:bg-white/10 transition shadow-lg shadow-black/10"
+                  className="px-4 py-2.5 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition"
                 >
                   View Storefront
                 </button>
                 <button
+                  type="button"
                   onClick={handleSignOut}
-                  className="px-4 py-2.5 bg-linear-to-r from-[#38bdf8] to-[#6366f1] hover:from-[#0ea5e9] hover:to-[#4338ca] text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-[#6366f1]/40"
+                  className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition shadow-md shadow-blue-600/20"
                 >
                   Sign out
                 </button>
@@ -380,21 +385,23 @@ const CmsDashboardPage = () => {
             <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
               {stats.map((stat, index) => {
                 const Icon = stat.icon || FiTrendingUp;
+                const wrap = stat.iconWrap || 'bg-slate-100 text-slate-700';
                 return (
                   <div
                     key={`${stat.label}-${index}`}
-                    className={`relative overflow-hidden rounded-2xl p-6 shadow-xl border border-white/10 bg-linear-to-br ${stat.accent}`}
+                    className="rounded-2xl p-6 border border-slate-200 bg-white shadow-sm"
                   >
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.25),transparent_55%)] opacity-70" />
-                    <div className="relative flex items-start justify-between">
+                    <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-xs uppercase tracking-wide text-white/80">{stat.label}</p>
-                        <p className="mt-3 text-3xl font-bold text-white">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">{stat.label}</p>
+                        <p className="mt-3 text-3xl font-bold text-slate-900">
                           {statsLoading ? '—' : formatNumber(stat.value)}
                         </p>
                       </div>
-                      <span className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
-                        <Icon className="text-xl text-white" />
+                      <span
+                        className={`h-12 w-12 rounded-full flex items-center justify-center ${wrap}`}
+                      >
+                        <Icon className="text-xl" />
                       </span>
                     </div>
                   </div>
@@ -403,12 +410,12 @@ const CmsDashboardPage = () => {
             </section>
 
             <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-              <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl border border-white/10 p-6 xl:col-span-2">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 xl:col-span-2">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-semibold text-white">Quick Actions</h2>
+                  <h2 className="text-lg font-semibold text-slate-900">Quick Actions</h2>
                   <Link
                     href="/cms/auth/login"
-                    className="text-sm text-[#38bdf8] hover:text-[#60a5fa] font-medium transition"
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium transition"
                   >
                     Manage CMS Users
                   </Link>
@@ -417,19 +424,22 @@ const CmsDashboardPage = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {quickActions.map((action, key) => {
                     const Icon = action.icon;
+                    const ic = action.iconClass || 'text-slate-700';
                     const buttonContent = (
                       <button
                         key={action.id}
-                        className={`relative overflow-hidden rounded-xl border border-white/10 bg-linear-to-br ${action.accent} text-left p-5 transition transform hover:-translate-y-1 hover:shadow-2xl w-full`}
+                        type="button"
+                        className={`relative overflow-hidden rounded-xl border ${action.accent} text-left p-5 transition transform hover:-translate-y-0.5 hover:shadow-md w-full`}
                       >
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.25),transparent_55%)] opacity-80" />
                         <div className="relative flex items-start gap-4">
-                          <span className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
-                            <Icon className="text-xl text-white" />
+                          <span
+                            className={`h-12 w-12 rounded-full bg-white border border-slate-200 flex items-center justify-center ${ic}`}
+                          >
+                            <Icon className="text-xl" />
                           </span>
                           <div>
-                            <span className="text-sm font-semibold text-white block">{action.label}</span>
-                            <span className="text-xs text-white/80">{action.description}</span>
+                            <span className="text-sm font-semibold text-slate-900 block">{action.label}</span>
+                            <span className="text-xs text-slate-600">{action.description}</span>
                           </div>
                         </div>
                       </button>
@@ -440,36 +450,32 @@ const CmsDashboardPage = () => {
                         {buttonContent}
                       </Link>
                     ) : (
-                      <div key={key}>
-                        {buttonContent}
-                      </div>
+                      <div key={key}>{buttonContent}</div>
                     );
                   })}
                 </div>
               </div>
 
-              <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl border border-white/10 p-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                 <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-lg font-semibold text-white">Recent Activity</h2>
+                  <h2 className="text-lg font-semibold text-slate-900">Recent Activity</h2>
                   <Link
                     href="/cms/recent-activity"
-                    className="text-sm text-[#38bdf8] hover:text-[#60a5fa] font-medium transition"
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium transition"
                   >
                     View Activity
                   </Link>
                 </div>
                 <ul className="space-y-5">
                   {activities.map((item) => (
-                    <li key={item.id} className="pb-4 border-b border-white/10 last:pb-0 last:border-b-0">
-                      <p className="text-sm text-white/90">{item.message}</p>
-                      <span className="text-xs text-white/60">{item.timestamp}</span>
+                    <li key={item.id} className="pb-4 border-b border-slate-200 last:pb-0 last:border-b-0">
+                      <p className="text-sm text-slate-800">{item.message}</p>
+                      <span className="text-xs text-slate-500">{item.timestamp}</span>
                     </li>
                   ))}
                 </ul>
               </div>
             </section>
-
-            
           </main>
         </div>
       </div>

@@ -117,40 +117,40 @@ const BulkAddScannersPage = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-linear-to-br from-[#0f172a] via-[#1e1b4b] to-[#020617] text-slate-100 px-4 py-10">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.25),transparent_55%)] opacity-80 pointer-events-none" />
+    <div className="relative min-h-screen text-slate-900 px-4 py-10">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.08),transparent_55%)] pointer-events-none" />
 
       <div className="relative max-w-5xl mx-auto space-y-8">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Link
               href="/cms/products"
-              className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-300"
+              className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-600"
             >
-              <FiArrowLeft className="text-[#38bdf8]" /> Back to Products
+              <FiArrowLeft className="text-blue-600" /> Back to Products
             </Link>
-            <h1 className="mt-3 text-3xl font-semibold text-white">Bulk Add Scanners</h1>
-            <p className="mt-2 text-sm text-slate-300 max-w-2xl">
+            <h1 className="mt-3 text-3xl font-semibold text-slate-900">Bulk Add Scanners</h1>
+            <p className="mt-2 text-sm text-slate-600 max-w-2xl">
               Upload a CSV file to create multiple scanner listings in one go.
             </p>
           </div>
         </header>
 
-        <section className="rounded-3xl border border-white/10 bg-white/10 backdrop-blur-3xl shadow-2xl p-6 sm:p-8 space-y-8">
+        <section className="rounded-3xl border border-slate-200 bg-slate-100 backdrop-blur-3xl shadow-2xl p-6 sm:p-8 space-y-8">
           <div className="grid gap-6">
             <div className="grid grid-cols-1 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-5">
               <div className="space-y-6">
                 <div>
-                  <label className="text-sm font-semibold text-white uppercase tracking-wide block mb-3">
+                  <label className="text-sm font-semibold text-slate-900 uppercase tracking-wide block mb-3">
                     Upload CSV
                   </label>
-                  <div className="relative flex flex-col items-center justify-center gap-4 border border-dashed border-white/20 rounded-2xl px-6 py-10 bg-white/5 hover:border-[#38bdf8]/60 transition">
-                    <FiUpload className="text-3xl text-[#38bdf8]" />
-                    <div className="text-center text-sm text-slate-300">
-                      Drag & drop a <code className="text-slate-200">.csv</code> file here, or click to browse.
+                  <div className="relative flex flex-col items-center justify-center gap-4 border border-dashed border-slate-200 rounded-2xl px-6 py-10 bg-slate-50 hover:border-blue-500/60 transition">
+                    <FiUpload className="text-3xl text-blue-600" />
+                    <div className="text-center text-sm text-slate-600">
+                      Drag & drop a <code className="text-slate-700">.csv</code> file here, or click to browse.
                     </div>
                     {fileName ? (
-                      <div className="rounded-full bg-white/10 border border-white/10 px-3 py-1 text-xs text-slate-200">
+                      <div className="rounded-full bg-slate-100 border border-slate-200 px-3 py-1 text-xs text-slate-700">
                         {fileName}
                       </div>
                     ) : null}
@@ -166,8 +166,8 @@ const BulkAddScannersPage = () => {
               </div>
 
               <div className="space-y-5">
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-5 text-xs text-slate-300 space-y-2">
-                  <div className="flex items-center gap-2 text-[#38bdf8] font-semibold uppercase tracking-wide">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-xs text-slate-600 space-y-2">
+                  <div className="flex items-center gap-2 text-blue-600 font-semibold uppercase tracking-wide">
                     <FiInfo /> Quick Tips
                   </div>
                   <p>
@@ -178,8 +178,8 @@ const BulkAddScannersPage = () => {
                   <p>- Required columns: name, brand, price</p>
                 </div>
 
-                <div className="rounded-2xl border border-[#f97316]/30 bg-[#f97316]/10 p-5 text-xs text-amber-200 space-y-2">
-                  <div className="flex items-center gap-2 font-semibold uppercase tracking-wide text-amber-300">
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-xs text-amber-900 space-y-2">
+                  <div className="flex items-center gap-2 font-semibold uppercase tracking-wide text-amber-800">
                     <FiAlertCircle /> Validation
                   </div>
                   <p>
@@ -192,13 +192,13 @@ const BulkAddScannersPage = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="text-xs text-slate-300">
+            <div className="text-xs text-slate-600">
               Required columns: name, brand, price. Optional: model, series, sku, stock, description, image, image_urls, memory, paper_types, paper_size, duplex, resolution, power, weight, dimensions, color_scan, wireless
             </div>
             <div className="flex gap-3">
               <Link
                 href="/cms/products"
-                className="inline-flex items-center justify-center px-4 py-2 rounded-md border border-white/20 text-sm font-semibold text-white hover:bg-white/10 transition"
+                className="inline-flex items-center justify-center px-4 py-2 rounded-md border border-slate-200 text-sm font-semibold text-slate-800 hover:bg-slate-100 transition"
               >
                 Cancel
               </Link>
@@ -206,7 +206,7 @@ const BulkAddScannersPage = () => {
                 type="button"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="inline-flex items-center justify-center px-4 py-2 rounded-md bg-linear-to-r from-[#38bdf8] to-[#6366f1] text-sm font-semibold text-white shadow-lg shadow-[#6366f1]/40 hover:from-[#0ea5e9] hover:to-[#4338ca] transition disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center px-4 py-2 rounded-md bg-linear-to-r from-blue-600 to-blue-700 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Processing…' : 'Process Upload'}
               </button>
@@ -230,25 +230,25 @@ const BulkAddScannersPage = () => {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
               <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 p-3 text-center">
-                <div className="text-[0.95rem] font-semibold text-white">
+                <div className="text-[0.95rem] font-semibold text-slate-900">
                   {result?.summary?.attempted ?? 0}
                 </div>
                 <div className="uppercase tracking-wide text-emerald-200/80">Rows in file</div>
               </div>
               <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 p-3 text-center">
-                <div className="text-[0.95rem] font-semibold text-white">
+                <div className="text-[0.95rem] font-semibold text-slate-900">
                   {result?.summary?.processed ?? 0}
                 </div>
                 <div className="uppercase tracking-wide text-emerald-200/80">Validated</div>
               </div>
               <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 p-3 text-center">
-                <div className="text-[0.95rem] font-semibold text-white">
+                <div className="text-[0.95rem] font-semibold text-slate-900">
                   {result?.summary?.inserted ?? 0}
                 </div>
                 <div className="uppercase tracking-wide text-emerald-200/80">Inserted</div>
               </div>
               <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 p-3 text-center">
-                <div className="text-[0.95rem] font-semibold text-white">
+                <div className="text-[0.95rem] font-semibold text-slate-900">
                   {result?.summary?.failed ?? 0}
                 </div>
                 <div className="uppercase tracking-wide text-emerald-200/80">Issues</div>

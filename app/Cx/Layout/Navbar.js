@@ -47,6 +47,7 @@ const Navbar = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [mobileMattressOpen, setMobileMattressOpen] = useState(false);
   const searchTimeoutRef = useRef(null);
 
   const parseNumeric = (value, fallback = 0) => {
@@ -268,6 +269,20 @@ const Navbar = () => {
     { label: 'Sofa Cum Bed', slug: 'sofa-cum-bed', Icon: MdWeekend },
     { label: 'Furniture', slug: 'furniture', Icon: MdChair },
   ];
+
+  /** Matches `app/all-products/page.js` mattress brand URL slugs */
+  const mattressBrandNavLinks = [
+    { label: 'All mattresses', brand: '' },
+    { label: 'Englander', brand: 'englander' },
+    { label: 'Citi Foam', brand: 'citi-foam' },
+    { label: 'Diamond', brand: 'diamond' },
+  ];
+
+  const mattressProductsHref = (brandSlug) => {
+    const q = new URLSearchParams({ subcategory: 'matteress' });
+    if (brandSlug) q.set('brand', brandSlug);
+    return `/all-products?${q.toString()}`;
+  };
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -599,9 +614,9 @@ const Navbar = () => {
       {/* Bottom Bar - Navigation - Hidden on mobile */}
       <div className="hidden lg:block bg-[#d3eaf7] text-[#1a2f4a] border-b border-sky-200/80">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-5">
-          <div className="flex flex-row items-center justify-between flex-nowrap gap-2 lg:gap-4 min-w-0">
-            {/* Desktop Navigation */}
-            <div className="flex items-center shrink-0 min-w-0 flex-wrap lg:flex-nowrap">
+          <div className="flex min-w-0 flex-row flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            {/* Desktop Navigation — wrap instead of clipping when the row is tight */}
+            <div className="flex min-w-0 max-w-full flex-1 flex-wrap items-center gap-x-2 gap-y-1 lg:gap-x-3">
               <a href="/" className="flex items-center gap-1.5 px-2.5 py-3 bg-transparent hover:bg-sky-300/50 transition shrink-0 whitespace-nowrap">
                 <CiHome className="text-2xl shrink-0" />
                 <span className="text-sm font-medium">Home</span>
@@ -630,16 +645,42 @@ const Navbar = () => {
                       <MdLocalOffer className="text-xl shrink-0 text-[#1a2f4a]/80" aria-hidden />
                       <span>Deals</span>
                     </Link>
-                    {allProductsSubcategories.map(({ label, slug, Icon }) => (
-                      <Link
-                        key={slug}
-                        href={`/all-products?subcategory=${encodeURIComponent(slug)}`}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-900 hover:bg-gray-100 transition"
-                      >
-                        <Icon className="text-xl shrink-0 text-[#1a2f4a]/80" aria-hidden />
-                        <span>{label}</span>
-                      </Link>
-                    ))}
+                    {allProductsSubcategories.map(({ label, slug, Icon }) =>
+                      slug === 'matteress' ? (
+                        <div key={slug} className="relative group/mattDropdown border-t border-gray-100">
+                          <Link
+                            href={mattressProductsHref('')}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-900 hover:bg-gray-100 transition"
+                          >
+                            <Icon className="text-xl shrink-0 text-[#1a2f4a]/80" aria-hidden />
+                            <span className="flex-1">{label}</span>
+                            <FaChevronDown className="text-xs shrink-0 text-gray-400 transition-transform group-hover/mattDropdown:rotate-180" aria-hidden />
+                          </Link>
+                          <div className="hidden group-hover/mattDropdown:block border-t border-gray-100 bg-sky-50/50">
+                            <div className="ml-3 mr-2 border-l-2 border-[#00aeef]/50 py-1.5 pl-3 space-y-0.5">
+                              {mattressBrandNavLinks.map(({ label: brandLabel, brand }) => (
+                                <Link
+                                  key={brand || 'all'}
+                                  href={mattressProductsHref(brand)}
+                                  className="block rounded-sm py-1.5 text-sm text-gray-800 hover:bg-white hover:text-[#00aeef]"
+                                >
+                                  {brandLabel}
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <Link
+                          key={slug}
+                          href={`/all-products?subcategory=${encodeURIComponent(slug)}`}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-900 hover:bg-gray-100 transition"
+                        >
+                          <Icon className="text-xl shrink-0 text-[#1a2f4a]/80" aria-hidden />
+                          <span>{label}</span>
+                        </Link>
+                      ),
+                    )}
                   </div>
                 )}
               </div>
@@ -652,17 +693,42 @@ const Navbar = () => {
                 <span className="text-sm font-medium">Deals</span>
               </Link>
 
-              {allProductsSubcategories.map(({ label, slug, Icon }) => (
-                <Link
-                  key={slug}
-                  href={`/all-products?subcategory=${encodeURIComponent(slug)}`}
-                  className="flex items-center gap-1.5 px-2 lg:px-2.5 py-3 hover:bg-sky-300/50 transition shrink-0 whitespace-nowrap"
-                >
-                  <Icon className="text-2xl shrink-0" aria-hidden />
-                  <span className="text-sm font-medium">{label}</span>
-                  <FaChevronDown className="text-xs shrink-0" />
-                </Link>
-              ))}
+              {allProductsSubcategories.map(({ label, slug, Icon }) =>
+                slug === 'matteress' ? (
+                  <div key={slug} className="relative shrink-0 group/mattBar">
+                    <Link
+                      href={mattressProductsHref('')}
+                      className="flex items-center gap-1.5 px-2 lg:px-2.5 py-3 hover:bg-sky-300/50 transition whitespace-nowrap"
+                    >
+                      <Icon className="text-2xl shrink-0" aria-hidden />
+                      <span className="text-sm font-medium">{label}</span>
+                      <FaChevronDown className="text-xs shrink-0" aria-hidden />
+                    </Link>
+                    <div className="absolute left-0 top-full z-50 hidden pt-1 group-hover/mattBar:block">
+                      <div className="min-w-[220px] rounded-sm border border-gray-200 bg-white py-1 shadow-lg">
+                        {mattressBrandNavLinks.map(({ label: brandLabel, brand }) => (
+                          <Link
+                            key={brand || 'all'}
+                            href={mattressProductsHref(brand)}
+                            className="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 transition"
+                          >
+                            {brandLabel}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <Link
+                    key={slug}
+                    href={`/all-products?subcategory=${encodeURIComponent(slug)}`}
+                    className="flex items-center gap-1.5 px-2 lg:px-2.5 py-3 hover:bg-sky-300/50 transition whitespace-nowrap"
+                  >
+                    <Icon className="text-2xl shrink-0" aria-hidden />
+                    <span className="text-sm font-medium">{label}</span>
+                  </Link>
+                ),
+              )}
             </div>
 
             {/* Phone Number */}
@@ -930,18 +996,52 @@ const Navbar = () => {
                 <span className="text-sm font-medium text-gray-900">Deals</span>
                 <FaChevronRight className="ml-auto text-gray-400 text-sm" aria-hidden />
               </Link>
-              {allProductsSubcategories.map(({ label, slug, Icon }) => (
-                <Link
-                  key={slug}
-                  href={`/all-products?subcategory=${encodeURIComponent(slug)}`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 hover:bg-gray-50 transition"
-                >
-                  <Icon className="text-xl shrink-0 text-gray-700" aria-hidden />
-                  <span className="text-sm font-medium text-gray-900">{label}</span>
-                  <FaChevronRight className="ml-auto text-gray-400 text-sm" aria-hidden />
-                </Link>
-              ))}
+              {allProductsSubcategories.map(({ label, slug, Icon }) =>
+                slug === 'matteress' ? (
+                  <div key={slug} className="border-b border-gray-200">
+                    <button
+                      type="button"
+                      onClick={() => setMobileMattressOpen((o) => !o)}
+                      className="flex w-full items-center gap-3 px-4 py-3 hover:bg-gray-50 transition text-left"
+                    >
+                      <Icon className="text-xl shrink-0 text-gray-700" aria-hidden />
+                      <span className="text-sm font-medium text-gray-900 flex-1">{label}</span>
+                      <FaChevronDown
+                        className={`text-gray-400 text-sm shrink-0 transition-transform ${mobileMattressOpen ? 'rotate-180' : ''}`}
+                        aria-hidden
+                      />
+                    </button>
+                    {mobileMattressOpen ? (
+                      <div className="bg-gray-50 border-t border-gray-100 py-1">
+                        {mattressBrandNavLinks.map(({ label: brandLabel, brand }) => (
+                          <Link
+                            key={brand || 'all'}
+                            href={mattressProductsHref(brand)}
+                            onClick={() => {
+                              setIsMobileMenuOpen(false);
+                              setMobileMattressOpen(false);
+                            }}
+                            className="block py-2 pl-12 pr-4 text-sm text-gray-800 hover:bg-gray-100"
+                          >
+                            {brandLabel}
+                          </Link>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <Link
+                    key={slug}
+                    href={`/all-products?subcategory=${encodeURIComponent(slug)}`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 hover:bg-gray-50 transition"
+                  >
+                    <Icon className="text-xl shrink-0 text-gray-700" aria-hidden />
+                    <span className="text-sm font-medium text-gray-900">{label}</span>
+                    <FaChevronRight className="ml-auto text-gray-400 text-sm" aria-hidden />
+                  </Link>
+                ),
+              )}
             </div>
 
             {/* Logout Button if logged in */}

@@ -92,7 +92,12 @@ const Printers = () => {
             rawDescription ||
             [item.features, item.series, item.fabric].filter(Boolean).join(' • ') ||
             computedName;
-          const parsedPrice = parseNumeric(item.price, 0);
+          const variantNums =
+            Array.isArray(item.variants) && item.variants.length
+              ? item.variants.map((v) => parseNumeric(v.price, 0)).filter((n) => n > 0)
+              : [];
+          const variantFloor = variantNums.length ? Math.min(...variantNums) : null;
+          const parsedPrice = parseNumeric(item.price, 0) || variantFloor || 0;
           const priceDisplay =
             typeof item.price === 'string' && item.price.trim()
               ? item.price.trim()

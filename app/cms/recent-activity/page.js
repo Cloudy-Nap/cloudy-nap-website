@@ -81,7 +81,7 @@ const CmsRecentActivityPage = () => {
             break;
           case 'product_updated':
             icon = FiEdit2;
-            color = 'from-[#f97316] to-[#fb7185]';
+            color = 'from-amber-500 to-rose-500';
             break;
           case 'product_deleted':
             icon = FiTrash2;
@@ -93,7 +93,7 @@ const CmsRecentActivityPage = () => {
             break;
           case 'order_cancelled':
             icon = FiXCircle;
-            color = 'from-[#f97316] to-[#fb7185]';
+            color = 'from-amber-500 to-rose-500';
             break;
           case 'order_updated':
             icon = FiEdit2;
@@ -195,31 +195,31 @@ const CmsRecentActivityPage = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-linear-to-br from-[#0f172a] via-[#1e1b4b] to-[#020617] text-slate-100">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(76,29,149,0.25),transparent_55%)] opacity-80 pointer-events-none" />
+    <div className="relative min-h-screen text-slate-900">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.05),transparent_55%)] pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <Link
               href="/cms/dashboard"
-              className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-300 hover:text-[#38bdf8] transition mb-4"
+              className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-600 hover:text-blue-600 transition mb-4"
             >
-              <FiArrowLeft className="text-[#38bdf8]" /> Back to Dashboard
+              <FiArrowLeft className="text-blue-600" /> Back to Dashboard
             </Link>
             <br/>
-            <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-300">
-              <FiClock className="text-[#38bdf8]" /> Activity Log
+            <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-600">
+              <FiClock className="text-blue-600" /> Activity Log
             </p>
-            <h1 className="mt-2 text-3xl font-semibold text-white">Recent Activity</h1>
-            <p className="mt-1 text-sm text-slate-300">
+            <h1 className="mt-2 text-3xl font-semibold text-slate-900">Recent Activity</h1>
+            <p className="mt-1 text-sm text-slate-600">
               View all recent actions and changes in your CMS system.
             </p>
           </div>
           <div className="flex gap-3 items-center">
             <button
               onClick={fetchActivities}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm font-semibold text-white hover:bg-white/15 transition"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-lg text-sm font-semibold text-slate-900 hover:bg-slate-200 transition"
             >
               <FiRefreshCw className={loading ? 'animate-spin' : ''} />
               Refresh
@@ -239,7 +239,7 @@ const CmsRecentActivityPage = () => {
         )}
 
         {/* Activities List */}
-        <section className="rounded-3xl border border-white/10 bg-white/10 backdrop-blur-3xl shadow-2xl p-6 sm:p-8">
+        <section className="rounded-3xl border border-slate-200 bg-slate-100 backdrop-blur-3xl shadow-2xl p-6 sm:p-8">
           {loading ? (
             <div className="flex flex-col items-center justify-center gap-3 py-16 text-slate-200">
               <FiRefreshCw className="animate-spin text-2xl" />
@@ -262,17 +262,17 @@ const CmsRecentActivityPage = () => {
                       setSelectedActivity(activity);
                       setShowModal(true);
                     }}
-                    className="rounded-xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition cursor-pointer"
+                    className="rounded-xl border border-slate-200 bg-slate-50 p-4 hover:bg-slate-200/80 transition cursor-pointer"
                   >
                     <div className="flex items-start gap-4">
-                      <div className={`h-12 w-12 rounded-full bg-linear-to-br ${activity.color} flex items-center justify-center text-white shrink-0`}>
+                      <div className={`h-12 w-12 rounded-full bg-linear-to-br ${activity.color} flex items-center justify-center text-slate-700 shrink-0`}>
                         <Icon className="text-xl" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-white mb-1">
+                        <p className="text-sm font-semibold text-slate-900 mb-1">
                           {activity.action || activity.message}
                         </p>
-                        <div className="flex items-center gap-4 mt-2 text-xs text-white/70">
+                        <div className="flex items-center gap-4 mt-2 text-xs text-slate-600">
                           <span className="flex items-center gap-1">
                             <FiUser className="text-xs" />
                             {activity.user_name || activity.user_role || 'System'}
@@ -295,14 +295,14 @@ const CmsRecentActivityPage = () => {
       {/* Detail Modal */}
       {showModal && selectedActivity && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-linear-to-br from-[#1e1b4b] to-[#0f172a] rounded-2xl border border-white/20 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-linear-to-r from-[#1e1b4b] to-[#0f172a] border-b border-white/10 p-6 flex items-center justify-between">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-slate-50 border-b border-slate-200 p-6 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`h-10 w-10 rounded-full bg-linear-to-br ${selectedActivity.color} flex items-center justify-center text-white`}>
+                <div className={`h-10 w-10 rounded-full bg-linear-to-br ${selectedActivity.color} flex items-center justify-center text-slate-700`}>
                   {React.createElement(selectedActivity.icon || FiClock, { className: 'text-lg' })}
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-white">Activity Details</h2>
+                  <h2 className="text-lg font-semibold text-slate-900">Activity Details</h2>
                   <p className="text-xs text-slate-400">{selectedActivity.type?.replace(/_/g, ' ').toUpperCase()}</p>
                 </div>
               </div>
@@ -311,37 +311,37 @@ const CmsRecentActivityPage = () => {
                   setShowModal(false);
                   setSelectedActivity(null);
                 }}
-                className="p-2 hover:bg-white/10 rounded-lg transition"
+                className="p-2 hover:bg-slate-200/80 rounded-lg transition"
               >
-                <FiX className="text-white text-xl" />
+                <FiX className="text-slate-600 text-xl" />
               </button>
             </div>
 
             <div className="p-6 space-y-6">
               {/* Action */}
               <div>
-                <h3 className="text-sm font-semibold text-slate-300 mb-2">Action</h3>
-                <p className="text-white">{selectedActivity.action}</p>
+                <h3 className="text-sm font-semibold text-slate-600 mb-2">Action</h3>
+                <p className="text-slate-800">{selectedActivity.action}</p>
               </div>
 
               {/* User Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-300 mb-2">User</h3>
-                  <p className="text-white">{selectedActivity.user_name || selectedActivity.user_role || 'System'}</p>
+                  <h3 className="text-sm font-semibold text-slate-600 mb-2">User</h3>
+                  <p className="text-slate-800">{selectedActivity.user_name || selectedActivity.user_role || 'System'}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-300 mb-2">Role</h3>
-                  <p className="text-white">{selectedActivity.user_role || 'N/A'}</p>
+                  <h3 className="text-sm font-semibold text-slate-600 mb-2">Role</h3>
+                  <p className="text-slate-800">{selectedActivity.user_role || 'N/A'}</p>
                 </div>
               </div>
 
               {/* Entity Info */}
               {selectedActivity.entity_name && (
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-300 mb-2">Entity</h3>
-                  <div className="bg-white/5 rounded-lg p-4 space-y-2">
-                    <p className="text-white font-medium">{selectedActivity.entity_name}</p>
+                  <h3 className="text-sm font-semibold text-slate-600 mb-2">Entity</h3>
+                  <div className="bg-slate-50 rounded-lg p-4 space-y-2">
+                    <p className="text-slate-800 font-medium">{selectedActivity.entity_name}</p>
                     {selectedActivity.entity_id && (
                       <p className="text-xs text-slate-400">ID: {selectedActivity.entity_id}</p>
                     )}
@@ -355,8 +355,8 @@ const CmsRecentActivityPage = () => {
               {/* Details */}
               {selectedActivity.details && (
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-300 mb-2">Details</h3>
-                  <div className="bg-white/5 rounded-lg p-4 space-y-3">
+                  <h3 className="text-sm font-semibold text-slate-600 mb-2">Details</h3>
+                  <div className="bg-slate-50 rounded-lg p-4 space-y-3">
                     {(() => {
                       const details = selectedActivity.details;
                       const type = selectedActivity.type;
@@ -369,7 +369,7 @@ const CmsRecentActivityPage = () => {
                               <p className="text-xs text-slate-400 mb-1">Fields Updated:</p>
                               <div className="flex flex-wrap gap-2">
                                 {details.changes.map((field, idx) => (
-                                  <span key={idx} className="px-2 py-1 bg-[#00aeef]/20 text-[#00aeef] rounded text-xs">
+                                  <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-600 rounded text-xs">
                                     {field}
                                   </span>
                                 ))}
@@ -378,25 +378,25 @@ const CmsRecentActivityPage = () => {
                             {details.brand && (
                               <div>
                                 <p className="text-xs text-slate-400 mb-1">Brand:</p>
-                                <p className="text-white">{details.brand}</p>
+                                <p className="text-slate-800">{details.brand}</p>
                               </div>
                             )}
                             {details.price && (
                               <div>
                                 <p className="text-xs text-slate-400 mb-1">Price:</p>
-                                <p className="text-white">PKR {details.price}</p>
+                                <p className="text-slate-800">PKR {details.price}</p>
                               </div>
                             )}
                             {details.stock !== undefined && (
                               <div>
                                 <p className="text-xs text-slate-400 mb-1">Stock:</p>
-                                <p className="text-white">{details.stock} units</p>
+                                <p className="text-slate-800">{details.stock} units</p>
                               </div>
                             )}
                             {details.category && (
                               <div>
                                 <p className="text-xs text-slate-400 mb-1">Category:</p>
-                                <p className="text-white capitalize">{details.category}</p>
+                                <p className="text-slate-800 capitalize">{details.category}</p>
                               </div>
                             )}
                           </div>
@@ -409,25 +409,25 @@ const CmsRecentActivityPage = () => {
                             {details.category && (
                               <div>
                                 <p className="text-xs text-slate-400 mb-1">Category:</p>
-                                <p className="text-white capitalize">{details.category}</p>
+                                <p className="text-slate-800 capitalize">{details.category}</p>
                               </div>
                             )}
                             {details.brand && (
                               <div>
                                 <p className="text-xs text-slate-400 mb-1">Brand:</p>
-                                <p className="text-white">{details.brand}</p>
+                                <p className="text-slate-800">{details.brand}</p>
                               </div>
                             )}
                             {details.price && (
                               <div>
                                 <p className="text-xs text-slate-400 mb-1">Price:</p>
-                                <p className="text-white">PKR {details.price}</p>
+                                <p className="text-slate-800">PKR {details.price}</p>
                               </div>
                             )}
                             {details.stock !== undefined && (
                               <div>
                                 <p className="text-xs text-slate-400 mb-1">Stock:</p>
-                                <p className="text-white">{details.stock} units</p>
+                                <p className="text-slate-800">{details.stock} units</p>
                               </div>
                             )}
                           </div>
@@ -440,19 +440,19 @@ const CmsRecentActivityPage = () => {
                             {details.orderId && (
                               <div>
                                 <p className="text-xs text-slate-400 mb-1">Order ID:</p>
-                                <p className="text-white">#{details.orderId}</p>
+                                <p className="text-slate-800">#{details.orderId}</p>
                               </div>
                             )}
                             {details.previousStatus && (
                               <div>
                                 <p className="text-xs text-slate-400 mb-1">Previous Status:</p>
-                                <p className="text-white capitalize">{details.previousStatus}</p>
+                                <p className="text-slate-800 capitalize">{details.previousStatus}</p>
                               </div>
                             )}
                             {details.newStatus && (
                               <div>
                                 <p className="text-xs text-slate-400 mb-1">New Status:</p>
-                                <p className="text-white capitalize">{details.newStatus}</p>
+                                <p className="text-slate-800 capitalize">{details.newStatus}</p>
                               </div>
                             )}
                           </div>
@@ -465,19 +465,19 @@ const CmsRecentActivityPage = () => {
                             {details.count && (
                               <div>
                                 <p className="text-xs text-slate-400 mb-1">Products Imported:</p>
-                                <p className="text-white font-semibold">{details.count}</p>
+                                <p className="text-slate-800 font-semibold">{details.count}</p>
                               </div>
                             )}
                             {details.category && (
                               <div>
                                 <p className="text-xs text-slate-400 mb-1">Category:</p>
-                                <p className="text-white capitalize">{details.category}</p>
+                                <p className="text-slate-800 capitalize">{details.category}</p>
                               </div>
                             )}
                             {details.attempted && (
                               <div>
                                 <p className="text-xs text-slate-400 mb-1">Total Attempted:</p>
-                                <p className="text-white">{details.attempted}</p>
+                                <p className="text-slate-800">{details.attempted}</p>
                               </div>
                             )}
                             {details.failed !== undefined && details.failed > 0 && (
@@ -492,7 +492,7 @@ const CmsRecentActivityPage = () => {
                       
                       // Fallback to JSON for unknown types
                       return (
-                        <pre className="text-sm text-white whitespace-pre-wrap font-sans">
+                        <pre className="text-sm text-slate-800 whitespace-pre-wrap font-sans">
                           {JSON.stringify(details, null, 2)}
                         </pre>
                       );
@@ -503,8 +503,8 @@ const CmsRecentActivityPage = () => {
 
               {/* Timestamp */}
               <div>
-                <h3 className="text-sm font-semibold text-slate-300 mb-2">Timestamp</h3>
-                <div className="flex items-center gap-2 text-white">
+                <h3 className="text-sm font-semibold text-slate-600 mb-2">Timestamp</h3>
+                <div className="flex items-center gap-2 text-slate-800">
                   <FiClock className="text-slate-400" />
                   <span>{formatTimestamp(selectedActivity.created_at || selectedActivity.timestamp)}</span>
                   <span className="text-slate-400 text-xs ml-2">

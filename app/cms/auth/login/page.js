@@ -97,61 +97,57 @@ const CmsLoginPage = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#020617] text-slate-100 flex items-center justify-center px-4 py-10 overflow-hidden">
-      <div className="absolute inset-0 bg-[conic-gradient(from_135deg_at_40%_20%,rgba(56,189,248,0.12),rgba(99,102,241,0.14),rgba(14,165,233,0.08),rgba(15,23,42,0.7))]" />
-      <div className="absolute -top-32 -right-28 h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.28),transparent_62%)] blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-48 -left-40 h-[640px] w-[640px] rounded-full bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.22),transparent_65%)] blur-3xl pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_58%)] pointer-events-none" />
-      <div className="relative w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 bg-white/10 border border-white/15 rounded-3xl shadow-[0_40px_120px_rgba(14,165,233,0.18)] backdrop-blur-2xl overflow-hidden">
-        <div className="hidden lg:flex flex-col justify-between bg-linear-to-br from-[#172554]/80 via-[#1e3a8a]/75 to-[#0f172a]/85 px-10 py-12 border-r border-white/10">
+    <div className="relative min-h-screen bg-transparent flex items-center justify-center px-4 py-10">
+      <div className="relative w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-0 bg-white border border-slate-200 rounded-3xl shadow-xl shadow-slate-200/80 overflow-hidden">
+        <div className="hidden lg:flex flex-col justify-between bg-linear-to-br from-blue-600 via-blue-700 to-blue-900 text-white px-10 py-12 border-r border-blue-500/30">
           <div>
-            <p className="flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-300">
-              <FiShield className="text-[#38bdf8]" />
+            <p className="flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-blue-100">
+              <FiShield className="text-white" />
               Secure Access
             </p>
-            <h1 className="mt-4 text-3xl font-bold text-white">CMS Control Center</h1>
-            <p className="mt-3 text-sm text-slate-200 leading-relaxed">
+            <h1 className="mt-4 text-3xl font-bold">CMS Control Center</h1>
+            <p className="mt-3 text-sm text-blue-100 leading-relaxed">
               Manage products, orders, and inventory across your hi-tech storefront with a single, powerful dashboard.
             </p>
           </div>
 
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <span className="h-10 w-10 rounded-full bg-white/15 flex items-center justify-center text-[#38bdf8]">
+              <span className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center text-white">
                 <FiLock />
               </span>
               <div>
-                <p className="text-sm font-semibold text-white">Enterprise Grade Security</p>
-                <p className="text-xs text-slate-300">Protected with service-role credentials and auditing.</p>
+                <p className="text-sm font-semibold">Enterprise grade security</p>
+                <p className="text-xs text-blue-100">Protected with service-role credentials and auditing.</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className="h-10 w-10 rounded-full bg-white/15 flex items-center justify-center text-[#38bdf8]">
+              <span className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center text-white">
                 <FiArrowRightCircle />
               </span>
               <div>
-                <p className="text-sm font-semibold text-white">Lightning Fast Workflows</p>
-                <p className="text-xs text-slate-300">Jump into dashboards the moment you authenticate.</p>
+                <p className="text-sm font-semibold">Fast workflows</p>
+                <p className="text-xs text-blue-100">Jump into dashboards the moment you authenticate.</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="px-8 sm:px-10 py-12 flex flex-col justify-center">
+        <div className="px-8 sm:px-10 py-12 flex flex-col justify-center bg-white">
           <div className="mb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/20 bg-white/15 text-xs uppercase tracking-[0.25em] text-slate-200 shadow-inner shadow-black/10">
-              <FiLogIn className="text-[#38bdf8]" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-blue-200 bg-blue-50 text-xs uppercase tracking-[0.25em] text-blue-800">
+              <FiLogIn className="text-blue-600" />
               Sign in
             </div>
-            <h2 className="mt-4 text-2xl font-semibold text-white">Welcome back, Administrator</h2>
-            <p className="mt-2 text-sm text-slate-300">
+            <h2 className="mt-4 text-2xl font-semibold text-slate-900">Welcome back, Administrator</h2>
+            <p className="mt-2 text-sm text-slate-600">
               Use your CMS credentials to continue. Need access? Contact your hi-tech platform owner.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <label htmlFor="identifier" className="block text-sm font-medium text-slate-200">
+              <label htmlFor="identifier" className="block text-sm font-medium text-slate-700">
                 Email or Username
               </label>
               <div className="relative">
@@ -163,17 +159,17 @@ const CmsLoginPage = () => {
                   value={identifier}
                   onChange={(event) => setIdentifier(event.target.value)}
                   disabled={loading}
-                  className="w-full bg-white/10 border border-white/20 focus:border-[#38bdf8] focus:ring-2 focus:ring-[#38bdf8]/60 rounded-lg px-4 py-3 pr-12 text-sm placeholder:text-slate-400 text-white transition disabled:opacity-60 disabled:cursor-not-allowed backdrop-blur-sm"
+                  className="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 rounded-lg px-4 py-3 pr-12 text-sm placeholder:text-slate-400 text-slate-900 transition disabled:opacity-60 disabled:cursor-not-allowed"
                   placeholder="admin@example.com"
                 />
-                <span className="absolute inset-y-0 right-3 flex items-center text-slate-300">
+                <span className="absolute inset-y-0 right-3 flex items-center text-slate-400">
                   <FiShield />
                 </span>
               </div>
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="block text-sm font-medium text-slate-200">
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700">
                 Password
               </label>
               <div className="relative">
@@ -185,23 +181,23 @@ const CmsLoginPage = () => {
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   disabled={loading}
-                  className="w-full bg-white/10 border border-white/20 focus:border-[#38bdf8] focus:ring-2 focus:ring-[#38bdf8]/60 rounded-lg px-4 py-3 pr-12 text-sm placeholder:text-slate-400 text-white transition disabled:opacity-60 disabled:cursor-not-allowed backdrop-blur-sm"
+                  className="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 rounded-lg px-4 py-3 pr-12 text-sm placeholder:text-slate-400 text-slate-900 transition disabled:opacity-60 disabled:cursor-not-allowed"
                   placeholder="Enter your password"
                 />
-                <span className="absolute inset-y-0 right-3 flex items-center text-slate-300">
+                <span className="absolute inset-y-0 right-3 flex items-center text-slate-400">
                   <FiLock />
                 </span>
               </div>
             </div>
 
             {error && (
-              <div className="text-sm text-red-300 bg-red-500/10 border border-red-400/40 rounded-lg px-4 py-3">
+              <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="text-sm text-emerald-200 bg-emerald-500/10 border border-emerald-400/40 rounded-lg px-4 py-3">
+              <div className="text-sm text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3">
                 {success}
               </div>
             )}
@@ -209,16 +205,16 @@ const CmsLoginPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-linear-to-r from-[#38bdf8] to-[#6366f1] hover:from-[#0ea5e9] hover:to-[#4338ca] text-white font-semibold py-3 rounded-lg transition disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-[#6366f1]/40 flex items-center justify-center gap-2 text-sm"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-60 disabled:cursor-not-allowed shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 text-sm"
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
 
-          <p className="mt-8 text-xs text-slate-300 text-center leading-5">
-            Ensure that your CMS user exists in the <code>cmsusers</code> table with accurate credentials.
+          <p className="mt-8 text-xs text-slate-500 text-center leading-5">
+            Ensure that your CMS user exists in the <code className="text-slate-700 bg-slate-100 px-1 rounded">cmsusers</code> table with accurate credentials.
             {` `}
-            <Link href="/" className="text-[#38bdf8] hover:text-[#60a5fa] font-semibold">
+            <Link href="/" className="text-blue-600 hover:text-blue-700 font-semibold">
               Return to storefront
             </Link>
           </p>

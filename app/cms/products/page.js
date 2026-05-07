@@ -19,6 +19,7 @@ import {
   FiEdit2,
   FiX,
   FiCheck,
+  FiPlusCircle,
 } from 'react-icons/fi';
 import { API_BASE } from '../../lib/apiBase';
 import { getCategoryPlaceholderImage } from '../../lib/categoryPlaceholders';
@@ -76,7 +77,7 @@ const sanitizeProduct = (item) => {
 
   let priceNumeric = 0;
   let priceLabel = 'Price on request';
-  if (resolvedType === 'furniture' || resolvedType === 'sofacumbed') {
+  if (resolvedType === 'furniture') {
     const s = item.price !== null && item.price !== undefined ? String(item.price).trim() : '';
     priceLabel = s || 'Price on request';
     priceNumeric = parseNumeric(s, 0);
@@ -125,10 +126,7 @@ const renderProductImage = (src, alt, catalogType = 'bed') => {
 };
 
 const EDIT_GENERAL_FIELD_CONFIG = {
-  bed: [
-    { id: 'name', label: 'Product name', type: 'text', placeholder: 'Cloudynap Ortho Comfort' },
-    { id: 'price', label: 'Price (PKR)', type: 'text', placeholder: '85000' },
-  ],
+  bed: [{ id: 'name', label: 'Product name', type: 'text', placeholder: 'Cloudynap Ortho Comfort' }],
   accessory: [
     { id: 'name', label: 'Product name', type: 'text', placeholder: 'Memory foam pillow' },
     { id: 'price', label: 'Price (PKR)', type: 'text', placeholder: '4500' },
@@ -137,16 +135,11 @@ const EDIT_GENERAL_FIELD_CONFIG = {
     { id: 'name', label: 'Product name', type: 'text', placeholder: 'Accent chair' },
     { id: 'price', label: 'Price (display text)', type: 'text', placeholder: 'PKR 32,000' },
   ],
-  sofacumbed: [
-    { id: 'name', label: 'Product name', type: 'text', placeholder: '3-seater sofa cum bed' },
-    { id: 'price', label: 'Price (display text)', type: 'text', placeholder: 'PKR 125,000' },
-  ],
+  sofacumbed: [{ id: 'name', label: 'Product name', type: 'text', placeholder: '3-seater sofa cum bed' }],
 };
 
 const BED_SPEC_FIELDS = [
-  { id: 'length', label: 'Length (cm)', sourceKey: 'length', placeholder: '198' },
-  { id: 'width', label: 'Width (cm)', sourceKey: 'width', placeholder: '152' },
-  { id: 'height', label: 'Height (cm)', sourceKey: 'height', placeholder: '25' },
+  { id: 'brand', label: 'Brand', sourceKey: 'brand', placeholder: 'Englander' },
   { id: 'series', label: 'Series / line', sourceKey: 'series', placeholder: 'Ortho Comfort' },
   { id: 'features', label: 'Features', sourceKey: 'features', placeholder: 'Cool-gel foam' },
   { id: 'benefits', label: 'Benefits', sourceKey: 'benefits', placeholder: 'Spinal support' },
@@ -180,8 +173,7 @@ const SOFA_SPEC_FIELDS = [
   { id: 'features', label: 'Features', sourceKey: 'features', placeholder: 'Storage, fold mechanism' },
   { id: 'benefits', label: 'Benefits', sourceKey: 'benefits', placeholder: 'Guest-ready' },
   { id: 'firmness', label: 'Mattress firmness', sourceKey: 'firmness', placeholder: 'Medium' },
-  { id: 'fabric', label: 'Fabric', sourceKey: 'fabric', placeholder: 'Linen blend' },
-  { id: 'warranty', label: 'Warranty', sourceKey: 'warranty', placeholder: '5 years' },
+  { id: 'warranty', label: 'Warranty', sourceKey: 'warranty', placeholder: '5 years frame, 2 years mattress' },
 ];
 
 const specFieldsForType = (type) => {
@@ -199,10 +191,10 @@ const specSectionTitle = (type) => {
 };
 
 const CategoryBadgeIcon = ({ type }) => {
-  if (type === 'bed') return <FiLayers className="text-[#00aeef]" />;
-  if (type === 'accessory') return <FiPackage className="text-[#00aeef]" />;
-  if (type === 'furniture') return <FiGrid className="text-[#00aeef]" />;
-  if (type === 'sofacumbed') return <FiMaximize2 className="text-[#00aeef]" />;
+  if (type === 'bed') return <FiLayers className="text-blue-600" />;
+  if (type === 'accessory') return <FiPackage className="text-blue-600" />;
+  if (type === 'furniture') return <FiGrid className="text-blue-600" />;
+  if (type === 'sofacumbed') return <FiMaximize2 className="text-blue-600" />;
   return <FiBox />;
 };
 
@@ -226,6 +218,8 @@ const CmsProductsPage = () => {
     description: '',
     featured: false,
   });
+  const [editBedVariants, setEditBedVariants] = useState([]);
+  const [editSofaVariants, setEditSofaVariants] = useState([]);
   const [editSpecs, setEditSpecs] = useState({});
   const [editExistingImages, setEditExistingImages] = useState([]);
   const [editNewImages, setEditNewImages] = useState([]);
@@ -347,6 +341,8 @@ const CmsProductsPage = () => {
       featured: false,
     });
     setEditSpecs({});
+    setEditBedVariants([]);
+    setEditSofaVariants([]);
     setEditExistingImages([]);
     setEditNewImages((prev) => {
       prev.forEach((item) => {
@@ -405,6 +401,43 @@ const CmsProductsPage = () => {
       }, {});
       setEditSpecs(nextSpecs);
 
+      if (product.type === 'bed') {
+        const rawVariants = Array.isArray(data.product_variants_bed)
+          ? data.product_variants_bed
+          : data.variants;
+        const list = Array.isArray(rawVariants) ? rawVariants : [];
+        setEditBedVariants(
+          list.length
+            ? list.map((v) => ({
+                id: v.id,
+                width: v.width != null ? String(v.width) : '',
+                height: v.height != null ? String(v.height) : '',
+                length: v.length != null ? String(v.length) : '',
+                price: v.price != null ? String(v.price) : '',
+              }))
+            : [{ width: '', height: '', length: '', price: '' }],
+        );
+        setEditSofaVariants([]);
+      } else if (product.type === 'sofacumbed') {
+        setEditBedVariants([]);
+        const rawVariants = Array.isArray(data.product_variants_sofacumbed)
+          ? data.product_variants_sofacumbed
+          : data.variants;
+        const list = Array.isArray(rawVariants) ? rawVariants : [];
+        setEditSofaVariants(
+          list.length
+            ? list.map((v) => ({
+                id: v.id,
+                price: v.price != null ? String(v.price) : '',
+                fabric: v.fabric != null ? String(v.fabric) : '',
+              }))
+            : [{ price: '', fabric: '' }],
+        );
+      } else {
+        setEditBedVariants([]);
+        setEditSofaVariants([]);
+      }
+
       const existingImages = extractImageArray(data);
       const normalizedImages = existingImages.length
         ? Array.from(new Set(existingImages))
@@ -437,6 +470,34 @@ const CmsProductsPage = () => {
   const handleEditSpecChange = useCallback((event) => {
     const { name, value } = event.target;
     setEditSpecs((prev) => ({ ...prev, [name]: value }));
+  }, []);
+
+  const updateEditBedVariant = useCallback((index, field, value) => {
+    setEditBedVariants((prev) =>
+      prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)),
+    );
+  }, []);
+
+  const addEditBedVariantRow = useCallback(() => {
+    setEditBedVariants((prev) => [...prev, { width: '', height: '', length: '', price: '' }]);
+  }, []);
+
+  const removeEditBedVariantRow = useCallback((index) => {
+    setEditBedVariants((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
+  }, []);
+
+  const updateEditSofaVariant = useCallback((index, field, value) => {
+    setEditSofaVariants((prev) =>
+      prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)),
+    );
+  }, []);
+
+  const addEditSofaVariantRow = useCallback(() => {
+    setEditSofaVariants((prev) => [...prev, { price: '', fabric: '' }]);
+  }, []);
+
+  const removeEditSofaVariantRow = useCallback((index) => {
+    setEditSofaVariants((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
   }, []);
 
   const handleEditNewImageChange = useCallback(
@@ -526,7 +587,19 @@ const CmsProductsPage = () => {
       return;
     }
 
-    if (!editDetails.price.trim()) {
+    if (editTarget?.type === 'bed') {
+      const priced = editBedVariants.filter((v) => String(v.price || '').trim() !== '');
+      if (!priced.length) {
+        setEditError('Add at least one mattress size with a price (PKR).');
+        return;
+      }
+    } else if (editTarget?.type === 'sofacumbed') {
+      const priced = editSofaVariants.filter((v) => String(v.price || '').trim() !== '');
+      if (!priced.length) {
+        setEditError('Add at least one sofa cum bed option with a price (PKR).');
+        return;
+      }
+    } else if (!editDetails.price.trim()) {
       setEditError('Price is required.');
       return;
     }
@@ -550,7 +623,19 @@ const CmsProductsPage = () => {
         }
       });
 
-      formData.append('specs', JSON.stringify(editSpecs));
+      const specsToSend =
+        editTarget?.type === 'bed'
+          ? {
+              ...editSpecs,
+              variants: editBedVariants.filter((v) => String(v.price || '').trim() !== ''),
+            }
+          : editTarget?.type === 'sofacumbed'
+            ? {
+                ...editSpecs,
+                variants: editSofaVariants.filter((v) => String(v.price || '').trim() !== ''),
+              }
+            : editSpecs;
+      formData.append('specs', JSON.stringify(specsToSend));
       formData.append('existingImages', JSON.stringify(editExistingImages));
 
       if (editCover?.kind === 'existing') {
@@ -611,44 +696,44 @@ const CmsProductsPage = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(0,174,239,0.18),transparent_55%)] opacity-90 pointer-events-none" />
+    <div className="relative min-h-screen text-slate-900">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.06),transparent_55%)] pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-400">
-              <FiBox className="text-[#00aeef]" /> Cloudynap
+              <FiBox className="text-blue-600" /> Cloudynap
             </p>
-            <h1 className="mt-2 text-3xl font-semibold text-white">Product catalogue</h1>
-            <p className="mt-1 text-sm text-slate-300 max-w-2xl">
+            <h1 className="mt-2 text-3xl font-semibold text-slate-900">Product catalogue</h1>
+            <p className="mt-1 text-sm text-slate-600 max-w-2xl">
               Manage mattresses, furniture, sofa cum beds, and accessories synced with your storefront Supabase tables.
             </p>
           </div>
           <div className="flex flex-wrap gap-3 items-center">
             <Link
               href="/cms/dashboard"
-              className="inline-flex items-center gap-2 px-4 py-2.5 border border-white/20 rounded-lg text-sm font-semibold text-white hover:bg-white/10 transition shadow-lg shadow-black/10"
+              className="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 hover:bg-slate-100 transition shadow-lg shadow-black/10"
             >
               <FiArrowLeft />
               Back to dashboard
             </Link>
             <button
               onClick={() => router.refresh()}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-[#00aeef] to-[#0284c7] hover:from-[#0891b2] hover:to-[#0369a1] text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-[#00aeef]/25"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-blue-500/20"
             >
               <FiRefreshCw className={loading ? 'animate-spin' : ''} />
               Refresh
             </button>
             <button
               onClick={() => (window.location.href = '/cms/products/add-product')}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-[#00aeef] to-[#0284c7] hover:from-[#0891b2] hover:to-[#0369a1] text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-[#00aeef]/25"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-blue-500/20"
             >
               Add product
             </button>
             <button
               onClick={() => (window.location.href = '/cms/products/bulk-add-product')}
-              className="inline-flex items-center gap-2 px-4 py-2.5 border border-white/20 rounded-lg text-sm font-semibold text-white hover:bg-white/10 transition"
+              className="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 hover:bg-slate-100 transition"
             >
               Bulk CSV (legacy)
             </button>
@@ -656,79 +741,79 @@ const CmsProductsPage = () => {
         </header>
 
         <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          <div className="rounded-2xl border border-white/10 bg-linear-to-br from-[#00aeef] to-[#0284c7] p-6 shadow-xl">
-            <p className="text-xs uppercase tracking-wide text-white/90">Total SKUs</p>
+          <div className="rounded-2xl border border-blue-500/20 bg-linear-to-br from-blue-600 to-blue-700 p-6 shadow-lg shadow-blue-500/20">
+            <p className="text-xs uppercase tracking-wide text-blue-100">Total SKUs</p>
             <p className="mt-3 text-3xl font-bold text-white">{stats.total}</p>
-            <p className="text-xs text-white/80 mt-1">All Cloudynap catalog items</p>
+            <p className="text-xs text-blue-100/90 mt-1">All Cloudynap catalog items</p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-wide text-white/70">Mattresses & beds</p>
-                <p className="mt-3 text-2xl font-semibold text-white">{stats.beds}</p>
+                <p className="text-xs uppercase tracking-wide text-slate-600">Mattresses & beds</p>
+                <p className="mt-3 text-2xl font-semibold text-slate-900">{stats.beds}</p>
               </div>
-              <span className="h-11 w-11 rounded-full bg-[#00aeef]/20 flex items-center justify-center text-[#00aeef]">
+              <span className="h-11 w-11 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
                 <FiLayers />
               </span>
             </div>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-wide text-white/70">Accessories</p>
-                <p className="mt-3 text-2xl font-semibold text-white">{stats.accessories}</p>
+                <p className="text-xs uppercase tracking-wide text-slate-600">Accessories</p>
+                <p className="mt-3 text-2xl font-semibold text-slate-900">{stats.accessories}</p>
               </div>
-              <span className="h-11 w-11 rounded-full bg-white/10 flex items-center justify-center text-[#00aeef]">
+              <span className="h-11 w-11 rounded-full bg-slate-100 flex items-center justify-center text-blue-600">
                 <FiPackage />
               </span>
             </div>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-wide text-white/70">Furniture</p>
-                <p className="mt-3 text-2xl font-semibold text-white">{stats.furniture}</p>
+                <p className="text-xs uppercase tracking-wide text-slate-600">Furniture</p>
+                <p className="mt-3 text-2xl font-semibold text-slate-900">{stats.furniture}</p>
               </div>
-              <span className="h-11 w-11 rounded-full bg-white/10 flex items-center justify-center text-[#00aeef]">
+              <span className="h-11 w-11 rounded-full bg-slate-100 flex items-center justify-center text-blue-600">
                 <FiGrid />
               </span>
             </div>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-wide text-white/70">Sofa cum bed</p>
-                <p className="mt-3 text-2xl font-semibold text-white">{stats.sofas}</p>
+                <p className="text-xs uppercase tracking-wide text-slate-600">Sofa cum bed</p>
+                <p className="mt-3 text-2xl font-semibold text-slate-900">{stats.sofas}</p>
               </div>
-              <span className="h-11 w-11 rounded-full bg-white/10 flex items-center justify-center text-[#00aeef]">
+              <span className="h-11 w-11 rounded-full bg-slate-100 flex items-center justify-center text-blue-600">
                 <FiMaximize2 />
               </span>
             </div>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-wide text-white/70">Avg. price (beds & accessories)</p>
-                <p className="mt-3 text-2xl font-semibold text-white">
+                <p className="text-xs uppercase tracking-wide text-slate-600">Avg. price (beds & accessories)</p>
+                <p className="mt-3 text-2xl font-semibold text-slate-900">
                   {stats.averagePrice > 0 ? `PKR ${stats.averagePrice.toLocaleString('en-PK')}` : 'n/a'}
                 </p>
               </div>
-              <span className="h-11 w-11 rounded-full bg-white/10 flex items-center justify-center text-[#00aeef]">
+              <span className="h-11 w-11 rounded-full bg-slate-100 flex items-center justify-center text-blue-600">
                 <FiTrendingUp />
               </span>
             </div>
           </div>
         </section>
 
-        <section className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-3xl shadow-2xl p-6 sm:p-8 space-y-6">
+        <section className="rounded-3xl border border-slate-200 bg-slate-50 backdrop-blur-3xl shadow-2xl p-6 sm:p-8 space-y-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+            <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
               <FiSearch className="text-slate-400" />
               <input
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Search name, description, or category…"
-                className="bg-transparent text-sm text-white placeholder:text-slate-500 focus:outline-none w-full min-w-0"
+                className="bg-transparent text-sm text-slate-800 placeholder:text-slate-500 focus:outline-none w-full min-w-0"
               />
             </div>
             <div className="flex flex-wrap gap-3">
@@ -745,8 +830,8 @@ const CmsProductsPage = () => {
                   onClick={() => setFilter(id)}
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
                     filter === id
-                      ? 'bg-linear-to-r from-[#00aeef] to-[#0284c7] text-white shadow-lg shadow-[#00aeef]/25'
-                      : 'bg-white/10 text-slate-200 hover:bg-white/20'
+                      ? 'bg-linear-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/20'
+                      : 'bg-white/10 text-slate-200 hover:bg-slate-200'
                   }`}
                 >
                   {label}
@@ -774,7 +859,7 @@ const CmsProductsPage = () => {
             )}
 
             {!loading && !error && filteredProducts.length === 0 && (
-              <div className="col-span-full border border-white/10 bg-white/5 text-white/80 rounded-2xl p-6">
+              <div className="col-span-full border border-slate-200 bg-slate-50 text-slate-700 rounded-2xl p-6">
                 <p className="text-sm font-semibold">No products match your filters.</p>
                 <p className="text-xs mt-1">Try adjusting search or add items from Add product.</p>
               </div>
@@ -794,32 +879,32 @@ const CmsProductsPage = () => {
                       openEditModal(product);
                     }
                   }}
-                  className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 transition hover:border-[#00aeef]/40 hover:bg-white/10 cursor-pointer"
+                  className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-6 transition hover:border-blue-300 hover:bg-slate-200/80 cursor-pointer"
                 >
                   <div className="absolute inset-0 bg-linear-to-br from-white/10 via-transparent to-white/5 opacity-60 pointer-events-none" />
                   <div className="relative p-6 flex flex-col gap-4">
                     <div className="flex items-center justify-between">
-                      <span className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-white/10 text-white/80 border border-white/10">
+                      <span className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
                         <CategoryBadgeIcon type={product.type} />
                         {product.category}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-center bg-white/5 border border-white/10 rounded-xl p-4 h-36">
+                    <div className="flex items-center justify-center bg-slate-50 border border-slate-200 rounded-xl p-4 h-36">
                       {renderProductImage(product.image, product.name, product.type)}
                     </div>
 
                     <div className="space-y-2">
-                      <h3 className="text-base font-semibold text-white line-clamp-2">{product.name}</h3>
-                      <p className="text-xs text-white/70 line-clamp-3 min-h-[48px]">{product.description}</p>
+                      <h3 className="text-base font-semibold text-slate-900 line-clamp-2">{product.name}</h3>
+                      <p className="text-xs text-slate-600 line-clamp-3 min-h-[48px]">{product.description}</p>
                     </div>
 
-                    <div className="flex items-center justify-between text-sm text-white/80">
-                      <span className="font-semibold text-white">{product.priceLabel}</span>
-                      <span className="text-xs text-white/50">Tap to edit</span>
+                    <div className="flex items-center justify-between text-sm text-slate-600">
+                      <span className="font-semibold text-slate-900">{product.priceLabel}</span>
+                      <span className="text-xs text-slate-500">Tap to edit</span>
                     </div>
                   </div>
-                  <div className="absolute top-4 right-4 inline-flex items-center gap-2 rounded-full bg-black/40 border border-white/10 px-3 py-1 text-xs text-white/80">
+                  <div className="absolute top-4 right-4 inline-flex items-center gap-2 rounded-full bg-black/40 border border-slate-200 px-3 py-1 text-xs text-slate-600">
                     <FiEdit2 />
                     Edit
                   </div>
@@ -832,20 +917,20 @@ const CmsProductsPage = () => {
       {editModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-10">
           <div
-            className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             onClick={closeEditModal}
             aria-hidden="true"
           />
-          <div className="relative w-full max-w-4xl max-h-[85vh] overflow-y-auto rounded-3xl border border-white/10 bg-slate-900/95 shadow-[0_40px_120px_rgba(15,23,42,0.6)]">
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-white/10 bg-slate-900/95 px-6 py-5">
+          <div className="relative w-full max-w-4xl max-h-[85vh] overflow-y-auto rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-slate-300/40">
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-slate-200 bg-slate-50 px-6 py-5">
               <div>
                 <p className="text-xs uppercase tracking-[0.35em] text-slate-400 flex items-center gap-2">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/10 border border-white/10">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 border border-slate-200">
                     <CategoryBadgeIcon type={editTarget?.type} />
                   </span>
                   Edit {categoryLabel(editTarget?.type)}
                 </p>
-                <h2 className="mt-2 text-2xl font-semibold text-white">
+                <h2 className="mt-2 text-2xl font-semibold text-slate-900">
                   {editDetails.name || editTarget?.name || 'Untitled product'}
                 </h2>
                 <p className="text-xs text-slate-400 mt-1">
@@ -855,7 +940,7 @@ const CmsProductsPage = () => {
               <button
                 type="button"
                 onClick={closeEditModal}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 transition disabled:opacity-60"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition disabled:opacity-60"
                 disabled={editSubmitting}
               >
                 <FiX className="text-lg" />
@@ -873,7 +958,7 @@ const CmsProductsPage = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                   {(EDIT_GENERAL_FIELD_CONFIG[editTarget?.type] || EDIT_GENERAL_FIELD_CONFIG.bed).map((field) => (
                     <label key={field.id} className="flex flex-col">
-                      <span className="text-xs font-semibold text-slate-200 uppercase tracking-wide mb-2">
+                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
                         {field.label}
                       </span>
                       <input
@@ -883,7 +968,7 @@ const CmsProductsPage = () => {
                         onChange={handleEditDetailChange}
                         placeholder={field.placeholder}
                         disabled={editSubmitting}
-                        className="w-full rounded-lg border border-white/15 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00aeef]/60 disabled:opacity-60"
+                        className="w-full rounded-lg border border-slate-300 bg-slate-100 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-60"
                       />
                     </label>
                   ))}
@@ -891,7 +976,7 @@ const CmsProductsPage = () => {
 
                 <div>
                   <label className="flex flex-col">
-                    <span className="text-xs font-semibold text-slate-200 uppercase tracking-wide mb-2">Description</span>
+                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Description</span>
                     <textarea
                       name="description"
                       value={editDetails.description}
@@ -899,17 +984,17 @@ const CmsProductsPage = () => {
                       rows={4}
                       placeholder="Marketing copy and highlights."
                       disabled={editSubmitting}
-                      className="w-full rounded-lg border border-white/15 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00aeef]/60 disabled:opacity-60 resize-none"
+                      className="w-full rounded-lg border border-slate-300 bg-slate-100 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-60 resize-none"
                     />
                   </label>
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-semibold text-white mb-3">{specSectionTitle(editTarget?.type)}</h3>
+                  <h3 className="text-sm font-semibold text-slate-900 mb-3">{specSectionTitle(editTarget?.type)}</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {specFieldsForType(editTarget?.type).map((field) => (
-                      <label key={field.id} className="flex flex-col bg-white/5 border border-white/10 rounded-xl p-4">
-                        <span className="text-xs font-semibold text-slate-200 uppercase tracking-wide mb-2">
+                      <label key={field.id} className="flex flex-col bg-slate-50 border border-slate-200 rounded-xl p-4">
+                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
                           {field.label}
                         </span>
                         <input
@@ -918,21 +1003,153 @@ const CmsProductsPage = () => {
                           onChange={handleEditSpecChange}
                           placeholder={field.placeholder}
                           disabled={editSubmitting}
-                          className="rounded-lg border border-white/15 bg-transparent px-3 py-2 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00aeef]/50 disabled:opacity-60"
+                          className="rounded-lg border border-slate-300 bg-transparent px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 disabled:opacity-60"
                         />
                       </label>
                     ))}
                   </div>
                 </div>
 
+                {editTarget?.type === 'bed' && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-900 mb-3">Mattress sizes &amp; prices</h3>
+                    <div className="space-y-4">
+                      {editBedVariants.map((row, index) => (
+                        <div
+                          key={`edit-bed-var-${index}`}
+                          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end bg-slate-50 border border-slate-200 rounded-xl p-4"
+                        >
+                          <label className="flex flex-col">
+                            <span className="text-xs font-semibold text-slate-500 uppercase mb-1">Length (in.)</span>
+                            <input
+                              value={row.length ?? ''}
+                              onChange={(e) => updateEditBedVariant(index, 'length', e.target.value)}
+                              placeholder="78"
+                              disabled={editSubmitting}
+                              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 disabled:opacity-60"
+                            />
+                          </label>
+                          <label className="flex flex-col">
+                            <span className="text-xs font-semibold text-slate-500 uppercase mb-1">Width (in.)</span>
+                            <input
+                              value={row.width ?? ''}
+                              onChange={(e) => updateEditBedVariant(index, 'width', e.target.value)}
+                              placeholder="60"
+                              disabled={editSubmitting}
+                              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 disabled:opacity-60"
+                            />
+                          </label>
+                          <label className="flex flex-col">
+                            <span className="text-xs font-semibold text-slate-500 uppercase mb-1">Height (in.)</span>
+                            <input
+                              value={row.height ?? ''}
+                              onChange={(e) => updateEditBedVariant(index, 'height', e.target.value)}
+                              placeholder="12"
+                              disabled={editSubmitting}
+                              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 disabled:opacity-60"
+                            />
+                          </label>
+                          <label className="flex flex-col">
+                            <span className="text-xs font-semibold text-slate-500 uppercase mb-1">Price (PKR)</span>
+                            <input
+                              value={row.price ?? ''}
+                              onChange={(e) => updateEditBedVariant(index, 'price', e.target.value)}
+                              placeholder="85000"
+                              disabled={editSubmitting}
+                              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 disabled:opacity-60"
+                            />
+                          </label>
+                          <div className="flex gap-2 justify-end lg:justify-start">
+                            <button
+                              type="button"
+                              onClick={() => addEditBedVariantRow()}
+                              disabled={editSubmitting}
+                              className="text-xs font-semibold text-blue-600 hover:text-blue-800 px-2 py-2 disabled:opacity-60"
+                            >
+                              <FiPlusCircle className="inline mr-1" />
+                              Add size
+                            </button>
+                            {editBedVariants.length > 1 ? (
+                              <button
+                                type="button"
+                                onClick={() => removeEditBedVariantRow(index)}
+                                disabled={editSubmitting}
+                                className="text-xs font-semibold text-red-600 hover:text-red-800 px-2 py-2 disabled:opacity-60"
+                              >
+                                Remove
+                              </button>
+                            ) : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {editTarget?.type === 'sofacumbed' && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-900 mb-3">Fabric options &amp; prices</h3>
+                    <div className="space-y-4">
+                      {editSofaVariants.map((row, index) => (
+                        <div
+                          key={`edit-sofa-var-${index}`}
+                          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end bg-slate-50 border border-slate-200 rounded-xl p-4"
+                        >
+                          <label className="flex flex-col sm:col-span-2">
+                            <span className="text-xs font-semibold text-slate-500 uppercase mb-1">Fabric</span>
+                            <input
+                              value={row.fabric ?? ''}
+                              onChange={(e) => updateEditSofaVariant(index, 'fabric', e.target.value)}
+                              placeholder="Linen blend"
+                              disabled={editSubmitting}
+                              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 disabled:opacity-60"
+                            />
+                          </label>
+                          <label className="flex flex-col">
+                            <span className="text-xs font-semibold text-slate-500 uppercase mb-1">Price (PKR)</span>
+                            <input
+                              value={row.price ?? ''}
+                              onChange={(e) => updateEditSofaVariant(index, 'price', e.target.value)}
+                              placeholder="125000"
+                              disabled={editSubmitting}
+                              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 disabled:opacity-60"
+                            />
+                          </label>
+                          <div className="flex gap-2 justify-end lg:justify-start">
+                            <button
+                              type="button"
+                              onClick={() => addEditSofaVariantRow()}
+                              disabled={editSubmitting}
+                              className="text-xs font-semibold text-blue-600 hover:text-blue-800 px-2 py-2 disabled:opacity-60"
+                            >
+                              <FiPlusCircle className="inline mr-1" />
+                              Add option
+                            </button>
+                            {editSofaVariants.length > 1 ? (
+                              <button
+                                type="button"
+                                onClick={() => removeEditSofaVariantRow(index)}
+                                disabled={editSubmitting}
+                                className="text-xs font-semibold text-red-600 hover:text-red-800 px-2 py-2 disabled:opacity-60"
+                              >
+                                Remove
+                              </button>
+                            ) : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
-                      <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                        <FiUploadCloud className="text-[#00aeef]" />
+                      <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                        <FiUploadCloud className="text-blue-600" />
                         Product images
                       </h3>
-                      <p className="text-xs text-slate-300 mt-1">Update gallery or set a new cover image.</p>
+                      <p className="text-xs text-slate-600 mt-1">Update gallery or set a new cover image.</p>
                     </div>
                     <span className="text-xs text-slate-400">
                       Total: {editExistingImages.length + editNewImages.length} image
@@ -942,12 +1159,12 @@ const CmsProductsPage = () => {
 
                   <label
                     htmlFor="edit-product-images"
-                    className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-white/20 rounded-2xl px-6 py-10 bg-white/5 hover:border-[#00aeef]/60 transition cursor-pointer text-center"
+                    className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-slate-200 rounded-2xl px-6 py-10 bg-slate-50 hover:border-blue-500/60 transition cursor-pointer text-center"
                   >
-                    <FiUploadCloud className="text-3xl text-[#00aeef]" />
+                    <FiUploadCloud className="text-3xl text-blue-600" />
                     <div>
-                      <p className="text-sm font-semibold text-white">Click to upload images</p>
-                      <p className="text-xs text-slate-300 mt-1">PNG, JPG up to 8MB each.</p>
+                      <p className="text-sm font-semibold text-slate-900">Click to upload images</p>
+                      <p className="text-xs text-slate-600 mt-1">PNG, JPG up to 8MB each.</p>
                     </div>
                     <input
                       id="edit-product-images"
@@ -962,7 +1179,7 @@ const CmsProductsPage = () => {
 
                   {editExistingImages.length > 0 && (
                     <div>
-                      <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-300 mb-2">Current images</h4>
+                      <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Current images</h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {editExistingImages.map((url) => {
                           const isCover = editCover?.kind === 'existing' && editCover.value === url;
@@ -970,14 +1187,14 @@ const CmsProductsPage = () => {
                             <div
                               key={url}
                               className={`relative overflow-hidden rounded-xl border ${
-                                isCover ? 'border-[#00aeef]' : 'border-white/15'
-                              } bg-white/5`}
+                                isCover ? 'border-blue-500' : 'border-slate-300'
+                              } bg-slate-50`}
                             >
                               <img src={url} alt="Existing product" className="h-40 w-full object-cover" />
                               <div className="absolute inset-x-0 bottom-0 bg-black/60 px-3 py-2 flex items-center justify-between text-xs text-white">
                                 <span className="truncate pr-2">{url.split('/').slice(-1)[0]}</span>
                                 {isCover ? (
-                                  <span className="inline-flex items-center gap-1 text-[#00aeef]">
+                                  <span className="inline-flex items-center gap-1 text-blue-600">
                                     <FiCheck /> Cover
                                   </span>
                                 ) : (
@@ -1009,7 +1226,7 @@ const CmsProductsPage = () => {
 
                   {editNewImages.length > 0 && (
                     <div>
-                      <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-300 mb-2">New images</h4>
+                      <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">New images</h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {editNewImages.map((item, index) => {
                           const isCover = editCover?.kind === 'new' && editCover.id === item.id;
@@ -1017,14 +1234,14 @@ const CmsProductsPage = () => {
                             <div
                               key={item.id}
                               className={`relative overflow-hidden rounded-xl border ${
-                                isCover ? 'border-[#00aeef]' : 'border-white/15'
-                              } bg-white/5`}
+                                isCover ? 'border-blue-500' : 'border-slate-300'
+                              } bg-slate-50`}
                             >
                               <img src={item.preview} alt={`New upload ${index + 1}`} className="h-40 w-full object-cover" />
                               <div className="absolute inset-x-0 bottom-0 bg-black/60 px-3 py-2 flex items-center justify-between text-xs text-white">
                                 <span className="truncate pr-2">{item.file.name}</span>
                                 {isCover ? (
-                                  <span className="inline-flex items-center gap-1 text-[#00aeef]">
+                                  <span className="inline-flex items-center gap-1 text-blue-600">
                                     <FiCheck /> Cover
                                   </span>
                                 ) : (
@@ -1072,14 +1289,14 @@ const CmsProductsPage = () => {
                     type="button"
                     onClick={closeEditModal}
                     disabled={editSubmitting}
-                    className="px-5 py-2.5 rounded-lg border border-white/15 text-sm font-semibold text-white hover:bg-white/10 transition disabled:opacity-60"
+                    className="px-5 py-2.5 rounded-lg border border-slate-300 text-sm font-semibold text-slate-800 hover:bg-slate-100 transition disabled:opacity-60"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={editSubmitting}
-                    className="px-5 py-2.5 rounded-lg bg-linear-to-r from-[#00aeef] to-[#0284c7] text-sm font-semibold text-white shadow-lg shadow-[#00aeef]/30 hover:from-[#0891b2] hover:to-[#0369a1] transition disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="px-5 py-2.5 rounded-lg bg-linear-to-r from-blue-600 to-blue-700 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {editSubmitting ? 'Saving…' : 'Save changes'}
                   </button>

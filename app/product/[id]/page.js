@@ -97,9 +97,9 @@ const buildCuratedCatalogSpecs = (item, productType) => {
   switch (productType) {
     case 'bed':
       return [
-        specRow('Length', pickCatalogColumn(item, 'length', 'length_cm', 'length_in', 'length_mm', 'l')),
-        specRow('Width', pickCatalogColumn(item, 'width', 'width_cm', 'width_in', 'w')),
-        specRow('Height', pickCatalogColumn(item, 'height', 'height_cm', 'height_in', 'thickness', 'h')),
+        specRow('Length (in.)', pickCatalogColumn(item, 'length', 'length_cm', 'length_in', 'length_mm', 'l')),
+        specRow('Width (in.)', pickCatalogColumn(item, 'width', 'width_cm', 'width_in', 'w')),
+        specRow('Height (in.)', pickCatalogColumn(item, 'height', 'height_cm', 'height_in', 'thickness', 'h')),
         specRow('Firmness', pickCatalogColumn(item, 'firmness', 'firmness_level', 'firmness_rating')),
         specRow('Fabric', pickCatalogColumn(item, 'fabric', 'fabric_type', 'upholstery', 'material', 'textile')),
         specRow('Series', pickCatalogColumn(item, 'series')),
@@ -108,6 +108,20 @@ const buildCuratedCatalogSpecs = (item, productType) => {
         specRow('Benefits', pickCatalogColumn(item, 'benefits')),
       ];
     case 'sofacumbed':
+      return [
+        specRow(
+          'Fabric',
+          pickCatalogColumn(item, 'fabric', 'fabric_type', 'upholstery', 'material', 'textile'),
+        ),
+        specRow(
+          'Firmness',
+          pickCatalogColumn(item, 'firmness', 'firmness_level', 'firmness_rating', 'softness'),
+        ),
+        specRow('Series', pickCatalogColumn(item, 'series')),
+        specRow('Warranty', pickCatalogColumn(item, 'warranty')),
+        specRow('Features', pickCatalogColumn(item, 'features')),
+        specRow('Benefits', pickCatalogColumn(item, 'benefits')),
+      ];
     case 'accessory':
       return [
         specRow(
@@ -165,12 +179,12 @@ const catalogSectionTitle = (t) => {
   }
 };
 
-/** List / detail price display for an included catalog row (furniture/sofa often text). */
+/** List / detail price display for an included catalog row (furniture often display text). */
 const formatCatalogLinePrice = (detail, catalogType) => {
   if (!detail) return null;
   const p = detail.price;
   if (p === null || p === undefined) return null;
-  if (catalogType === 'furniture' || catalogType === 'sofacumbed') {
+  if (catalogType === 'furniture') {
     const s = String(p).trim();
     return s || null;
   }
@@ -286,6 +300,7 @@ const ProductPage = () => {
   const [selectedMemory, setSelectedMemory] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedStorage, setSelectedStorage] = useState('');
+  const [selectedBedVariantIndex, setSelectedBedVariantIndex] = useState(0);
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -559,6 +574,23 @@ const ProductPage = () => {
             : data.processor || data.graphics || '') ||
           finalName;
 
+        const variantFloorPk =
+          (resolvedType === 'bed' || resolvedType === 'sofacumbed') && Array.isArray(data.variants)
+            ? (() => {
+                const nums = data.variants
+                  .map((v) => parseNumeric(v?.price, 0))
+                  .filter((n) => n > 0);
+                return nums.length ? Math.min(...nums) : null;
+              })()
+            : null;
+
+        const dealOrCatalogNumericPrice =
+          resolvedType === DEAL_TYPE
+            ? parseNumeric(data.deal_price ?? data.price, 0)
+            : resolvedType === 'bed' || resolvedType === 'sofacumbed'
+              ? Math.max(parseNumeric(data.price, 0), variantFloorPk ?? 0)
+              : parseNumeric(data.price, 0);
+
         const normalized = {
           ...data,
           id: rawId,
@@ -584,11 +616,8 @@ const ProductPage = () => {
           cartId: rawId ? `${resolvedType}-${rawId}` : undefined,
           name: finalName,
           description: computedDescription,
-          price:
-            resolvedType === DEAL_TYPE
-              ? parseNumeric(data.deal_price ?? data.price, 0)
-              : parseNumeric(data.price, 0),
-          hasPrice: parseNumeric(data.price, 0) > 0,
+          price: dealOrCatalogNumericPrice,
+          hasPrice: dealOrCatalogNumericPrice > 0,
           rating: parseNumeric(data.rating, 4.7) || 4.7,
           reviews: parseNumeric(data.reviews, 0),
           brand: data.brand || 'Unknown',
@@ -627,6 +656,10 @@ const ProductPage = () => {
 
     fetchProduct();
   }, [productId, initialType]);
+
+  useEffect(() => {
+    setSelectedBedVariantIndex(0);
+  }, [productId]);
 
   const images = React.useMemo(() => {
     if (!product) return [];
@@ -737,6 +770,30 @@ const ProductPage = () => {
     return null;
   }
 
+  const bedVariantsList =
+    product.type === 'bed' && Array.isArray(product.variants) ? product.variants : [];
+  const sofaVariantsList =
+    product.type === 'sofacumbed' && Array.isArray(product.variants) ? product.variants : [];
+  const catalogVariantList =
+    product.type === 'bed' ? bedVariantsList : product.type === 'sofacumbed' ? sofaVariantsList : [];
+  const safeVariantIndex = Math.min(
+    selectedBedVariantIndex,
+    Math.max(0, catalogVariantList.length - 1),
+  );
+  const selectedCatalogVariant = catalogVariantList.length ? catalogVariantList[safeVariantIndex] : null;
+  const variantUnitPrice =
+    selectedCatalogVariant != null ? parseNumeric(selectedCatalogVariant.price, 0) : 0;
+  const displayPrice =
+    product.type === 'bed' || product.type === 'sofacumbed'
+      ? variantUnitPrice > 0
+        ? variantUnitPrice
+        : parseNumeric(product.price, 0)
+      : product.price;
+  const productForCatalogSpecs =
+    (product.type === 'bed' || product.type === 'sofacumbed') && selectedCatalogVariant
+      ? { ...product, ...selectedCatalogVariant }
+      : product;
+
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-PK').format(price);
   };
@@ -745,7 +802,7 @@ const ProductPage = () => {
     product.type === DEAL_TYPE
       ? null
       : CATALOG_TYPES.includes(product.type)
-        ? applyCategoryDiscount(product.type, product.price, discountMap)
+        ? applyCategoryDiscount(product.type, displayPrice, discountMap)
         : null;
 
   const productTitle = product.name || 'Product';
@@ -774,7 +831,11 @@ const ProductPage = () => {
 
   const handleAddToCart = () => {
     if (!product) return;
-    const cartId = product.cartId || (product.type ? `${product.type}-${product.id}` : product.id);
+    const baseCartId = product.cartId || (product.type ? `${product.type}-${product.id}` : product.id);
+    const cartId =
+      product.type === 'sofacumbed' && selectedCatalogVariant?.id != null
+        ? `sofacumbed-${product.id}-v-${selectedCatalogVariant.id}`
+        : baseCartId;
     const imageSrc =
       product.image ||
       getCategoryPlaceholderImage(
@@ -784,7 +845,16 @@ const ProductPage = () => {
     const cartPrice =
       discountInfo && !discountInfo.badgeOnly && discountInfo.discounted != null
         ? discountInfo.discounted
-        : product.price;
+        : displayPrice;
+
+    const sofaFabric =
+      product.type === 'sofacumbed' && selectedCatalogVariant?.fabric != null
+        ? String(selectedCatalogVariant.fabric).trim()
+        : '';
+    const cartDisplayName =
+      product.type === 'sofacumbed' && sofaFabric
+        ? `${product.name} — ${sofaFabric}`
+        : product.name;
 
     addToCart(
       {
@@ -792,7 +862,7 @@ const ProductPage = () => {
         productId: product.id,
         type: product.type,
         category: product.category,
-        name: product.name,
+        name: cartDisplayName,
         price: cartPrice,
         image: imageSrc,
         brand: product.brand,
@@ -810,7 +880,7 @@ const ProductPage = () => {
     productType === DEAL_TYPE
       ? buildCuratedCatalogSpecs(product, DEAL_TYPE)
       : CATALOG_TYPES.includes(productType)
-        ? buildCuratedCatalogSpecs(product, productType)
+        ? buildCuratedCatalogSpecs(productForCatalogSpecs, productType)
         : productType === 'printer'
         ? [
             { label: 'Brand', value: product.brand },
@@ -863,6 +933,11 @@ const ProductPage = () => {
     CATALOG_TYPES.includes(productType) || productType === DEAL_TYPE
       ? specListRaw
       : specListRaw.filter((spec) => spec.value);
+
+  /** Sidebar “Product details” omits Benefits — full list stays under Specification tab. */
+  const productDetailsSidebarRows = CATALOG_TYPES.includes(productType)
+    ? specList.filter((row) => row.label !== 'Benefits')
+    : specList;
 
   const isCatalogProduct =
     CATALOG_TYPES.includes(productType) || productType === DEAL_TYPE;
@@ -985,6 +1060,73 @@ const ProductPage = () => {
               </div>
             </div>
 
+            {product.type === 'bed' && bedVariantsList.length > 1 ? (
+              <div className="space-y-2">
+                <label htmlFor="bed-variant-select" className="block text-sm font-medium text-gray-700">
+                  Size (L × W × H in.)
+                </label>
+                <select
+                  id="bed-variant-select"
+                  value={safeVariantIndex}
+                  onChange={(e) => setSelectedBedVariantIndex(Number(e.target.value))}
+                  className="w-full max-w-md border border-gray-300 rounded-sm px-3 py-2 text-sm text-gray-900 bg-white"
+                >
+                  {bedVariantsList.map((v, idx) => {
+                    const dim =
+                      [v.length, v.width, v.height].filter((x) => x != null && String(x).trim() !== '').join(' × ') ||
+                      null;
+                    const label = dim ? `${dim} in.` : `Size ${idx + 1}`;
+                    return (
+                      <option key={v.id != null ? String(v.id) : `v-${idx}`} value={idx}>
+                        {label} — PKR {formatPrice(parseNumeric(v.price, 0))}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+            ) : null}
+
+            {product.type === 'sofacumbed' && sofaVariantsList.length > 1 ? (
+              <div className="space-y-2">
+                <label htmlFor="sofa-variant-select" className="block text-sm font-medium text-gray-700">
+                  Upholstery / fabric
+                </label>
+                <select
+                  id="sofa-variant-select"
+                  value={safeVariantIndex}
+                  onChange={(e) => setSelectedBedVariantIndex(Number(e.target.value))}
+                  className="w-full max-w-md border border-gray-300 rounded-sm px-3 py-2 text-sm text-gray-900 bg-white"
+                >
+                  {sofaVariantsList.map((v, idx) => {
+                    const fabric =
+                      typeof v.fabric === 'string' && v.fabric.trim() !== ''
+                        ? v.fabric.trim()
+                        : `Option ${idx + 1}`;
+                    return (
+                      <option key={v.id != null ? String(v.id) : `sofa-v-${idx}`} value={idx}>
+                        {fabric} — PKR {formatPrice(parseNumeric(v.price, 0))}
+                      </option>
+                    );
+                  })}
+                </select>
+                <p className="text-xs text-gray-500">
+                  Each option is a different upholstery choice with its own price.
+                </p>
+              </div>
+            ) : null}
+
+            {product.type === 'sofacumbed' && sofaVariantsList.length === 1 && selectedCatalogVariant ? (
+              <div className="text-sm text-gray-700">
+                <span className="font-medium text-gray-900">Upholstery / fabric: </span>
+                <span>
+                  {typeof selectedCatalogVariant.fabric === 'string' && selectedCatalogVariant.fabric.trim() !== ''
+                    ? selectedCatalogVariant.fabric.trim()
+                    : '—'}
+                </span>
+                <span className="text-gray-500"> — PKR {formatPrice(parseNumeric(selectedCatalogVariant.price, 0))}</span>
+              </div>
+            ) : null}
+
             {/* Pricing */}
             <div className="space-y-2">
               {discountInfo ? (
@@ -1004,19 +1146,19 @@ const ProductPage = () => {
                   </>
                 ) : (
                   <span className="text-3xl font-bold text-[#00aeef]">
-                    {product.price > 0 ? `PKR ${formatPrice(product.price)}` : 'Price on request'}
+                    {displayPrice > 0 ? `PKR ${formatPrice(displayPrice)}` : 'Price on request'}
                   </span>
                 )}
               </div>
             </div>
 
-            {isCatalogProduct && specList.length > 0 && (
+            {isCatalogProduct && productDetailsSidebarRows.length > 0 && (
               <div className="rounded-sm border border-gray-200 bg-gray-50 p-4">
                 <h3 className="text-sm font-semibold text-gray-900 mb-3">
                   {productType === DEAL_TYPE ? 'Bundle overview' : 'Product details'}
                 </h3>
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                  {specList.map((row) => (
+                  {productDetailsSidebarRows.map((row) => (
                     <React.Fragment key={row.label}>
                       <dt className="text-gray-600">{row.label}</dt>
                       <dd className="font-medium text-gray-900">{row.value}</dd>

@@ -172,31 +172,31 @@ const CmsCustomersPage = () => {
   }, [userOrders, ordersPage]);
 
   return (
-    <div className="relative min-h-screen bg-linear-to-br from-[#0f172a] via-[#1e1b4b] to-[#020617] text-slate-100">
+    <div className="relative min-h-screen text-slate-900">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(96,165,250,0.20),transparent_55%)] opacity-80 pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-300">
-              <FiUsers className="text-[#38bdf8]" /> Customers
+            <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-600">
+              <FiUsers className="text-blue-600" /> Customers
             </p>
-            <h1 className="mt-2 text-3xl font-semibold text-white">Customer Directory</h1>
-            <p className="mt-1 text-sm text-slate-300">
+            <h1 className="mt-2 text-3xl font-semibold text-slate-900">Customer Directory</h1>
+            <p className="mt-1 text-sm text-slate-600">
               Browse every user registered on your hi-tech storefront. Use search and pagination to manage your customer base.
             </p>
           </div>
           <div className="flex gap-3 items-center">
             <Link
               href="/cms/dashboard"
-              className="inline-flex items-center gap-2 px-4 py-2.5 border border-white/20 rounded-lg text-sm font-semibold text-white hover:bg-white/10 transition shadow-lg shadow-black/10"
+              className="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 hover:bg-slate-100 transition shadow-lg shadow-black/10"
             >
               <FiArrowLeft />
               Back to dashboard
             </Link>
             <button
               onClick={() => router.refresh()}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-[#38bdf8] to-[#6366f1] hover:from-[#0ea5e9] hover:to-[#4338ca] text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-[#6366f1]/30"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-blue-500/20"
             >
               <FiRefreshCw className={loading ? 'animate-spin' : ''} />
               Refresh
@@ -204,18 +204,18 @@ const CmsCustomersPage = () => {
           </div>
         </header>
 
-        <section className="rounded-3xl border border-white/10 bg-white/10 backdrop-blur-3xl shadow-2xl p-6 sm:p-8 space-y-6">
+        <section className="rounded-3xl border border-slate-200 bg-slate-100 backdrop-blur-3xl shadow-2xl p-6 sm:p-8 space-y-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3 bg-white/10 border border-white/10 rounded-xl px-4 py-3">
-              <FiSearch className="text-slate-300" />
+            <div className="flex items-center gap-3 bg-slate-100 border border-slate-200 rounded-xl px-4 py-3">
+              <FiSearch className="text-slate-600" />
               <input
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Search by name, email, or address..."
-                className="bg-transparent text-sm text-white placeholder:text-slate-400 focus:outline-none"
+                className="bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none"
               />
             </div>
-            <div className="text-xs text-slate-300">
+            <div className="text-xs text-slate-600">
               Showing {paginatedUsers.length} of {filteredUsers.length} customers
             </div>
           </div>
@@ -239,7 +239,7 @@ const CmsCustomersPage = () => {
             )}
 
             {!loading && !error && filteredUsers.length === 0 && (
-              <div className="border border-white/10 bg-white/5 text-white/80 rounded-2xl p-6">
+              <div className="border border-slate-200 bg-slate-50 text-slate-700 rounded-2xl p-6">
                 <p className="text-sm font-semibold">No users found.</p>
                 <p className="text-xs mt-1">Try adjusting your search query.</p>
               </div>
@@ -251,22 +251,22 @@ const CmsCustomersPage = () => {
                 <article
                   key={user.id}
                   onClick={() => handleUserClick(user)}
-                  className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/10 backdrop-blur-xl shadow-xl cursor-pointer hover:border-white/20 hover:bg-white/15 transition"
+                  className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 backdrop-blur-xl shadow-xl cursor-pointer hover:border-slate-200 hover:bg-slate-200 transition"
                 >
                   <div className="absolute inset-0 bg-linear-to-br from-white/10 via-transparent to-white/5 opacity-45 pointer-events-none" />
                   <div className="relative p-6 grid gap-4 md:grid-cols-[1.5fr_1fr]">
                     <div className="space-y-3">
                       <div className="flex items-center gap-3">
-                        <div className="h-11 w-11 rounded-full bg-white/15 flex items-center justify-center text-white">
+                        <div className="h-11 w-11 rounded-full bg-white/15 flex items-center justify-center text-slate-700">
                           <FiUser />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-white">{user.fullName}</p>
-                          <p className="text-xs text-white/70">User ID: {user.id}</p>
+                          <p className="text-sm font-semibold text-slate-900">{user.fullName}</p>
+                          <p className="text-xs text-slate-600">User ID: {user.id}</p>
                         </div>
                       </div>
 
-                      <div className="grid sm:grid-cols-2 gap-3 text-xs text-white/70">
+                      <div className="grid sm:grid-cols-2 gap-3 text-xs text-slate-600">
                         <div className="flex items-center gap-2">
                           <FiMail />
                           <span className="truncate">{user.email}</span>
@@ -282,14 +282,14 @@ const CmsCustomersPage = () => {
                       </div>
                     </div>
 
-                    <div className="flex flex-col justify-between gap-3 text-sm text-white/80">
+                    <div className="flex flex-col justify-between gap-3 text-sm text-slate-600">
                       <div className="flex items-center justify-between">
                         <span>Total Orders</span>
-                        <span className="font-semibold text-white">{user.orders}</span>
+                        <span className="font-semibold text-slate-900">{user.orders}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span>Status</span>
-                        <span className="inline-flex px-3 py-1 rounded-lg bg-white/10 border border-white/20 text-xs uppercase tracking-wide">
+                        <span className="inline-flex px-3 py-1 rounded-lg bg-slate-100 border border-slate-200 text-xs uppercase tracking-wide">
                           {user.status}
                         </span>
                       </div>
@@ -311,17 +311,17 @@ const CmsCustomersPage = () => {
             <div className="flex items-center justify-center gap-3 pt-4">
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
-                className="px-4 py-2 bg-white/10 border border-white/10 rounded-lg text-sm text-white hover:bg-white/15 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-800 hover:bg-slate-200 transition disabled:opacity-40 disabled:cursor-not-allowed"
                 disabled={currentPage === 1}
               >
                 Previous
               </button>
-              <span className="text-xs text-slate-300">
+              <span className="text-xs text-slate-600">
                 Page {currentPage} of {totalPages}
               </span>
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
-                className="px-4 py-2 bg-white/10 border border-white/10 rounded-lg text-sm text-white hover:bg-white/15 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-800 hover:bg-slate-200 transition disabled:opacity-40 disabled:cursor-not-allowed"
                 disabled={currentPage === totalPages}
               >
                 Next
@@ -340,17 +340,17 @@ const CmsCustomersPage = () => {
           />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
             <div
-              className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#020617] border border-white/20 rounded-3xl shadow-2xl pointer-events-auto"
+              className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white border border-slate-200 rounded-3xl shadow-2xl pointer-events-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="sticky top-0 bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#020617] border-b border-white/10 p-6 flex items-center justify-between z-10">
+              <div className="sticky top-0 bg-slate-50 border-b border-slate-200 p-6 flex items-center justify-between z-10">
                 <div>
-                  <h2 className="text-2xl font-semibold text-white">User Details</h2>
-                  <p className="text-sm text-slate-300 mt-1">ID: {selectedUser.id}</p>
+                  <h2 className="text-2xl font-semibold text-slate-900">User Details</h2>
+                  <p className="text-sm text-slate-600 mt-1">ID: {selectedUser.id}</p>
                 </div>
                 <button
                   onClick={closeModal}
-                  className="p-2 rounded-lg hover:bg-white/10 transition text-white"
+                  className="p-2 rounded-lg hover:bg-slate-200/80 transition text-slate-700"
                 >
                   <FiX className="text-xl" />
                 </button>
@@ -358,46 +358,46 @@ const CmsCustomersPage = () => {
 
               <div className="p-6 space-y-6">
                 {/* User Information */}
-                <section className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
-                  <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <section className="rounded-2xl border border-slate-200 bg-slate-50 p-6 space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                     <FiUser />
                     Personal Information
                   </h3>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-xs text-slate-400 mb-1">Full Name</p>
-                      <p className="text-white font-medium">{selectedUser.fullName}</p>
+                      <p className="text-slate-800 font-medium">{selectedUser.fullName}</p>
                     </div>
                     <div>
                       <p className="text-xs text-slate-400 mb-1">Email</p>
-                      <p className="text-white flex items-center gap-2">
+                      <p className="text-slate-800 flex items-center gap-2">
                         <FiMail className="text-sm" />
                         {selectedUser.email}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-slate-400 mb-1">Phone</p>
-                      <p className="text-white flex items-center gap-2">
+                      <p className="text-slate-800 flex items-center gap-2">
                         <FiPhone className="text-sm" />
                         {selectedUser.phone}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-slate-400 mb-1">Status</p>
-                      <span className="inline-flex px-3 py-1 rounded-lg bg-white/10 border border-white/20 text-xs uppercase tracking-wide text-white">
+                      <span className="inline-flex px-3 py-1 rounded-lg bg-slate-100 border border-slate-200 text-xs uppercase tracking-wide text-slate-800">
                         {selectedUser.status}
                       </span>
                     </div>
                     <div className="md:col-span-2">
                       <p className="text-xs text-slate-400 mb-1">Address</p>
-                      <p className="text-white flex items-start gap-2">
+                      <p className="text-slate-800 flex items-start gap-2">
                         <FiMapPin className="text-sm mt-1" />
                         {selectedUser.address}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-slate-400 mb-1">Joined</p>
-                      <p className="text-white flex items-center gap-2">
+                      <p className="text-slate-800 flex items-center gap-2">
                         <FiCalendar className="text-sm" />
                         {selectedUser.createdAt
                           ? new Date(selectedUser.createdAt).toLocaleDateString('en-PK', {
@@ -408,14 +408,14 @@ const CmsCustomersPage = () => {
                     </div>
                     <div>
                       <p className="text-xs text-slate-400 mb-1">Total Orders</p>
-                      <p className="text-white font-semibold text-lg">{selectedUser.orders}</p>
+                      <p className="text-slate-800 font-semibold text-lg">{selectedUser.orders}</p>
                     </div>
                   </div>
                 </section>
 
                 {/* Orders Section */}
-                <section className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
-                  <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <section className="rounded-2xl border border-slate-200 bg-slate-50 p-6 space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                     <FiPackage />
                     Order History ({userOrders.length})
                   </h3>
@@ -445,11 +445,11 @@ const CmsCustomersPage = () => {
                           return (
                             <div
                               key={order.id}
-                              className="rounded-xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition"
+                              className="rounded-xl border border-slate-200 bg-slate-50 p-4 hover:bg-slate-200/80 transition"
                             >
                               <div className="flex items-start justify-between mb-3">
                                 <div>
-                                  <p className="text-white font-semibold">
+                                  <p className="text-slate-800 font-semibold">
                                     Order #{order.id}
                                   </p>
                                   <p className="text-xs text-slate-400 mt-1 flex items-center gap-2">
@@ -458,7 +458,7 @@ const CmsCustomersPage = () => {
                                   </p>
                                 </div>
                                 <div className="text-right">
-                                  <p className="text-white font-semibold flex items-center gap-2">
+                                  <p className="text-slate-800 font-semibold flex items-center gap-2">
                                     
                                     {formatCurrency(total)}
                                   </p>
@@ -473,7 +473,7 @@ const CmsCustomersPage = () => {
                               </div>
 
                               {order.order_items && Array.isArray(order.order_items) && (
-                                <div className="mt-3 pt-3 border-t border-white/10">
+                                <div className="mt-3 pt-3 border-t border-slate-200">
                                   <p className="text-xs text-slate-400 mb-2">
                                     Items ({order.order_items.length}):
                                   </p>
@@ -481,7 +481,7 @@ const CmsCustomersPage = () => {
                                     {order.order_items.slice(0, 3).map((item, idx) => (
                                       <p
                                         key={idx}
-                                        className="text-sm text-slate-300"
+                                        className="text-sm text-slate-600"
                                       >
                                         • {item.product_name || item.name || 'Unknown Product'} x
                                         {item.quantity || 1}
@@ -502,15 +502,15 @@ const CmsCustomersPage = () => {
 
                       {/* Orders Pagination */}
                       {userOrders.length > ORDERS_PER_PAGE && (
-                        <div className="flex items-center justify-center gap-3 pt-4 border-t border-white/10">
+                        <div className="flex items-center justify-center gap-3 pt-4 border-t border-slate-200">
                           <button
                             onClick={() => setOrdersPage((p) => Math.max(1, p - 1))}
                             disabled={ordersPage === 1}
-                            className="px-4 py-2 bg-white/10 border border-white/10 rounded-lg text-sm text-white hover:bg-white/15 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="px-4 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-800 hover:bg-slate-200 transition disabled:opacity-40 disabled:cursor-not-allowed"
                           >
                             Previous
                           </button>
-                          <span className="text-xs text-slate-300">
+                          <span className="text-xs text-slate-600">
                             Page {ordersPage} of {totalOrdersPages}
                           </span>
                           <button
@@ -518,7 +518,7 @@ const CmsCustomersPage = () => {
                               setOrdersPage((p) => Math.min(totalOrdersPages, p + 1))
                             }
                             disabled={ordersPage === totalOrdersPages}
-                            className="px-4 py-2 bg-white/10 border border-white/10 rounded-lg text-sm text-white hover:bg-white/15 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="px-4 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-800 hover:bg-slate-200 transition disabled:opacity-40 disabled:cursor-not-allowed"
                           >
                             Next
                           </button>

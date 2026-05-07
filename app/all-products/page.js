@@ -18,7 +18,7 @@ import { API_BASE } from '../lib/apiBase';
 import { applyCategoryDiscount, discountsArrayToMap } from '../lib/categoryDiscounts';
 import { getCategoryPlaceholderImage } from '../lib/categoryPlaceholders';
 
-/** Mattress / product height filter (inches). API beds use cm; furniture often uses text with units. */
+/** Mattress / product height filter (inches). Mattress variant dimensions in API are stored as inch values; furniture often uses text with units. */
 const HEIGHT_INCH_STOPS = [6, 8, 12, 16, 20, 24, 28, 32];
 const CM_TO_INCH = 1 / 2.54;
 
@@ -85,6 +85,26 @@ const SLUG_TO_LABEL = {
   furniture: 'Furniture',
   deals: 'Deals',
 };
+
+/** URL ?brand= slug → must match `beds.brand` text (case-insensitive). */
+const MATTRESS_BRAND_OPTIONS = [
+  { slug: '', label: 'All brands' },
+  { slug: 'englander', label: 'Englander' },
+  { slug: 'citi-foam', label: 'Citi Foam' },
+  { slug: 'diamond', label: 'Diamond' },
+];
+
+const MATTRESS_BRAND_LABEL_BY_SLUG = MATTRESS_BRAND_OPTIONS.reduce((acc, o) => {
+  if (o.slug) acc[o.slug] = o.label;
+  return acc;
+}, {});
+
+function mattressBrandSlugMatchesProduct(slug, productBrand) {
+  if (!slug) return true;
+  const expected = MATTRESS_BRAND_LABEL_BY_SLUG[slug];
+  if (!expected) return true;
+  return String(productBrand || '').trim().toLowerCase() === expected.toLowerCase();
+}
 
 export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictToType = null, pageTitle = 'All Products', showCategoryFilter = true } = {}) => {
   const searchParams = useSearchParams();
@@ -188,14 +208,39 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
       const params = new URLSearchParams(searchParams.toString());
       if (category === 'All Products') {
         params.delete('subcategory');
+        params.delete('brand');
       } else {
         const slug = SUBCATEGORY_SLUGS[category];
         if (slug) params.set('subcategory', slug);
+        if (category !== 'Matteress') {
+          params.delete('brand');
+        }
       }
       router.push(`/all-products?${params.toString()}`);
     },
     [router, searchParams, restrictToType],
   );
+
+  const handleMattressBrandChange = useCallback(
+    (slug) => {
+      setCurrentPage(1);
+      const params = new URLSearchParams(searchParams.toString());
+      if (!slug) {
+        params.delete('brand');
+      } else {
+        params.set('brand', slug);
+      }
+      router.push(`/all-products?${params.toString()}`);
+    },
+    [router, searchParams],
+  );
+
+  const mattressBrandQuery = searchParams?.get('brand');
+  const mattressBrandSlug = useMemo(() => {
+    const raw = typeof mattressBrandQuery === 'string' ? mattressBrandQuery.trim().toLowerCase() : '';
+    if (!raw) return '';
+    return ['englander', 'citi-foam', 'diamond'].includes(raw) ? raw : '';
+  }, [mattressBrandQuery]);
 
   const clampPrice = (value) => {
     const numeric = Number(value);
@@ -299,7 +344,16 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
             .join(' • ')
         : item.processor || item.graphics || '') ||
       computedName;
-    const parsedPrice = parseNumeric(item.price);
+    let parsedPrice = parseNumeric(item.price);
+    if (
+      (type === 'bed' || type === 'sofacumbed') &&
+      Array.isArray(item.variants) &&
+      item.variants.length &&
+      (!Number.isFinite(parsedPrice) || parsedPrice <= 0)
+    ) {
+      const nums = item.variants.map((v) => parseNumeric(v?.price, 0)).filter((n) => n > 0);
+      if (nums.length) parsedPrice = Math.min(...nums);
+    }
     const hasPrice = Number.isFinite(parsedPrice) && parsedPrice > 0;
 
     const categoryTitle =
@@ -511,6 +565,17 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
         return false;
       }
 
+      const mattressViewActive =
+        !restrictToType && (effectiveSubcategory === 'matteress' || selectedCategory === 'Matteress');
+      if (
+        mattressViewActive &&
+        mattressBrandSlug &&
+        (product.type || '').toLowerCase() === 'bed' &&
+        !mattressBrandSlugMatchesProduct(mattressBrandSlug, product.brand)
+      ) {
+        return false;
+      }
+
       if (applySearchFilter) {
         const searchableFields = [
           product.name || '',
@@ -565,6 +630,9 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
     products,
     mergeProductDiscount,
     restrictToType,
+    effectiveSubcategory,
+    selectedCategory,
+    mattressBrandSlug,
     selectedPriceRange,
     priceRange,
     searchTerm,
@@ -835,6 +903,27 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
                 </div>
               )}
 
+              {showCategoryFilter && selectedCategory === 'Matteress' && (
+                <div className="bg-white rounded-sm border border-gray-200 shadow-lg p-4">
+                  <h3 className="text-sm font-bold text-gray-900 mb-2">MATTRESS BRAND</h3>
+                  <p className="text-xs text-gray-500 mb-3">Show mattresses from one supplier only.</p>
+                  <label className="block">
+                    <span className="sr-only">Mattress brand</span>
+                    <select
+                      value={mattressBrandSlug}
+                      onChange={(e) => handleMattressBrandChange(e.target.value)}
+                      className="w-full rounded-sm border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-[#00aeef] focus:outline-none focus:ring-1 focus:ring-[#00aeef]"
+                    >
+                      {MATTRESS_BRAND_OPTIONS.map((o) => (
+                        <option key={o.slug || 'all'} value={o.slug}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              )}
+
               {/* Price Range */}
               <div className="bg-white rounded-sm border border-gray-200 shadow-lg p-4">
                 <h3 className="text-sm font-bold text-gray-900 mb-3">PRICE RANGE</h3>
@@ -937,7 +1026,7 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
               <div className="bg-white rounded-sm border border-gray-200 shadow-lg p-4">
                 <h3 className="text-sm font-bold text-gray-900 mb-3">HEIGHT (INCHES)</h3>
                 <p className="text-xs text-gray-500 mb-3">
-                  Filter by product height. Beds stored in cm are converted automatically.
+                  Filter by product height. Mattress heights use inches in the catalog.
                 </p>
                 <div className="space-y-3">
                   <div>

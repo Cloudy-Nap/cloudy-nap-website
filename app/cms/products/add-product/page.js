@@ -20,10 +20,7 @@ const CLOUDYNAP_TYPES = ['bed', 'accessory', 'furniture', 'sofacumbed'];
 const isCloudynapCategory = (value) => CLOUDYNAP_TYPES.includes(value);
 
 const GENERAL_FIELD_CONFIG = {
-  bed: [
-    { id: 'name', label: 'Product name', type: 'text', placeholder: 'Cloudynap Ortho Comfort 6"' },
-    { id: 'price', label: 'Price (PKR)', type: 'text', placeholder: '85000' },
-  ],
+  bed: [{ id: 'name', label: 'Product name', type: 'text', placeholder: 'Cloudynap Ortho Comfort 6"' }],
   accessory: [
     { id: 'name', label: 'Product name', type: 'text', placeholder: 'Memory foam pillow — medium' },
     { id: 'price', label: 'Price (PKR)', type: 'text', placeholder: '4500' },
@@ -37,21 +34,11 @@ const GENERAL_FIELD_CONFIG = {
       placeholder: 'PKR 32,000 or Contact for quote',
     },
   ],
-  sofacumbed: [
-    { id: 'name', label: 'Product name', type: 'text', placeholder: '3-seater sofa cum bed — grey' },
-    {
-      id: 'price',
-      label: 'Price (display text)',
-      type: 'text',
-      placeholder: 'PKR 125,000',
-    },
-  ],
+  sofacumbed: [{ id: 'name', label: 'Product name', type: 'text', placeholder: '3-seater sofa cum bed — grey' }],
 };
 
 const bedSpecs = [
-  { id: 'length', label: 'Length (cm)', placeholder: '198' },
-  { id: 'width', label: 'Width (cm)', placeholder: '152' },
-  { id: 'height', label: 'Height (cm)', placeholder: '25' },
+  { id: 'brand', label: 'Brand', placeholder: 'Englander, Citi Foam, or Diamond' },
   { id: 'series', label: 'Series / line', placeholder: 'Ortho Comfort' },
   { id: 'features', label: 'Features', placeholder: 'Cool-gel foam, anti-mite cover' },
   { id: 'benefits', label: 'Benefits', placeholder: 'Spinal support, motion isolation' },
@@ -85,7 +72,6 @@ const sofaCumBedSpecs = [
   { id: 'features', label: 'Features', placeholder: 'Storage, easy fold mechanism' },
   { id: 'benefits', label: 'Benefits', placeholder: 'Guest-ready, space-saving' },
   { id: 'firmness', label: 'Mattress firmness', placeholder: 'Medium' },
-  { id: 'fabric', label: 'Fabric', placeholder: 'Linen blend' },
   { id: 'warranty', label: 'Warranty', placeholder: '5 years frame, 2 years mattress' },
 ];
 
@@ -104,6 +90,8 @@ const CmsAddProductPage = () => {
     price: '',
     description: '',
   });
+  const [bedVariants, setBedVariants] = useState([{ width: '', height: '', length: '', price: '' }]);
+  const [sofaVariants, setSofaVariants] = useState([{ price: '', fabric: '' }]);
   const [specs, setSpecs] = useState({});
   const [images, setImages] = useState([]);
   const [status, setStatus] = useState({ type: '', message: '' });
@@ -150,6 +138,12 @@ const CmsAddProductPage = () => {
 
   useEffect(() => {
     setSpecs({});
+    if (category === 'bed') {
+      setBedVariants([{ width: '', height: '', length: '', price: '' }]);
+    }
+    if (category === 'sofacumbed') {
+      setSofaVariants([{ price: '', fabric: '' }]);
+    }
   }, [category]);
 
   useEffect(() => {
@@ -192,6 +186,34 @@ const CmsAddProductPage = () => {
     });
   };
 
+  const updateBedVariant = (index, field, value) => {
+    setBedVariants((prev) =>
+      prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)),
+    );
+  };
+
+  const addBedVariantRow = () => {
+    setBedVariants((prev) => [...prev, { width: '', height: '', length: '', price: '' }]);
+  };
+
+  const removeBedVariantRow = (index) => {
+    setBedVariants((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
+  };
+
+  const updateSofaVariant = (index, field, value) => {
+    setSofaVariants((prev) =>
+      prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)),
+    );
+  };
+
+  const addSofaVariantRow = () => {
+    setSofaVariants((prev) => [...prev, { price: '', fabric: '' }]);
+  };
+
+  const removeSofaVariantRow = (index) => {
+    setSofaVariants((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
+  };
+
   const handleReset = () => {
     setDetails({
       name: '',
@@ -199,6 +221,8 @@ const CmsAddProductPage = () => {
       description: '',
     });
     setSpecs({});
+    setBedVariants([{ width: '', height: '', length: '', price: '' }]);
+    setSofaVariants([{ price: '', fabric: '' }]);
     setStatus({ type: '', message: '' });
     setImages((prev) => {
       prev.forEach((item) => URL.revokeObjectURL(item.preview));
@@ -215,7 +239,19 @@ const CmsAddProductPage = () => {
       return;
     }
 
-    if (!details.price.trim()) {
+    if (category === 'bed') {
+      const priced = bedVariants.filter((v) => String(v.price || '').trim() !== '');
+      if (!priced.length) {
+        setStatus({ type: 'error', message: 'Add at least one mattress size with a price (PKR).' });
+        return;
+      }
+    } else if (category === 'sofacumbed') {
+      const priced = sofaVariants.filter((v) => String(v.price || '').trim() !== '');
+      if (!priced.length) {
+        setStatus({ type: 'error', message: 'Add at least one fabric option with a price (PKR).' });
+        return;
+      }
+    } else if (!details.price.trim()) {
       setStatus({ type: 'error', message: 'Please provide a price.' });
       return;
     }
@@ -241,7 +277,19 @@ const CmsAddProductPage = () => {
       Object.entries(details).forEach(([key, value]) => {
         formData.append(key, value ?? '');
       });
-      formData.append('specs', JSON.stringify(specs));
+      const specsPayload =
+        category === 'bed'
+          ? {
+              ...specs,
+              variants: bedVariants.filter((v) => String(v.price || '').trim() !== ''),
+            }
+          : category === 'sofacumbed'
+            ? {
+                ...specs,
+                variants: sofaVariants.filter((v) => String(v.price || '').trim() !== ''),
+              }
+            : specs;
+      formData.append('specs', JSON.stringify(specsPayload));
 
       const cmsUser = JSON.parse(window.localStorage.getItem('cmsUser') || '{}');
 
@@ -277,60 +325,69 @@ const CmsAddProductPage = () => {
     }
   };
 
+  const fieldLabelClass = 'text-sm font-medium text-slate-700 mb-2';
+  const inputClass =
+    'w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/25';
+
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
-      <header className="bg-linear-to-r from-slate-900/90 via-slate-800/90 to-slate-900/90 border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="relative min-h-screen text-slate-900">
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.06),transparent_55%)]"
+        aria-hidden
+      />
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+        <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Cloudynap catalog</p>
-            <h1 className="mt-2 text-3xl font-semibold text-white">Add product</h1>
-            <p className="text-sm text-slate-300 mt-2 max-w-xl">
+            <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-400">
+              <FiPlusCircle className="text-blue-600" /> Cloudynap catalog
+            </p>
+            <h1 className="mt-2 text-3xl font-semibold text-slate-900">Add product</h1>
+            <p className="mt-1 text-sm text-slate-600 max-w-2xl">
               List mattresses, furniture, sofa cum beds, and accessories. Fields match your storefront. Upload clear
               photos before publishing.
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <Link
               href="/cms/products"
-              className="inline-flex items-center gap-2 px-4 py-2.5 border border-white/20 rounded-lg text-sm font-semibold text-white hover:bg-white/10 transition shadow-lg shadow-black/10"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 bg-white/90 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 transition"
             >
               <FiArrowLeft /> Back to products
             </Link>
             <button
               type="button"
               onClick={() => router.push('/cms/dashboard')}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-[#00aeef] to-[#0284c7] hover:from-[#0891b2] hover:to-[#0369a1] text-sm font-semibold text-white rounded-lg shadow-lg shadow-[#00aeef]/25"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-linear-to-r from-blue-600 to-blue-700 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:from-blue-700 hover:to-blue-800"
             >
               Dashboard
             </button>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-10">
         <form
           onSubmit={handleSubmit}
-          className="space-y-10 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-xl shadow-2xl px-6 sm:px-10 py-10"
+          className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 lg:p-10 shadow-sm space-y-10"
         >
-          <section className="grid grid-cols-1 lg:grid-cols-[280px,1fr] gap-6">
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <p className="text-sm font-semibold text-white flex items-center gap-2">
-                <FiPlusCircle className="text-[#00aeef]" />
+          <section className="grid grid-cols-1 lg:grid-cols-[minmax(0,280px),1fr] gap-8">
+            <div className="rounded-2xl border border-blue-100 bg-linear-to-br from-blue-50/95 to-sky-50/40 p-6 shadow-sm">
+              <p className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                <FiPlusCircle className="text-blue-600" />
                 Category
               </p>
-              <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+              <p className="text-xs text-slate-600 mt-2 leading-relaxed">
                 Pick the catalog section. Specification fields update for mattresses, furniture, sofa cum beds, or
                 accessories.
               </p>
             </div>
             <div className="space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <label className="flex flex-col">
-                  <span className="text-xs font-semibold text-slate-200 uppercase tracking-wide mb-2">Category</span>
+                  <span className={fieldLabelClass}>Category</span>
                   <select
                     value={category}
                     onChange={(event) => setCategory(event.target.value)}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#00aeef]/60"
+                    className={`${inputClass} appearance-none`}
                   >
                     <option className="text-black" value="bed">
                       Mattresses & beds
@@ -347,24 +404,22 @@ const CmsAddProductPage = () => {
                   </select>
                 </label>
                 <label className="flex flex-col">
-                  <span className="text-xs font-semibold text-slate-200 uppercase tracking-wide mb-2">Description</span>
+                  <span className={fieldLabelClass}>Description</span>
                   <textarea
                     name="description"
                     value={details.description}
                     onChange={handleGeneralChange}
                     rows={4}
                     placeholder="Short description for the product page and cards."
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#00aeef]/60 resize-none"
+                    className={`${inputClass} resize-none min-h-28`}
                   />
                 </label>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {(GENERAL_FIELD_CONFIG[category] || GENERAL_FIELD_CONFIG.bed).map((field) => (
                   <label key={field.id} className="flex flex-col">
-                    <span className="text-xs font-semibold text-slate-200 uppercase tracking-wide mb-2">
-                      {field.label}
-                    </span>
+                    <span className={fieldLabelClass}>{field.label}</span>
                     <input
                       id={field.id}
                       name={field.id}
@@ -372,7 +427,7 @@ const CmsAddProductPage = () => {
                       value={details[field.id] ?? ''}
                       onChange={handleGeneralChange}
                       placeholder={field.placeholder}
-                      className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00aeef]/60"
+                      className={inputClass}
                     />
                   </label>
                 ))}
@@ -380,14 +435,14 @@ const CmsAddProductPage = () => {
             </div>
           </section>
 
-          <section className="space-y-6">
+          <section className="space-y-6 pt-2 border-t border-slate-100">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold text-white flex items-center gap-2">
-                  <SpecIcon className="text-[#00aeef]" />
+                <p className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                  <SpecIcon className="text-blue-600" />
                   {categoryMeta[category]?.specTitle || 'Details'}
                 </p>
-                <p className="text-xs text-slate-300 mt-1">
+                <p className="text-xs text-slate-600 mt-1">
                   These values appear on the public product page in the specification area.
                 </p>
               </div>
@@ -395,28 +450,165 @@ const CmsAddProductPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {specFields.map((field) => (
-                <label key={field.id} className="flex flex-col bg-white/5 border border-white/10 rounded-xl p-4">
-                  <span className="text-xs font-semibold text-slate-200 uppercase tracking-wide mb-2">{field.label}</span>
+                <label
+                  key={field.id}
+                  className="flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                >
+                  <span className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600">
+                    {field.label}
+                  </span>
                   <input
                     name={field.id}
                     value={specs[field.id] || ''}
                     onChange={handleSpecChange}
                     placeholder={field.placeholder}
-                    className="bg-transparent border border-white/20 focus:border-[#00aeef] focus:ring-2 focus:ring-[#00aeef]/50 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-400"
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/25"
                   />
                 </label>
               ))}
             </div>
           </section>
 
-          <section className="space-y-4">
+          {category === 'bed' && (
+            <section className="space-y-6 pt-2 border-t border-slate-100">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Mattress sizes &amp; prices</p>
+                <p className="text-xs text-slate-600 mt-1">
+                  Each row is one stock keeping size (L × W × H in inches). PKR is required per row.
+                </p>
+              </div>
+              <div className="space-y-4">
+                {bedVariants.map((row, index) => (
+                  <div
+                    key={`bed-var-${index}`}
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                  >
+                    <label className="flex flex-col">
+                      <span className="text-xs font-semibold text-slate-600 mb-1">Length (in.)</span>
+                      <input
+                        value={row.length}
+                        onChange={(e) => updateBedVariant(index, 'length', e.target.value)}
+                        placeholder="78"
+                        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </label>
+                    <label className="flex flex-col">
+                      <span className="text-xs font-semibold text-slate-600 mb-1">Width (in.)</span>
+                      <input
+                        value={row.width}
+                        onChange={(e) => updateBedVariant(index, 'width', e.target.value)}
+                        placeholder="60"
+                        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </label>
+                    <label className="flex flex-col">
+                      <span className="text-xs font-semibold text-slate-600 mb-1">Height (in.)</span>
+                      <input
+                        value={row.height}
+                        onChange={(e) => updateBedVariant(index, 'height', e.target.value)}
+                        placeholder="12"
+                        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </label>
+                    <label className="flex flex-col">
+                      <span className="text-xs font-semibold text-slate-600 mb-1">Price (PKR)</span>
+                      <input
+                        value={row.price}
+                        onChange={(e) => updateBedVariant(index, 'price', e.target.value)}
+                        placeholder="85000"
+                        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </label>
+                    <div className="flex gap-2 justify-end lg:justify-start">
+                      <button
+                        type="button"
+                        onClick={() => addBedVariantRow()}
+                        className="text-xs font-semibold text-blue-600 hover:text-blue-800 px-2 py-2"
+                      >
+                        <FiPlusCircle className="inline mr-1" />
+                        Add size
+                      </button>
+                      {bedVariants.length > 1 ? (
+                        <button
+                          type="button"
+                          onClick={() => removeBedVariantRow(index)}
+                          className="text-xs font-semibold text-red-600 hover:text-red-800 px-2 py-2"
+                        >
+                          Remove
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {category === 'sofacumbed' && (
+            <section className="space-y-6 pt-2 border-t border-slate-100">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Fabric options &amp; prices</p>
+                <p className="text-xs text-slate-600 mt-1">
+                  Each row is one upholstery option. PKR is required per row.
+                </p>
+              </div>
+              <div className="space-y-4">
+                {sofaVariants.map((row, index) => (
+                  <div
+                    key={`sofa-var-${index}`}
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                  >
+                    <label className="flex flex-col sm:col-span-2">
+                      <span className="text-xs font-semibold text-slate-600 mb-1">Fabric</span>
+                      <input
+                        value={row.fabric}
+                        onChange={(e) => updateSofaVariant(index, 'fabric', e.target.value)}
+                        placeholder="e.g. Grey velvet"
+                        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </label>
+                    <label className="flex flex-col">
+                      <span className="text-xs font-semibold text-slate-600 mb-1">Price (PKR)</span>
+                      <input
+                        value={row.price}
+                        onChange={(e) => updateSofaVariant(index, 'price', e.target.value)}
+                        placeholder="125000"
+                        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </label>
+                    <div className="flex gap-2 justify-end lg:justify-start">
+                      <button
+                        type="button"
+                        onClick={() => addSofaVariantRow()}
+                        className="text-xs font-semibold text-blue-600 hover:text-blue-800 px-2 py-2"
+                      >
+                        <FiPlusCircle className="inline mr-1" />
+                        Add option
+                      </button>
+                      {sofaVariants.length > 1 ? (
+                        <button
+                          type="button"
+                          onClick={() => removeSofaVariantRow(index)}
+                          className="text-xs font-semibold text-red-600 hover:text-red-800 px-2 py-2"
+                        >
+                          Remove
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section className="space-y-4 pt-2 border-t border-slate-100">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-white flex items-center gap-2">
-                  <FiUploadCloud className="text-[#00aeef]" />
+                <p className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                  <FiUploadCloud className="text-blue-600" />
                   Product images
                 </p>
-                <p className="text-xs text-slate-300 mt-1">
+                <p className="text-xs text-slate-600 mt-1">
                   Multiple angles or room shots. The first image is the cover unless you change it when editing.
                 </p>
               </div>
@@ -424,12 +616,12 @@ const CmsAddProductPage = () => {
 
             <label
               htmlFor="product-images"
-              className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-white/20 rounded-2xl px-6 py-10 bg-white/5 hover:border-[#00aeef]/60 transition cursor-pointer text-center"
+              className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-300 bg-white px-6 py-10 transition cursor-pointer text-center hover:border-blue-400 hover:bg-blue-50/40"
             >
-              <FiUploadCloud className="text-3xl text-[#00aeef]" />
+              <FiUploadCloud className="text-3xl text-blue-600" />
               <div>
-                <p className="text-sm font-semibold text-white">Click to upload images</p>
-                <p className="text-xs text-slate-300 mt-1">PNG, JPG up to 8MB each. Multi-select supported.</p>
+                <p className="text-sm font-semibold text-slate-900">Click to upload images</p>
+                <p className="text-xs text-slate-600 mt-1">PNG, JPG up to 8MB each. Multi-select supported.</p>
               </div>
               <input
                 id="product-images"
@@ -446,17 +638,17 @@ const CmsAddProductPage = () => {
                 {images.map((item) => (
                   <div
                     key={item.id}
-                    className="relative bg-white/10 border border-white/15 rounded-xl overflow-hidden shadow-lg"
+                    className="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={item.preview} alt={item.file.name} className="h-44 w-full object-cover" />
                     <div className="p-3 space-y-2">
-                      <p className="text-sm font-semibold text-white truncate">{item.file.name}</p>
-                      <p className="text-xs text-slate-300">{(item.file.size / (1024 * 1024)).toFixed(2)} MB</p>
+                      <p className="text-sm font-semibold text-slate-900 truncate">{item.file.name}</p>
+                      <p className="text-xs text-slate-600">{(item.file.size / (1024 * 1024)).toFixed(2)} MB</p>
                       <button
                         type="button"
                         onClick={() => removeImage(item.id)}
-                        className="inline-flex items-center gap-2 text-xs font-semibold text-red-300 hover:text-red-200 transition"
+                        className="inline-flex items-center gap-2 text-xs font-semibold text-red-600 hover:text-red-700 transition"
                       >
                         <FiTrash2 /> Remove
                       </button>
@@ -471,33 +663,33 @@ const CmsAddProductPage = () => {
             <div
               className={`text-sm px-4 py-3 rounded-lg border ${
                 status.type === 'success'
-                  ? 'bg-emerald-500/10 border-emerald-400/40 text-emerald-200'
-                  : 'bg-red-500/10 border-red-400/40 text-red-200'
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+                  : 'border-red-200 bg-red-50 text-red-800'
               }`}
             >
               {status.message}
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row sm:justify-end gap-3">
+          <div className="flex flex-col gap-3 border-t border-slate-100 pt-8 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={handleReset}
               disabled={submitting}
-              className="px-4 py-2.5 border border-white/20 rounded-lg text-sm font-semibold text-white hover:bg-white/10 transition disabled:opacity-60 disabled:cursor-not-allowed"
+              className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Reset form
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2.5 bg-linear-to-r from-[#00aeef] to-[#0284c7] hover:from-[#0891b2] hover:to-[#0369a1] text-sm font-semibold text-white rounded-lg shadow-lg shadow-[#00aeef]/25 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="rounded-lg bg-linear-to-r from-blue-600 to-blue-700 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:from-blue-700 hover:to-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {submitting ? 'Saving…' : 'Save product'}
             </button>
           </div>
         </form>
-      </main>
+      </div>
     </div>
   );
 };

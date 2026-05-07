@@ -295,26 +295,26 @@ const CmsDealsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
-      <header className="border-b border-white/10 bg-slate-900/80 backdrop-blur">
+    <div className="min-h-screen text-slate-900">
+      <header className="border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="max-w-5xl mx-auto px-6 py-5 flex flex-wrap items-center gap-4 justify-between">
           <div className="flex items-center gap-3">
             <Link
               href="/cms/dashboard"
-              className="inline-flex items-center gap-2 text-sm text-slate-300 hover:text-white"
+              className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-blue-700"
             >
               <FiArrowLeft />
               Dashboard
             </Link>
           </div>
           <div className="flex items-center gap-2">
-            <FiGift className="text-[#38bdf8] text-xl" />
-            <h1 className="text-xl font-semibold text-white">Deal packages</h1>
+            <FiGift className="text-blue-600 text-xl" />
+            <h1 className="text-xl font-semibold text-slate-900">Deal packages</h1>
           </div>
           <button
             type="button"
             onClick={loadDeals}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/20 text-sm hover:bg-white/10"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 text-sm hover:bg-slate-200/80"
           >
             <FiRefreshCw />
             Refresh
@@ -335,16 +335,16 @@ const CmsDealsPage = () => {
           </div>
         )}
 
-        <section className="rounded-2xl border border-white/10 bg-slate-900/50 p-6 space-y-6">
+        <section className="rounded-2xl border border-slate-200 bg-white/95 shadow-sm p-6 space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-white">
+            <h2 className="text-lg font-semibold text-slate-900">
               {editingId ? 'Edit deal' : 'Create deal'}
             </h2>
             {editingId && (
               <button
                 type="button"
                 onClick={resetForm}
-                className="inline-flex items-center gap-2 text-sm text-slate-300 hover:text-white"
+                className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-blue-700"
               >
                 <FiX />
                 Cancel edit
@@ -357,7 +357,7 @@ const CmsDealsPage = () => {
               <label className="block space-y-1">
                 <span className="text-xs uppercase tracking-wide text-slate-400">Title</span>
                 <input
-                  className="w-full rounded-lg bg-slate-950 border border-white/15 px-3 py-2 text-white"
+                  className="w-full rounded-lg bg-white border border-slate-300 px-3 py-2 text-slate-900"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Queen mattress + 2 pillows"
@@ -370,7 +370,7 @@ const CmsDealsPage = () => {
                   type="number"
                   min="0"
                   step="0.01"
-                  className="w-full rounded-lg bg-slate-950 border border-white/15 px-3 py-2 text-white"
+                  className="w-full rounded-lg bg-white border border-slate-300 px-3 py-2 text-slate-900"
                   value={dealPrice}
                   onChange={(e) => setDealPrice(e.target.value)}
                   required
@@ -380,7 +380,7 @@ const CmsDealsPage = () => {
             <label className="block space-y-1">
               <span className="text-xs uppercase tracking-wide text-slate-400">Description</span>
               <textarea
-                className="w-full rounded-lg bg-slate-950 border border-white/15 px-3 py-2 text-white min-h-[88px]"
+                className="w-full rounded-lg bg-white border border-slate-300 px-3 py-2 text-slate-900 min-h-[88px]"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="What the customer gets in this bundle…"
@@ -391,7 +391,7 @@ const CmsDealsPage = () => {
                 <span className="text-xs uppercase tracking-wide text-slate-400">Sort order</span>
                 <input
                   type="number"
-                  className="w-full rounded-lg bg-slate-950 border border-white/15 px-3 py-2 text-white"
+                  className="w-full rounded-lg bg-white border border-slate-300 px-3 py-2 text-slate-900"
                   value={sortOrder}
                   onChange={(e) => setSortOrder(e.target.value)}
                 />
@@ -416,12 +416,12 @@ const CmsDealsPage = () => {
                   return (
                     <div
                       key={index}
-                      className="flex flex-wrap gap-3 items-end p-4 rounded-xl bg-slate-950/80 border border-white/10"
+                      className="flex flex-wrap gap-3 items-end p-4 rounded-xl bg-slate-100 border border-slate-200"
                     >
                       <label className="space-y-1 min-w-[160px]">
                         <span className="text-xs text-slate-500">Category</span>
                         <select
-                          className="w-full rounded-lg bg-slate-900 border border-white/15 px-2 py-2 text-sm text-white"
+                          className="w-full rounded-lg bg-white border border-slate-300 px-2 py-2 text-sm text-slate-900"
                           value={line.catalog_type}
                           onChange={(e) =>
                             updateLine(index, { catalog_type: e.target.value, product_id: '', label: '' })
@@ -437,7 +437,7 @@ const CmsDealsPage = () => {
                       <label className="space-y-1 flex-1 min-w-[200px]">
                         <span className="text-xs text-slate-500">Product</span>
                         <select
-                          className="w-full rounded-lg bg-slate-900 border border-white/15 px-2 py-2 text-sm text-white"
+                          className="w-full rounded-lg bg-white border border-slate-300 px-2 py-2 text-sm text-slate-900"
                           value={line.product_id}
                           onChange={(e) => onProductSelect(index, e.target.value)}
                         >
@@ -454,7 +454,7 @@ const CmsDealsPage = () => {
                         <input
                           type="number"
                           min="1"
-                          className="w-full rounded-lg bg-slate-900 border border-white/15 px-2 py-2 text-sm text-white"
+                          className="w-full rounded-lg bg-white border border-slate-300 px-2 py-2 text-sm text-slate-900"
                           value={line.quantity}
                           onChange={(e) => updateLine(index, { quantity: e.target.value })}
                         />
@@ -465,7 +465,7 @@ const CmsDealsPage = () => {
                           checked={line.is_free}
                           onChange={(e) => updateLine(index, { is_free: e.target.checked })}
                         />
-                        <span className="text-xs text-slate-300">Free add-on</span>
+                        <span className="text-xs text-slate-600">Free add-on</span>
                       </label>
                       <button
                         type="button"
@@ -487,7 +487,7 @@ const CmsDealsPage = () => {
               <button
                 type="button"
                 onClick={() => setLines((prev) => [...prev, emptyLine()])}
-                className="mt-3 inline-flex items-center gap-2 text-sm text-[#38bdf8] hover:underline"
+                className="mt-3 inline-flex items-center gap-2 text-sm text-blue-600 hover:underline"
               >
                 <FiPlus />
                 Add line
@@ -504,7 +504,7 @@ const CmsDealsPage = () => {
                       type="button"
                       onClick={() => setCoverExisting(url)}
                       className={`text-xs px-2 py-1 rounded border ${
-                        coverExisting === url ? 'border-[#38bdf8] bg-[#38bdf8]/20' : 'border-white/20'
+                        coverExisting === url ? 'border-[#38bdf8] bg-[#38bdf8]/20' : 'border-slate-200'
                       }`}
                     >
                       Cover
@@ -517,7 +517,7 @@ const CmsDealsPage = () => {
                 accept="image/*"
                 multiple
                 onChange={(e) => setNewFiles(Array.from(e.target.files || []))}
-                className="text-sm text-slate-300"
+                className="text-sm text-slate-600"
               />
               {newFiles.length > 0 && (
                 <p className="text-xs text-slate-500 mt-1">{newFiles.length} new file(s)</p>
@@ -527,7 +527,7 @@ const CmsDealsPage = () => {
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#00aeef] hover:bg-[#0099d9] text-white font-medium disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium disabled:opacity-50"
             >
               <FiSave />
               {saving ? 'Saving…' : editingId ? 'Update deal' : 'Create deal'}
@@ -536,7 +536,7 @@ const CmsDealsPage = () => {
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold text-white mb-4">All deals</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">All deals</h2>
           {loading ? (
             <p className="text-slate-400 text-sm">Loading…</p>
           ) : deals.length === 0 ? (
@@ -546,10 +546,10 @@ const CmsDealsPage = () => {
               {deals.map((d) => (
                 <li
                   key={d.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-900/40 px-4 py-3"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-900/40 px-4 py-3"
                 >
                   <div>
-                    <p className="font-medium text-white">{d.title}</p>
+                    <p className="font-medium text-slate-900">{d.title}</p>
                     <p className="text-xs text-slate-400">
                       PKR {Number(d.deal_price || 0).toLocaleString('en-PK')} ·{' '}
                       {d.is_active ? 'Active' : 'Hidden'} · {Array.isArray(d.items) ? d.items.length : 0} items
@@ -559,7 +559,7 @@ const CmsDealsPage = () => {
                     <button
                       type="button"
                       onClick={() => startEdit(d)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-white/20 text-sm hover:bg-white/10"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 text-sm hover:bg-slate-200/80"
                     >
                       <FiEdit2 />
                       Edit
@@ -581,7 +581,7 @@ const CmsDealsPage = () => {
 
         <p className="text-xs text-slate-500">
           Storefront:{' '}
-          <Link href="/all-products?subcategory=deals" className="text-[#38bdf8] hover:underline">
+          <Link href="/all-products?subcategory=deals" className="text-blue-600 hover:underline">
             /all-products?subcategory=deals
           </Link>
           . Run <code className="text-slate-400">supabase/catalog_deals.sql</code> if the table is missing.

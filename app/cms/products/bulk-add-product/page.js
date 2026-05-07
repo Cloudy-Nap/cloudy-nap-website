@@ -13,13 +13,13 @@ import {
 import { API_BASE } from '../../../lib/apiBase';
 
 const CLOUDYNAP_CSV_HEADER_HINTS = {
-  bed: 'name, description, price, length, width, height, series, features, benefits, firmness, fabric, warranty, image, image_urls',
+  bed: 'name, description, price, length, width, height in inches (per size row), series, features, benefits, firmness, fabric, warranty, image, image_urls — rows with the same name become one product with multiple variants',
   accessory:
     'name, price, description, series, features, benefits, firmness, fabric, warranty, image, image_urls',
   furniture:
     'name, price, description, seats, material, warranty, image, image_urls, width, length, height, structure, fabric',
   sofacumbed:
-    'name, description, price, series, features, benefits, firmness, fabric, warranty, image, image_urls',
+    'name, description, price (PKR per fabric row), fabric (per row), series, features, benefits, firmness, warranty, image, image_urls — rows with the same name become one product with multiple fabric/price variants',
 };
 
 const BulkAddProductsPage = () => {
@@ -127,8 +127,8 @@ const BulkAddProductsPage = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100 px-4 py-10">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(0,174,239,0.2),transparent_55%)] opacity-90 pointer-events-none" />
+    <div className="relative min-h-screen text-slate-900 px-4 py-10">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.08),transparent_55%)] pointer-events-none" />
 
       <div className="relative max-w-5xl mx-auto space-y-8">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -137,14 +137,14 @@ const BulkAddProductsPage = () => {
               href="/cms/products"
               className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-400"
             >
-              <FiArrowLeft className="text-[#00aeef]" /> Back to Products
+              <FiArrowLeft className="text-blue-600" /> Back to Products
             </Link>
-            <h1 className="mt-3 text-3xl font-semibold text-white">Bulk CSV import</h1>
-            <p className="mt-2 text-sm text-slate-300 max-w-2xl">
+            <h1 className="mt-3 text-3xl font-semibold text-slate-900">Bulk CSV import</h1>
+            <p className="mt-2 text-sm text-slate-600 max-w-2xl">
               Import multiple catalog rows from a CSV. Choose the table that matches your file (beds, accessories,
               furniture, sofa cum bed) or a legacy laptop, printer, or scanner file. You can also add products one at a time
               via{' '}
-              <Link href="/cms/products/add-product" className="text-[#00aeef] hover:underline">
+              <Link href="/cms/products/add-product" className="text-blue-600 hover:underline">
                 Add product
               </Link>
               .
@@ -152,19 +152,19 @@ const BulkAddProductsPage = () => {
           </div>
         </header>
 
-        <section className="rounded-3xl border border-white/10 bg-white/10 backdrop-blur-3xl shadow-2xl p-6 sm:p-8 space-y-8">
+        <section className="rounded-3xl border border-slate-200 bg-slate-100 backdrop-blur-3xl shadow-2xl p-6 sm:p-8 space-y-8">
           <div className="grid gap-6">
             <div className="grid grid-cols-1 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-5">
               <div className="space-y-6">
                 <div>
-                  <label className="text-sm font-semibold text-white uppercase tracking-wide block mb-3">
+                  <label className="text-sm font-semibold text-slate-900 uppercase tracking-wide block mb-3">
                     CSV target (table)
                   </label>
                   <div className="relative">
                     <select
                       value={category}
                       onChange={(event) => setCategory(event.target.value)}
-                      className="w-full appearance-none rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#00aeef]/60"
+                      className="w-full appearance-none rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                     >
                       <optgroup className="text-slate-900" label="Cloudynap catalog">
                         <option value="bed">Beds (mattresses)</option>
@@ -178,21 +178,21 @@ const BulkAddProductsPage = () => {
                         <option value="scanner">Scanner (legacy)</option>
                       </optgroup>
                     </select>
-                    <FiInfo className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-[#00aeef]" />
+                    <FiInfo className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-blue-600" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-sm font-semibold text-white uppercase tracking-wide block mb-3">
+                  <label className="text-sm font-semibold text-slate-900 uppercase tracking-wide block mb-3">
                     Upload CSV
                   </label>
-                  <div className="relative flex flex-col items-center justify-center gap-4 border border-dashed border-white/20 rounded-2xl px-6 py-10 bg-white/5 hover:border-[#00aeef]/60 transition">
-                    <FiUpload className="text-3xl text-[#00aeef]" />
-                    <div className="text-center text-sm text-slate-300">
-                      Drag & drop a <code className="text-slate-200">.csv</code> file here, or click to browse.
+                  <div className="relative flex flex-col items-center justify-center gap-4 border border-dashed border-slate-200 rounded-2xl px-6 py-10 bg-slate-50 hover:border-blue-500/60 transition">
+                    <FiUpload className="text-3xl text-blue-600" />
+                    <div className="text-center text-sm text-slate-600">
+                      Drag & drop a <code className="text-slate-700">.csv</code> file here, or click to browse.
                     </div>
                     {fileName ? (
-                      <div className="rounded-full bg-white/10 border border-white/10 px-3 py-1 text-xs text-slate-200">
+                      <div className="rounded-full bg-slate-100 border border-slate-200 px-3 py-1 text-xs text-slate-700">
                         {fileName}
                       </div>
                     ) : null}
@@ -208,8 +208,8 @@ const BulkAddProductsPage = () => {
               </div>
 
               <div className="space-y-5">
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-5 text-xs text-slate-300 space-y-2">
-                  <div className="flex items-center gap-2 text-[#00aeef] font-semibold uppercase tracking-wide">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-xs text-slate-600 space-y-2">
+                  <div className="flex items-center gap-2 text-blue-600 font-semibold uppercase tracking-wide">
                     <FiInfo /> Quick tips
                   </div>
                   <p>
@@ -218,7 +218,7 @@ const BulkAddProductsPage = () => {
                   </p>
                   {CLOUDYNAP_CSV_HEADER_HINTS[category] ? (
                     <p className="wrap-break-word text-slate-200/90">
-                      <span className="text-[#00aeef] font-medium">Expected headers: </span>
+                      <span className="text-blue-600 font-medium">Expected headers: </span>
                       {CLOUDYNAP_CSV_HEADER_HINTS[category]}
                     </p>
                   ) : (
@@ -249,13 +249,13 @@ const BulkAddProductsPage = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="text-xs text-slate-300">
+            <div className="text-xs text-slate-600">
               {['laptop', 'printer', 'scanner'].includes(category) ? (
                 <>
                   Need a sample?{' '}
                   <Link
                     href="/bulk-products-template.csv"
-                    className="text-[#00aeef] hover:underline font-semibold"
+                    className="text-blue-600 hover:underline font-semibold"
                   >
                     Legacy bulk template
                   </Link>
@@ -269,7 +269,7 @@ const BulkAddProductsPage = () => {
             <div className="flex gap-3">
               <Link
                 href="/cms/products"
-                className="inline-flex items-center justify-center px-4 py-2 rounded-md border border-white/20 text-sm font-semibold text-white hover:bg-white/10 transition"
+                className="inline-flex items-center justify-center px-4 py-2 rounded-md border border-slate-200 text-sm font-semibold text-slate-800 hover:bg-slate-100 transition"
               >
                 Cancel
               </Link>
@@ -277,7 +277,7 @@ const BulkAddProductsPage = () => {
                 type="button"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="inline-flex items-center justify-center px-4 py-2 rounded-md bg-linear-to-r from-[#00aeef] to-[#0284c7] text-sm font-semibold text-white shadow-lg shadow-[#00aeef]/30 hover:from-[#0891b2] hover:to-[#0369a1] transition disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center px-4 py-2 rounded-md bg-linear-to-r from-blue-600 to-blue-700 text-sm font-semibold text-slate-900 shadow-lg shadow-blue-500/20 hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Processing…' : 'Process Upload'}
               </button>
@@ -301,25 +301,25 @@ const BulkAddProductsPage = () => {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
               <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 p-3 text-center">
-                <div className="text-[0.95rem] font-semibold text-white">
+                <div className="text-[0.95rem] font-semibold text-slate-900">
                   {result?.summary?.attempted ?? 0}
                 </div>
                 <div className="uppercase tracking-wide text-emerald-200/80">Rows in file</div>
               </div>
               <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 p-3 text-center">
-                <div className="text-[0.95rem] font-semibold text-white">
+                <div className="text-[0.95rem] font-semibold text-slate-900">
                   {result?.summary?.processed ?? 0}
                 </div>
                 <div className="uppercase tracking-wide text-emerald-200/80">Validated</div>
               </div>
               <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 p-3 text-center">
-                <div className="text-[0.95rem] font-semibold text-white">
+                <div className="text-[0.95rem] font-semibold text-slate-900">
                   {result?.summary?.inserted ?? 0}
                 </div>
                 <div className="uppercase tracking-wide text-emerald-200/80">Inserted</div>
               </div>
               <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 p-3 text-center">
-                <div className="text-[0.95rem] font-semibold text-white">
+                <div className="text-[0.95rem] font-semibold text-slate-900">
                   {result?.summary?.failed ?? 0}
                 </div>
                 <div className="uppercase tracking-wide text-emerald-200/80">Issues</div>

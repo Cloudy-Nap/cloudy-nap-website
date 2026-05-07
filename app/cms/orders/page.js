@@ -26,15 +26,15 @@ const STATUS_COLORS = {
 };
 
 const STATUS_BADGE_BG = {
-  pending: 'from-[#f97316] to-[#fb7185]',
-  processing: 'from-[#38bdf8] to-[#6366f1]',
-  completed: 'from-[#22c55e] to-[#16a34a]',
+  pending: 'from-amber-500 to-rose-500',
+  processing: 'from-blue-600 to-blue-700',
+  completed: 'from-emerald-500 to-emerald-700',
   cancelled: 'from-[#ef4444] to-[#f97316]',
 };
 
 const STATUS_BADGE_SHADOW = {
   pending: 'shadow-[#fb7185]/40',
-  processing: 'shadow-[#6366f1]/40',
+  processing: 'shadow-blue-500/25',
   completed: 'shadow-[#16a34a]/40',
   cancelled: 'shadow-[#f97316]/40',
 };
@@ -414,20 +414,20 @@ const CmsOrdersPage = () => {
   };
 
   const renderAddressSection = (title, address) => (
-    <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-2">
-      <h4 className="text-xs font-semibold text-white/80 uppercase tracking-wide">{title}</h4>
-      {address?.name && <p className="text-sm font-semibold text-white">{address.name}</p>}
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2">
+      <h4 className="text-xs font-semibold text-slate-900/80 uppercase tracking-wide">{title}</h4>
+      {address?.name && <p className="text-sm font-semibold text-slate-900">{address.name}</p>}
       {address?.lines?.length ? (
-        <div className="text-xs text-white/70 space-y-1">
+        <div className="text-xs text-slate-600 space-y-1">
           {address.lines.map((line, index) => (
             <p key={`${title}-line-${index}`}>{line}</p>
           ))}
         </div>
       ) : (
-        <p className="text-xs text-white/60">Not provided</p>
+        <p className="text-xs text-slate-500">Not provided</p>
       )}
       {(address?.phone || address?.email) && (
-        <div className="text-xs text-white/60 space-y-1">
+        <div className="text-xs text-slate-500 space-y-1">
           {address.phone && <p>Phone: {address.phone}</p>}
           {address.email && <p>Email: {address.email}</p>}
         </div>
@@ -437,31 +437,31 @@ const CmsOrdersPage = () => {
 
   return (
     <>
-      <div className="relative min-h-screen bg-linear-to-br from-[#0f172a] via-[#1e1b4b] to-[#020617] text-slate-100">
+      <div className="relative min-h-screen text-slate-900">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.25),transparent_55%)] opacity-80 pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-300">
-              <FiShoppingCart className="text-[#38bdf8]" /> Orders
+            <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-600">
+              <FiShoppingCart className="text-blue-600" /> Orders
             </p>
-            <h1 className="mt-2 text-3xl font-semibold text-white">Order Management</h1>
-            <p className="mt-1 text-sm text-slate-300">
+            <h1 className="mt-2 text-3xl font-semibold text-slate-900">Order Management</h1>
+            <p className="mt-1 text-sm text-slate-600">
               Track pending, processing, and completed orders. Resolve fulfillment tasks and update statuses in real-time.
             </p>
           </div>
           <div className="flex gap-3 items-center">
             <Link
               href="/cms/dashboard"
-              className="inline-flex items-center gap-2 px-4 py-2.5 border border-white/20 rounded-lg text-sm font-semibold text-white hover:bg-white/10 transition shadow-lg shadow-black/10"
+              className="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 hover:bg-slate-100 transition shadow-lg shadow-black/10"
             >
               <FiArrowLeft />
               Back to dashboard
             </Link>
             <button
               onClick={() => router.refresh()}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-[#38bdf8] to-[#6366f1] hover:from-[#0ea5e9] hover:to-[#4338ca] text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-[#6366f1]/30"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-blue-500/20"
             >
               <FiRefreshCw className={loading ? 'animate-spin' : ''} />
               Refresh
@@ -470,40 +470,40 @@ const CmsOrdersPage = () => {
         </header>
 
         <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-          <div className="rounded-2xl border border-white/10 bg-linear-to-br from-[#38bdf8] to-[#6366f1] p-6 shadow-xl">
-            <p className="text-xs uppercase tracking-wide text-white/80">Total Orders</p>
+          <div className="rounded-2xl border border-slate-200 bg-linear-to-br from-blue-600 to-blue-700 p-6 shadow-xl">
+            <p className="text-xs uppercase tracking-wide text-blue-100">Total Orders</p>
             <p className="mt-3 text-3xl font-bold text-white">{stats.total}</p>
-            <p className="text-xs text-white/70 mt-1">Orders synced from Supabase</p>
+            <p className="text-xs text-slate-600 mt-1">Orders synced from Supabase</p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/10 backdrop-blur-xl p-6 shadow-xl">
+          <div className="rounded-2xl border border-slate-200 bg-slate-100 p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-wide text-white/70">Pending</p>
-                <p className="mt-3 text-2xl font-semibold text-white">{stats.pending}</p>
+                <p className="text-xs uppercase tracking-wide text-slate-600">Pending</p>
+                <p className="mt-3 text-2xl font-semibold text-slate-900">{stats.pending}</p>
               </div>
-              <span className="h-11 w-11 rounded-full bg-linear-to-br from-[#f97316]/30 to-[#fb7185]/10 flex items-center justify-center text-[#fb7185]">
+              <span className="h-11 w-11 rounded-full bg-linear-to-br from-amber-200/50 to-rose-100/30 flex items-center justify-center text-[#fb7185]">
                 <FiClock />
               </span>
             </div>
-            <p className="text-xs text-white/60 mt-2">Awaiting payment or fulfillment</p>
+            <p className="text-xs text-slate-500 mt-2">Awaiting payment or fulfillment</p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/10 backdrop-blur-xl p-6 shadow-xl">
+          <div className="rounded-2xl border border-slate-200 bg-slate-100 p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-wide text-white/70">Processing</p>
-                <p className="mt-3 text-2xl font-semibold text-white">{stats.processing}</p>
+                <p className="text-xs uppercase tracking-wide text-slate-600">Processing</p>
+                <p className="mt-3 text-2xl font-semibold text-slate-900">{stats.processing}</p>
               </div>
-              <span className="h-11 w-11 rounded-full bg-linear-to-br from-[#38bdf8]/30 to-[#6366f1]/10 flex items-center justify-center text-[#38bdf8]">
+              <span className="h-11 w-11 rounded-full bg-linear-to-br from-blue-500/30 to-blue-500/10 flex items-center justify-center text-blue-600">
                 <FiTruck />
               </span>
             </div>
-            <p className="text-xs text-white/60 mt-2">Orders currently being fulfilled</p>
+            <p className="text-xs text-slate-500 mt-2">Orders currently being fulfilled</p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/10 backdrop-blur-xl p-6 shadow-xl">
+          <div className="rounded-2xl border border-slate-200 bg-slate-100 p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-wide text-white/70">Revenue</p>
-                <p className="mt-3 text-2xl font-semibold text-white">
+                <p className="text-xs uppercase tracking-wide text-slate-600">Revenue</p>
+                <p className="mt-3 text-2xl font-semibold text-slate-900">
                   {stats.revenue > 0 ? `PKR ${stats.revenue.toLocaleString('en-PK')}` : 'n/a'}
                 </p>
               </div>
@@ -511,19 +511,19 @@ const CmsOrdersPage = () => {
                 <FiCheckCircle />
               </span>
             </div>
-            <p className="text-xs text-white/60 mt-2">Total value of all orders</p>
+            <p className="text-xs text-slate-500 mt-2">Total value of all orders</p>
           </div>
         </section>
 
-        <section className="rounded-3xl border border-white/10 bg-white/10 backdrop-blur-3xl shadow-2xl p-6 sm:p-8 space-y-6">
+        <section className="rounded-3xl border border-slate-200 bg-slate-100 backdrop-blur-3xl shadow-2xl p-6 sm:p-8 space-y-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3 bg-white/10 border border-white/10 rounded-xl px-4 py-3">
-              <FiSearch className="text-slate-300" />
+            <div className="flex items-center gap-3 bg-slate-100 border border-slate-200 rounded-xl px-4 py-3">
+              <FiSearch className="text-slate-600" />
               <input
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Search by order number or customer..."
-                className="bg-transparent text-sm text-white placeholder:text-slate-400 focus:outline-none"
+                className="bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none"
               />
             </div>
             <div className="flex flex-wrap gap-3">
@@ -531,8 +531,8 @@ const CmsOrdersPage = () => {
                 onClick={() => setStatusFilter('all')}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition inline-flex items-center gap-2 ${
                   statusFilter === 'all'
-                    ? 'bg-linear-to-r from-[#38bdf8] to-[#6366f1] text-white shadow-lg shadow-[#6366f1]/30'
-                    : 'bg-white/10 text-slate-200 hover:bg-white/20'
+                    ? 'bg-linear-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/20'
+                    : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
                 }`}
               >
                 <FiFilter />
@@ -542,8 +542,8 @@ const CmsOrdersPage = () => {
                 onClick={() => setStatusFilter('pending')}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
                   statusFilter === 'pending'
-                    ? 'bg-linear-to-r from-[#f97316] to-[#fb7185] text-white shadow-lg shadow-[#fb7185]/30'
-                    : 'bg-white/10 text-slate-200 hover:bg-white/20'
+                    ? 'bg-linear-to-r from-amber-500 to-rose-500 text-white shadow-lg shadow-rose-500/20'
+                    : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
                 }`}
               >
                 Pending
@@ -552,8 +552,8 @@ const CmsOrdersPage = () => {
                 onClick={() => setStatusFilter('processing')}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
                   statusFilter === 'processing'
-                    ? 'bg-linear-to-r from-[#38bdf8] to-[#6366f1] text-white shadow-lg shadow-[#6366f1]/30'
-                    : 'bg-white/10 text-slate-200 hover:bg-white/20'
+                    ? 'bg-linear-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/20'
+                    : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
                 }`}
               >
                 Processing
@@ -562,8 +562,8 @@ const CmsOrdersPage = () => {
                 onClick={() => setStatusFilter('completed')}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
                   statusFilter === 'completed'
-                    ? 'bg-linear-to-r from-[#22c55e] to-[#16a34a] text-white shadow-lg shadow-[#22c55e]/30'
-                    : 'bg-white/10 text-slate-200 hover:bg-white/20'
+                    ? 'bg-linear-to-r from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-500/20'
+                    : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
                 }`}
               >
                 Completed
@@ -590,7 +590,7 @@ const CmsOrdersPage = () => {
             )}
 
             {!loading && !error && filteredOrders.length === 0 && (
-              <div className="border border-white/10 bg-white/5 text-white/80 rounded-2xl p-6">
+              <div className="border border-slate-200 bg-slate-50 text-slate-700 rounded-2xl p-6">
                 <p className="text-sm font-semibold">No orders match your filters.</p>
                 <p className="text-xs mt-1">Try adjusting your search or status selection.</p>
               </div>
@@ -612,17 +612,17 @@ const CmsOrdersPage = () => {
                         openDetailModal(order);
                       }
                     }}
-                    className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/10 backdrop-blur-xl shadow-xl transition transform hover:-translate-y-1 hover:shadow-2xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#38bdf8]/60"
+                    className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 backdrop-blur-xl shadow-xl transition transform hover:-translate-y-1 hover:shadow-2xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                   >
                     <div className={`absolute inset-0 bg-linear-to-br ${gradient} opacity-20 pointer-events-none`} />
                     <div className="relative p-6 grid gap-6 md:grid-cols-[1.5fr_1fr]">
                       <div className="space-y-4">
                         <div className="flex items-center gap-3">
-                          <span className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-white/10 text-white/80 border border-white/10">
+                          <span className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
                             <FiPackage />
                             Order #{order.orderNumber}
                           </span>
-                          <span className="text-xs text-white/60">
+                          <span className="text-xs text-slate-500">
                             {order.createdAt
                               ? new Date(order.createdAt).toLocaleString('en-PK', {
                                   dateStyle: 'medium',
@@ -633,24 +633,24 @@ const CmsOrdersPage = () => {
                         </div>
 
                         <div>
-                          <p className="text-sm font-semibold text-white">{order.customerName}</p>
-                          <p className="text-xs text-white/70">{order.email}</p>
+                          <p className="text-sm font-semibold text-slate-900">{order.customerName}</p>
+                          <p className="text-xs text-slate-600">{order.email}</p>
                         </div>
 
-                        <p className="text-xs text-white/70 max-w-2xl">
+                        <p className="text-xs text-slate-600 max-w-2xl">
                           Order contains {order.itemCount} item{order.itemCount === 1 ? '' : 's'} with a total value of{' '}
-                          <span className="font-semibold text-white">{formatCurrency(order.total)}</span>. Use the CMS dashboard to update fulfillment status, track analytics, and manage customer communications.
+                          <span className="font-semibold text-slate-900">{formatCurrency(order.total)}</span>. Use the CMS dashboard to update fulfillment status, track analytics, and manage customer communications.
                         </p>
                       </div>
 
-                      <div className="flex flex-col justify-between gap-4 text-sm text-white/80">
+                      <div className="flex flex-col justify-between gap-4 text-sm text-slate-600">
                         <div className="flex items-center justify-between">
                           <span>Status</span>
                           <span
                             className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-linear-to-r ${
-                              STATUS_BADGE_BG[order.status] || 'from-[#38bdf8] to-[#6366f1]'
+                              STATUS_BADGE_BG[order.status] || 'from-blue-600 to-blue-700'
                             } text-white font-semibold uppercase text-xs tracking-wide shadow-md ${
-                              STATUS_BADGE_SHADOW[order.status] || 'shadow-[#6366f1]/40'
+                              STATUS_BADGE_SHADOW[order.status] || 'shadow-blue-500/25'
                             }`}
                           >
                             {order.status.toUpperCase()}
@@ -659,7 +659,7 @@ const CmsOrdersPage = () => {
 
                         <div className="flex items-center justify-between">
                           <span>Total</span>
-                          <span className="font-semibold text-white">{formatCurrency(order.total)}</span>
+                          <span className="font-semibold text-slate-900">{formatCurrency(order.total)}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span>Items</span>
@@ -667,7 +667,7 @@ const CmsOrdersPage = () => {
                         </div>
                         <div className="flex items-center justify-between">
                           <span>Order ID</span>
-                          <span className="text-xs text-white/70">{order.id}</span>
+                          <span className="text-xs text-slate-600">{order.id}</span>
                         </div>
                       </div>
                     </div>
@@ -681,18 +681,18 @@ const CmsOrdersPage = () => {
       {detailModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-10">
           <div
-            className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             aria-hidden="true"
             onClick={closeDetailModal}
           />
-          <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#0f172a]/95 shadow-[0_40px_120px_rgba(15,23,42,0.7)]">
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-white/10 bg-[#0f172a]/95 px-6 py-5">
+          <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-slate-300/40">
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-slate-200 bg-slate-50 px-6 py-5">
               <div>
-                <p className="flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-300">
-                  <FiShoppingCart className="text-[#38bdf8]" />
+                <p className="flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-600">
+                  <FiShoppingCart className="text-blue-600" />
                   Order Detail
                 </p>
-                <h2 className="mt-2 text-2xl font-semibold text-white">
+                <h2 className="mt-2 text-2xl font-semibold text-slate-900">
                   Order #{detailOrder?.orderNumber || detailOrder?.id || '—'}
                 </h2>
                 <p className="text-xs text-slate-400 mt-1">
@@ -708,7 +708,7 @@ const CmsOrdersPage = () => {
               <button
                 type="button"
                 onClick={closeDetailModal}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 transition disabled:opacity-60"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition disabled:opacity-60"
                 disabled={detailSaving}
               >
                 <FiX className="text-lg" />
@@ -724,38 +724,38 @@ const CmsOrdersPage = () => {
             ) : detailOrder ? (
               <div className="px-6 py-8 space-y-8">
                 <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-6">
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-4">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-white/70 uppercase tracking-wide">Status</span>
+                      <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Status</span>
                       <span
                         className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-linear-to-r ${
-                          STATUS_BADGE_BG[detailOrder.status] || 'from-[#38bdf8] to-[#6366f1]'
+                          STATUS_BADGE_BG[detailOrder.status] || 'from-blue-600 to-blue-700'
                         } text-white font-semibold uppercase text-xs tracking-wide shadow-md ${
-                          STATUS_BADGE_SHADOW[detailOrder.status] || 'shadow-[#6366f1]/40'
+                          STATUS_BADGE_SHADOW[detailOrder.status] || 'shadow-blue-500/25'
                         }`}
                       >
                         {detailOrder.status.toUpperCase()}
                       </span>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-white/80">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-600">
                       <div className="space-y-1">
-                        <p className="text-white/60 text-xs uppercase tracking-wide">Customer</p>
-                        <p className="font-semibold text-white">{detailOrder.customerName}</p>
-                        <p className="text-xs text-white/60">{detailOrder.email}</p>
+                        <p className="text-slate-500 text-xs uppercase tracking-wide">Customer</p>
+                        <p className="font-semibold text-slate-900">{detailOrder.customerName}</p>
+                        <p className="text-xs text-slate-500">{detailOrder.email}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-white/60 text-xs uppercase tracking-wide">Financials</p>
+                        <p className="text-slate-500 text-xs uppercase tracking-wide">Financials</p>
                         <p>Subtotal: {formatCurrency(detailOrder.subtotal)}</p>
                         <p>Tax: {formatCurrency(detailOrder.tax)}</p>
                         <p>Shipping: {formatCurrency(detailOrder.shippingCost)}</p>
-                        <p className="font-semibold text-white">Total: {formatCurrency(detailOrder.total)}</p>
+                        <p className="font-semibold text-slate-900">Total: {formatCurrency(detailOrder.total)}</p>
                       </div>
                     </div>
-                    <div className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-4">
-                      <div className="flex items-center justify-between text-xs text-white/60 uppercase tracking-wide">
+                    <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="flex items-center justify-between text-xs text-slate-500 uppercase tracking-wide">
                         <span>Change Status</span>
                         {detailSaving && (
-                          <span className="inline-flex items-center gap-1 text-[#38bdf8]">
+                          <span className="inline-flex items-center gap-1 text-blue-600">
                             <FiRefreshCw className="animate-spin" /> Saving...
                           </span>
                         )}
@@ -765,7 +765,7 @@ const CmsOrdersPage = () => {
                           value={detailStatus}
                           onChange={handleDetailStatusChange}
                           disabled={detailSaving}
-                          className="w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#38bdf8]/60 disabled:opacity-60"
+                          className="w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-60"
                         >
                           {STATUS_OPTIONS.map((option) => (
                             <option key={option.value} value={option.value} className="text-black">
@@ -777,7 +777,7 @@ const CmsOrdersPage = () => {
                           type="button"
                           onClick={handleDetailStatusUpdate}
                           disabled={detailSaving}
-                          className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-linear-to-r from-[#38bdf8] to-[#6366f1] text-sm font-semibold text-white shadow-md shadow-[#6366f1]/40 hover:from-[#0ea5e9] hover:to-[#4338ca] transition disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-linear-to-r from-blue-600 to-blue-700 text-sm font-semibold text-slate-900 shadow-md shadow-blue-500/25 hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                           Update
                         </button>
@@ -794,13 +794,13 @@ const CmsOrdersPage = () => {
                       )}
                     </div>
                   </div>
-                  <div className="space-y-4 text-sm text-white/80">
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-2">
-                      <h4 className="text-xs font-semibold text-white/80 uppercase tracking-wide">Payment</h4>
-                      <p className="text-sm text-white">{detailOrder.paymentMethod || 'Not provided'}</p>
+                  <div className="space-y-4 text-sm text-slate-600">
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2">
+                      <h4 className="text-xs font-semibold text-slate-900/80 uppercase tracking-wide">Payment</h4>
+                      <p className="text-sm text-slate-800">{detailOrder.paymentMethod || 'Not provided'}</p>
                       {detailOrder.notes && (
-                        <p className="text-xs text-white/60">
-                          Notes: <span className="text-white/80">{detailOrder.notes}</span>
+                        <p className="text-xs text-slate-500">
+                          Notes: <span className="text-slate-600">{detailOrder.notes}</span>
                         </p>
                       )}
                     </div>
@@ -810,24 +810,24 @@ const CmsOrdersPage = () => {
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-white uppercase tracking-wide">Items</h3>
+                  <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">Items</h3>
                   {detailOrder.items && detailOrder.items.length ? (
-                    <div className="rounded-2xl border border-white/10 bg-white/5 divide-y divide-white/10">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 divide-y divide-white/10">
                       {detailOrder.items.map((item) => (
-                        <div key={item.id || `${item.name}-${item.productId}`} className="flex items-center justify-between px-5 py-3 text-sm text-white/80">
+                        <div key={item.id || `${item.name}-${item.productId}`} className="flex items-center justify-between px-5 py-3 text-sm text-slate-600">
                           <div>
-                            <p className="font-semibold text-white">{item.name}</p>
-                            <p className="text-xs text-white/60">Quantity: {item.quantity}</p>
+                            <p className="font-semibold text-slate-900">{item.name}</p>
+                            <p className="text-xs text-slate-500">Quantity: {item.quantity}</p>
                           </div>
                           <div className="text-right">
-                            <p className="font-semibold text-white">{formatCurrency(item.total || item.price)}</p>
-                            <p className="text-xs text-white/60">Unit: {formatCurrency(item.price)}</p>
+                            <p className="font-semibold text-slate-900">{formatCurrency(item.total || item.price)}</p>
+                            <p className="text-xs text-slate-500">Unit: {formatCurrency(item.price)}</p>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-white/60">No order items found.</p>
+                    <p className="text-xs text-slate-500">No order items found.</p>
                   )}
                 </div>
 
@@ -836,7 +836,7 @@ const CmsOrdersPage = () => {
                     type="button"
                     onClick={closeDetailModal}
                     disabled={detailSaving}
-                    className="px-5 py-2.5 rounded-lg border border-white/15 text-sm font-semibold text-white hover:bg-white/10 transition disabled:opacity-60"
+                    className="px-5 py-2.5 rounded-lg border border-slate-300 text-sm font-semibold text-slate-800 hover:bg-slate-100 transition disabled:opacity-60"
                   >
                     Close
                   </button>

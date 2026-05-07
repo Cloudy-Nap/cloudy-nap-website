@@ -65,7 +65,7 @@ const sanitizeProduct = (item) => {
   const image = images[0] || item.image || getCategoryPlaceholderImage(resolvedType);
 
   let priceLabel = 'Price on request';
-  if (resolvedType === 'furniture' || resolvedType === 'sofacumbed') {
+  if (resolvedType === 'furniture') {
     const s = item.price !== null && item.price !== undefined ? String(item.price).trim() : '';
     priceLabel = s || 'Price on request';
   } else {
@@ -164,17 +164,17 @@ const CmsInventoryPage = () => {
   }, [products, filter, searchTerm]);
 
   return (
-    <div className="relative min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(0,174,239,0.18),transparent_55%)] opacity-90 pointer-events-none" />
+    <div className="relative min-h-screen text-slate-900">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.06),transparent_55%)] pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-400">
-              <FiPackage className="text-[#00aeef]" /> Inventory
+              <FiPackage className="text-blue-600" /> Inventory
             </p>
-            <h1 className="mt-2 text-3xl font-semibold text-white">Catalog overview</h1>
-            <p className="mt-1 text-sm text-slate-300 max-w-2xl">
+            <h1 className="mt-2 text-3xl font-semibold text-slate-900">Catalog overview</h1>
+            <p className="mt-1 text-sm text-slate-600 max-w-2xl">
               Cloudynap listings (mattresses, furniture, sofa cum beds, accessories). Stock counts are not stored in
               Supabase for this catalog—use the product list to manage what appears on the site.
             </p>
@@ -182,20 +182,20 @@ const CmsInventoryPage = () => {
           <div className="flex gap-3 items-center">
             <Link
               href="/cms/dashboard"
-              className="inline-flex items-center gap-2 px-4 py-2.5 border border-white/20 rounded-lg text-sm font-semibold text-white hover:bg-white/10 transition shadow-lg shadow-black/10"
+              className="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 hover:bg-slate-100 transition shadow-lg shadow-black/10"
             >
               <FiArrowLeft />
               Back to dashboard
             </Link>
             <Link
               href="/cms/products"
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-[#00aeef] to-[#0284c7] hover:from-[#0891b2] hover:to-[#0369a1] text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-[#00aeef]/25"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-blue-500/20"
             >
               Edit products
             </Link>
             <button
               onClick={() => router.refresh()}
-              className="inline-flex items-center gap-2 px-4 py-2.5 border border-white/20 rounded-lg text-sm font-semibold text-white hover:bg-white/10 transition"
+              className="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 hover:bg-slate-100 transition"
             >
               <FiRefreshCw className={loading ? 'animate-spin' : ''} />
               Refresh
@@ -203,15 +203,15 @@ const CmsInventoryPage = () => {
           </div>
         </header>
 
-        <section className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-3xl shadow-2xl p-6 sm:p-8 space-y-6">
+        <section className="rounded-3xl border border-slate-200 bg-slate-50 backdrop-blur-3xl shadow-2xl p-6 sm:p-8 space-y-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+            <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
               <FiSearch className="text-slate-400" />
               <input
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Search by name or category…"
-                className="bg-transparent text-sm text-white placeholder:text-slate-500 focus:outline-none w-full min-w-0"
+                className="bg-transparent text-sm text-slate-800 placeholder:text-slate-500 focus:outline-none w-full min-w-0"
               />
             </div>
             <div className="flex flex-wrap gap-3">
@@ -219,8 +219,8 @@ const CmsInventoryPage = () => {
                 onClick={() => setFilter('all')}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition inline-flex items-center gap-2 ${
                   filter === 'all'
-                    ? 'bg-linear-to-r from-[#00aeef] to-[#0284c7] text-white shadow-lg shadow-[#00aeef]/25'
-                    : 'bg-white/10 text-slate-200 hover:bg-white/20'
+                    ? 'bg-linear-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/20'
+                    : 'bg-white/10 text-slate-200 hover:bg-slate-200'
                 }`}
               >
                 <FiFilter />
@@ -238,8 +238,8 @@ const CmsInventoryPage = () => {
                   onClick={() => setFilter(id)}
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
                     filter === id
-                      ? 'bg-linear-to-r from-[#00aeef] to-[#0284c7] text-white shadow-lg shadow-[#00aeef]/25'
-                      : 'bg-white/10 text-slate-200 hover:bg-white/20'
+                      ? 'bg-linear-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/20'
+                      : 'bg-white/10 text-slate-200 hover:bg-slate-200'
                   }`}
                 >
                   {label}
@@ -267,7 +267,7 @@ const CmsInventoryPage = () => {
             )}
 
             {!loading && !error && filteredProducts.length === 0 && (
-              <div className="col-span-full border border-white/10 bg-white/5 text-white/80 rounded-2xl p-6">
+              <div className="col-span-full border border-slate-200 bg-slate-50 text-slate-700 rounded-2xl p-6">
                 <p className="text-sm font-semibold">No products match your filters.</p>
               </div>
             )}
@@ -277,18 +277,18 @@ const CmsInventoryPage = () => {
               filteredProducts.map((product) => (
                 <article
                   key={`${product.type}-${product.id}`}
-                  className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl transition transform hover:-translate-y-1 hover:shadow-2xl"
+                  className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm shadow-xl transition transform hover:-translate-y-1 hover:shadow-2xl"
                 >
                   <div className="absolute inset-0 bg-linear-to-br from-white/10 via-transparent to-white/5 opacity-50 pointer-events-none" />
                   <div className="relative p-6 flex flex-col gap-4">
                     <div className="flex items-center justify-between">
-                      <span className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-white/10 text-white/80 border border-white/10">
+                      <span className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
                         <CategoryIcon type={product.type} />
                         {product.category}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-center bg-white/5 border border-white/10 rounded-xl p-4 h-36">
+                    <div className="flex items-center justify-center bg-slate-50 border border-slate-200 rounded-xl p-4 h-36">
                       <img
                         src={product.image}
                         alt={product.name}
@@ -297,8 +297,8 @@ const CmsInventoryPage = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <h3 className="text-base font-semibold text-white line-clamp-2">{product.name}</h3>
-                      <div className="flex items-center justify-between text-xs text-white/70">
+                      <h3 className="text-base font-semibold text-slate-900 line-clamp-2">{product.name}</h3>
+                      <div className="flex items-center justify-between text-xs text-slate-600">
                         <span className="inline-flex items-center gap-2">
                           <FiTag />
                           {product.priceLabel}

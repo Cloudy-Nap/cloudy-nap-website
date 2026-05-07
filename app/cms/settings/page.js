@@ -258,38 +258,38 @@ const CmsSettingsPage = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-linear-to-br from-[#0f172a] via-[#1e1b4b] to-[#020617] text-slate-100">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(76,29,149,0.25),transparent_55%)] opacity-80 pointer-events-none" />
+    <div className="relative min-h-screen text-slate-900">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.05),transparent_55%)] pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-300">
-              <FiUsers className="text-[#38bdf8]" /> User Management
+            <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.35em] uppercase text-slate-600">
+              <FiUsers className="text-blue-600" /> User Management
             </p>
-            <h1 className="mt-2 text-3xl font-semibold text-white">CMS User Accounts</h1>
-            <p className="mt-1 text-sm text-slate-300">
+            <h1 className="mt-2 text-3xl font-semibold text-slate-900">CMS User Accounts</h1>
+            <p className="mt-1 text-sm text-slate-600">
               Create, update, and manage CMS user accounts for your team members.
             </p>
           </div>
           <div className="flex gap-3 items-center">
             <Link
               href="/cms/dashboard"
-              className="inline-flex items-center gap-2 px-4 py-2.5 border border-white/20 rounded-lg text-sm font-semibold text-white hover:bg-white/10 transition shadow-lg shadow-black/10"
+              className="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 hover:bg-slate-100 transition shadow-lg shadow-black/10"
             >
               <FiArrowLeft />
               Back to dashboard
             </Link>
             <button
               onClick={fetchUsers}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm font-semibold text-white hover:bg-white/15 transition"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-lg text-sm font-semibold text-slate-900 hover:bg-slate-200 transition"
             >
               <FiRefreshCw className={loading ? 'animate-spin' : ''} />
               Refresh
             </button>
             <button
               onClick={handleCreate}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-[#38bdf8] to-[#6366f1] hover:from-[#0ea5e9] hover:to-[#4338ca] text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-[#6366f1]/30"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-blue-500/20"
             >
               <FiPlus />
               Add User
@@ -309,7 +309,7 @@ const CmsSettingsPage = () => {
         )}
 
         {/* Users List */}
-        <section className="rounded-3xl border border-white/10 bg-white/10 backdrop-blur-3xl shadow-2xl p-6 sm:p-8">
+        <section className="rounded-3xl border border-slate-200 bg-slate-100 backdrop-blur-3xl shadow-2xl p-6 sm:p-8">
           {loading ? (
             <div className="flex flex-col items-center justify-center gap-3 py-16 text-slate-200">
               <FiRefreshCw className="animate-spin text-2xl" />
@@ -326,16 +326,16 @@ const CmsSettingsPage = () => {
               {users.map((user) => (
                 <div
                   key={user.id}
-                  className="rounded-xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition"
+                  className="rounded-xl border border-slate-200 bg-slate-50 p-4 hover:bg-slate-200/80 transition"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4 flex-1">
-                      <div className="h-12 w-12 rounded-full bg-white/15 flex items-center justify-center text-white">
+                      <div className="h-12 w-12 rounded-full bg-white/15 flex items-center justify-center text-slate-700">
                         <FiUser className="text-xl" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 flex-wrap">
-                          <p className="text-sm font-semibold text-white">
+                          <p className="text-sm font-semibold text-slate-900">
                             {user.full_name || user.email || user.username || user.user_name || 'Unnamed User'}
                           </p>
                           <span
@@ -346,7 +346,7 @@ const CmsSettingsPage = () => {
                             {getRoleLabel(user.role)}
                           </span>
                         </div>
-                        <div className="flex items-center gap-4 mt-1 text-xs text-white/70">
+                        <div className="flex items-center gap-4 mt-1 text-xs text-slate-600">
                           {user.username && (
                             <span className="flex items-center gap-1">
                               <FiUser className="text-xs" />
@@ -354,7 +354,7 @@ const CmsSettingsPage = () => {
                             </span>
                           )}
                           {user.accesspages && Array.isArray(user.accesspages) && (
-                            <span className="text-white/50">
+                            <span className="text-slate-500">
                               Access: {user.accesspages.join(', ')}
                             </span>
                           )}
@@ -364,7 +364,7 @@ const CmsSettingsPage = () => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleEdit(user)}
-                        className="p-2 rounded-lg hover:bg-white/10 transition text-white"
+                        className="p-2 rounded-lg hover:bg-slate-200/80 transition text-slate-700"
                         title="Edit user"
                       >
                         <FiEdit2 />
@@ -397,15 +397,15 @@ const CmsSettingsPage = () => {
             />
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
               <div
-                className="relative w-full max-w-md bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#020617] border border-white/20 rounded-3xl shadow-2xl pointer-events-auto max-h-[90vh] overflow-y-auto"
+                className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl pointer-events-auto max-h-[90vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="sticky top-0 bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#020617] border-b border-white/10 p-6 flex items-center justify-between z-10">
+                <div className="sticky top-0 bg-slate-50 border-b border-slate-200 p-6 flex items-center justify-between z-10">
                   <div>
-                    <h2 className="text-xl font-semibold text-white">
+                    <h2 className="text-xl font-semibold text-slate-900">
                       {showEditModal ? 'Edit User' : 'Create New User'}
                     </h2>
-                    <p className="text-xs text-slate-300 mt-1">
+                    <p className="text-xs text-slate-600 mt-1">
                       {showEditModal ? 'Update user information' : 'Add a new CMS user account'}
                     </p>
                   </div>
@@ -415,7 +415,7 @@ const CmsSettingsPage = () => {
                       setShowEditModal(false);
                       resetForm();
                     }}
-                    className="p-2 rounded-lg hover:bg-white/10 transition text-white"
+                    className="p-2 rounded-lg hover:bg-slate-200/80 transition text-slate-700"
                   >
                     <FiX className="text-xl" />
                   </button>
@@ -429,7 +429,7 @@ const CmsSettingsPage = () => {
                   )}
 
                   <div>
-                    <label className="block text-xs uppercase tracking-wide text-white/60 mb-2">
+                    <label className="block text-xs uppercase tracking-wide text-slate-500 mb-2">
                       Username <span className="text-red-400">*</span>
                     </label>
                     <input
@@ -437,7 +437,7 @@ const CmsSettingsPage = () => {
                       name="username"
                       value={formData.username}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/15 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#38bdf8]/60 transition"
+                      className="w-full px-4 py-3 rounded-lg bg-slate-100 border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition"
                       placeholder="username"
                       required
                     />
@@ -446,14 +446,14 @@ const CmsSettingsPage = () => {
                   
 
                   <div>
-                    <label className="block text-xs uppercase tracking-wide text-white/60 mb-2">
+                    <label className="block text-xs uppercase tracking-wide text-slate-500 mb-2">
                       Role
                     </label>
                     <select
                       name="role"
                       value={formData.role}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/15 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#38bdf8]/60 transition"
+                      className="w-full px-4 py-3 rounded-lg bg-slate-100 border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition"
                     >
                       {ROLE_OPTIONS.map((role) => (
                         <option key={role.value} value={role.value} className="bg-[#1e1b4b]">
@@ -461,13 +461,13 @@ const CmsSettingsPage = () => {
                         </option>
                       ))}
                     </select>
-                    <p className="text-xs text-white/50 mt-1">
+                    <p className="text-xs text-slate-500 mt-1">
                       {ROLE_OPTIONS.find((r) => r.value === formData.role)?.description}
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-xs uppercase tracking-wide text-white/60 mb-2">
+                    <label className="block text-xs uppercase tracking-wide text-slate-500 mb-2">
                       Password {showEditModal && '(leave empty to keep current)'}
                     </label>
                     <input
@@ -475,7 +475,7 @@ const CmsSettingsPage = () => {
                       name="password"
                       value={formData.password}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/15 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#38bdf8]/60 transition"
+                      className="w-full px-4 py-3 rounded-lg bg-slate-100 border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition"
                       placeholder={showEditModal ? 'Enter new password' : 'Enter password'}
                       required={!showEditModal}
                     />
@@ -489,14 +489,14 @@ const CmsSettingsPage = () => {
                         setShowEditModal(false);
                         resetForm();
                       }}
-                      className="flex-1 px-4 py-3 rounded-lg border border-white/20 text-sm font-semibold text-white hover:bg-white/10 transition"
+                      className="flex-1 px-4 py-3 rounded-lg border border-slate-200 text-sm font-semibold text-slate-800 hover:bg-slate-100 transition"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={saving}
-                      className="flex-1 px-4 py-3 rounded-lg bg-linear-to-r from-[#38bdf8] to-[#6366f1] hover:from-[#0ea5e9] hover:to-[#4338ca] text-white text-sm font-semibold transition shadow-lg shadow-[#6366f1]/40 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="flex-1 px-4 py-3 rounded-lg bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold transition shadow-lg shadow-blue-500/25 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {saving ? (
                         <>
