@@ -292,13 +292,18 @@ const replaceBedVariants = async (productId, normalizedVariants) => {
 };
 
 const fetchBedWithVariants = async (id) => {
-  const { data, error } = await supabase
-    .from('beds')
-    .select('*, product_variants_bed(*)')
-    .eq('id', id)
-    .maybeSingle();
-  if (error) throw error;
-  return enrichBedCatalogRow(data);
+  const { data: row, error: rowErr } = await supabase.from('beds').select('*').eq('id', id).maybeSingle();
+  if (rowErr) throw rowErr;
+  if (!row) return null;
+  const { data: variantRows, error: varErr } = await supabase
+    .from('product_variants_bed')
+    .select('*')
+    .eq('product_id', id);
+  if (varErr) throw varErr;
+  return enrichBedCatalogRow({
+    ...row,
+    product_variants_bed: Array.isArray(variantRows) ? variantRows : [],
+  });
 };
 
 const sanitizedRowToBedVariant = (sanitized) => {
@@ -415,7 +420,7 @@ router.get('/', async (req, res) => {
     const responses = await Promise.all(
       plans.map(({ table }) => {
         if (table === 'beds') {
-          return supabase.from('beds').select('*, product_variants_bed(*)');
+          return supabase.from('beds').select('*');
         }
         if (table === 'sofacumbed') {
           return supabase.from('sofacumbed').select('*');
@@ -436,7 +441,30 @@ router.get('/', async (req, res) => {
 
       let rows = attachType(data || [], type);
       if (table === 'beds') {
-        rows = rows.map((r) => enrichBedCatalogRow(r));
+        const parents = data || [];
+        const ids = parents.map((p) => p.id).filter((pid) => pid != null);
+        const variantByProductId = {};
+        if (ids.length) {
+          const { data: allVar, error: varErr } = await supabase
+            .from('product_variants_bed')
+            .select('*')
+            .in('product_id', ids);
+          if (varErr) {
+            console.error(`Failed to fetch ${table} variants:`, varErr);
+            return res.status(500).json({ error: 'Failed to fetch products' });
+          }
+          for (const v of allVar || []) {
+            const pid = v.product_id;
+            if (!variantByProductId[pid]) variantByProductId[pid] = [];
+            variantByProductId[pid].push(v);
+          }
+        }
+        rows = attachType(parents, type).map((r) =>
+          enrichBedCatalogRow({
+            ...r,
+            product_variants_bed: variantByProductId[r.id] || [],
+          }),
+        );
       }
       if (table === 'sofacumbed') {
         const parents = data || [];

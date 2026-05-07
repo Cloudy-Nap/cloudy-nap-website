@@ -57,6 +57,31 @@ router.get('/:type/:id', async (req, res) => {
       return res.status(400).json({ error: 'Invalid product type' });
     }
 
+    if (table === 'beds') {
+      /** Separate query: PostgREST embed `product_variants_bed(*)` is unreliable without a visible FK in schema cache. */
+      const { data: row, error: rowErr } = await supabase.from('beds').select('*').eq('id', id).maybeSingle();
+      if (rowErr) {
+        console.error('catalog fetch error:', rowErr);
+        return res.status(500).json({ error: 'Failed to fetch product' });
+      }
+      if (!row) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+      const { data: variantRows, error: varErr } = await supabase
+        .from('product_variants_bed')
+        .select('*')
+        .eq('product_id', id);
+      if (varErr) {
+        console.error('catalog mattress variants fetch error:', varErr);
+        return res.status(500).json({ error: 'Failed to fetch product' });
+      }
+      const enriched = enrichBedCatalogRow({
+        ...row,
+        product_variants_bed: Array.isArray(variantRows) ? variantRows : [],
+      });
+      return res.json({ ...enriched, type });
+    }
+
     if (table === 'sofacumbed') {
       /** Separate query: PostgREST often fails to embed `product_variants_sofacumbed` even when the FK exists. */
       const { data: row, error: rowErr } = await supabase.from('sofacumbed').select('*').eq('id', id).maybeSingle();
@@ -82,8 +107,7 @@ router.get('/:type/:id', async (req, res) => {
       return res.json({ ...enriched, type });
     }
 
-    const selectFields = table === 'beds' ? '*, product_variants_bed(*)' : '*';
-    const { data, error } = await supabase.from(table).select(selectFields).eq('id', id).maybeSingle();
+    const { data, error } = await supabase.from(table).select('*').eq('id', id).maybeSingle();
 
     if (error) {
       console.error('catalog fetch error:', error);
@@ -91,11 +115,6 @@ router.get('/:type/:id', async (req, res) => {
     }
     if (!data) {
       return res.status(404).json({ error: 'Product not found' });
-    }
-
-    if (table === 'beds') {
-      const enriched = enrichBedCatalogRow(data);
-      return res.json({ ...enriched, type });
     }
 
     if (table === 'catalog_deals') {
