@@ -7,7 +7,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Navbar from '../Cx/Layout/Navbar';
 import Footer from '../Cx/Layout/Footer';
 import { CiSearch } from 'react-icons/ci';
-import { FaTimes, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaTimes, FaChevronLeft, FaChevronRight, FaChevronDown } from 'react-icons/fa';
 import { CiHeart, CiShoppingCart } from 'react-icons/ci';
 import { FaRegEye } from 'react-icons/fa6';
 import { openSans } from '../Cx/Font/font';
@@ -153,6 +153,8 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
   const [fetchError, setFetchError] = useState('');
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewProduct, setPreviewProduct] = useState(null);
+  /** Below `lg`, filters toggle so products stay usable; desktop always shows the sidebar. */
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -767,7 +769,7 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
             {product.discountBadge}
           </div>
         ) : null}
-        <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        <div className="absolute top-2 right-2 flex flex-col gap-2 z-10 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
           <div className="bg-white rounded-full p-2 hover:bg-gray-100">
             <CiHeart className="text-lg" />
           </div>
@@ -877,10 +879,27 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-8 py-6">
-          <div className="flex gap-6">
-            {/* Left Sidebar - Filters */}
-            <div className="w-64 shrink-0 space-y-4 sticky top-4 h-fit">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="flex flex-col lg:flex-row lg:gap-6 gap-4">
+            <button
+              type="button"
+              className="lg:hidden flex w-full items-center justify-between rounded-sm border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm"
+              aria-expanded={mobileFiltersOpen}
+              onClick={() => setMobileFiltersOpen((open) => !open)}
+            >
+              <span>Filters</span>
+              <FaChevronDown
+                className={`text-gray-600 transition-transform duration-200 ${mobileFiltersOpen ? 'rotate-180' : ''}`}
+                aria-hidden
+              />
+            </button>
+
+            {/* Left Sidebar - Filters (collapsible on small screens; unchanged layout from lg up) */}
+            <div
+              className={`w-full lg:w-64 lg:shrink-0 space-y-4 lg:sticky lg:top-4 lg:h-fit ${
+                mobileFiltersOpen ? 'block' : 'hidden'
+              } lg:block`}
+            >
               {/* Category */}
               {showCategoryFilter && categories.length > 0 && (
                 <div className="bg-white rounded-sm border border-gray-200 shadow-lg p-4">
@@ -1085,12 +1104,12 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
             </div>
 
             {/* Right Side - Main Content */}
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col min-w-0">
               {/* Search and Filters Bar */}
-              <div className="bg-white rounded-sm p-4 mb-4">
+              <div className="bg-white rounded-sm p-3 sm:p-4 mb-4">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   {/* Search */}
-                  <div className="flex-1 max-w-md">
+                  <div className="flex-1 w-full md:max-w-md">
                     <div className="flex rounded overflow-hidden border border-gray-300">
                       <input
                         type="text"
@@ -1144,12 +1163,12 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
                   </div>
 
                   {/* Sort */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-700">Sort by:</span>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full md:w-auto shrink-0">
+                    <span className="text-sm text-gray-700 whitespace-nowrap">Sort by:</span>
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
-                      className="px-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#00aeef]"
+                      className="w-full md:w-auto min-w-0 px-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#00aeef]"
                     >
                       <option value="">Select sorting option</option>
                       <option>Price: Low to High</option>
@@ -1169,8 +1188,8 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
 
             
 
-              {/* Product Grid */}
-              <div className="pl-4 mb-6">
+              {/* Product Grid — extra inset matches sidebar gutter from lg only */}
+              <div className="mb-6 lg:pl-4">
                 {loadingProducts ? (
                   <div className="py-12 text-sm text-gray-600 text-center">Loading products...</div>
                 ) : fetchError ? (
@@ -1178,7 +1197,7 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
                 ) : filteredProducts.length === 0 ? (
                   <div className="py-12 text-sm text-gray-600 text-center">No products available yet.</div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                     {filteredProducts.map((product) => (
                       <ProductCard
                         key={product.cartId || `${product.type}-${product.id}`}
@@ -1204,11 +1223,11 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
               </div>
 
               {/* Pagination */}
-              <div className="flex items-center justify-center gap-2 mt-auto pt-8">
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-auto pt-6 sm:pt-8 px-1 max-w-full">
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-3 rounded-full border-blue-400 border-2 text-blue-400 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-2.5 py-2.5 sm:px-3 sm:py-3 rounded-full border-blue-400 border-2 text-blue-400 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                 >
                   <FaChevronLeft className="text-sm" />
                 </button>
@@ -1216,7 +1235,7 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`w-10 h-10 rounded-full transition ${
+                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full text-xs sm:text-sm transition shrink-0 ${
                       currentPage === page
                         ? 'bg-[#00aeef] text-white'
                         : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
@@ -1228,7 +1247,7 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(6, prev + 1))}
                   disabled={currentPage === 6}
-                  className="px-3 py-3 border-2 border-blue-400 text-blue-400 rounded-full hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-2.5 py-2.5 sm:px-3 sm:py-3 border-2 border-blue-400 text-blue-400 rounded-full hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                 >
                   <FaChevronRight className="text-sm" />
                 </button>
