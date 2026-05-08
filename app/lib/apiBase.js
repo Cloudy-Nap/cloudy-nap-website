@@ -29,3 +29,19 @@ export const API_BASE = useRelativeApi
     (typeof process !== 'undefined' && process.env.NODE_ENV === 'development'
       ? ''
       : CLOUDYNAP_API_FALLBACK);
+
+/**
+ * `new URL(\`${API_BASE}/api/...\`)` throws when API_BASE is "" (relative `/api/...` is invalid alone).
+ * Use this helper instead; it uses `window.location.origin` on the client when API_BASE is empty.
+ */
+export function createApiUrl(path) {
+  const pathname = path.startsWith('/') ? path : `/${path}`;
+  const pathNoLeading = pathname.replace(/^\//, '');
+  const root =
+    typeof API_BASE === 'string' && API_BASE.length > 0
+      ? trimTrailingSlash(API_BASE)
+      : typeof window !== 'undefined' && window.location?.origin
+        ? window.location.origin
+        : trimTrailingSlash(CLOUDYNAP_API_FALLBACK);
+  return new URL(pathNoLeading, `${root}/`);
+}

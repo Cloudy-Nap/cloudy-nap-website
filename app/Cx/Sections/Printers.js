@@ -9,7 +9,7 @@ import { openSans } from '../Font/font';
 import ProductModal from '../Components/ProductModal';
 import { useCart } from '../Providers/CartProvider';
 import { useImagePreloader } from '../hooks/useImagePreloader';
-import { API_BASE } from '../../lib/apiBase';
+import { API_BASE, createApiUrl } from '../../lib/apiBase';
 import { discountsArrayToMap, mergeListProductDiscount } from '../../lib/categoryDiscounts';
 import { getCategoryPlaceholderImage } from '../../lib/categoryPlaceholders';
 
@@ -68,7 +68,7 @@ const Printers = () => {
       setLoading(true);
       setError('');
       try {
-        const url = new URL(`${API_BASE}/api/products`);
+        const url = createApiUrl('/api/products');
         url.searchParams.set('subcategory', 'sofa-cum-bed');
         const [response, discRes] = await Promise.all([
           fetch(url.toString()),

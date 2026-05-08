@@ -13,7 +13,7 @@ import {
   FiEdit2,
   FiX,
 } from 'react-icons/fi';
-import { API_BASE } from '../../lib/apiBase';
+import { API_BASE, createApiUrl } from '../../lib/apiBase';
 
 const CATALOG_OPTIONS = [
   { id: 'bed', label: 'Mattresses / beds' },
@@ -109,7 +109,7 @@ const CmsDealsPage = () => {
     const key = `${lineIndex}-${catalogType}`;
     setPickerOptions((prev) => ({ ...prev, [key]: { loading: true, list: prev[key]?.list || [] } }));
     try {
-      const url = new URL(`${API_BASE}/api/products`);
+      const url = createApiUrl('/api/products');
       url.searchParams.set('subcategory', sub);
       const res = await fetch(url.toString());
       const payload = await res.json();

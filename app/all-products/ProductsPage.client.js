@@ -14,7 +14,7 @@ import { openSans } from '../Cx/Font/font';
 import ProductModal from '../Cx/Components/ProductModal';
 import { useCart } from '../Cx/Providers/CartProvider';
 import { useImagePreloader } from '../Cx/hooks/useImagePreloader';
-import { API_BASE } from '../lib/apiBase';
+import { API_BASE, createApiUrl } from '../lib/apiBase';
 
 const ProductsPageClient = ({
   searchParams = {},
@@ -169,7 +169,7 @@ const ProductsPageClient = ({
 
       try {
         const sortParam = resolveSortParam(sortBy);
-        const url = new URL(`${API_BASE}/api/products`);
+        const url = createApiUrl('/api/products');
         if (sortParam) {
           url.searchParams.set('sort', sortParam);
         }

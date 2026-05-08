@@ -29,7 +29,7 @@ import { GiPillow } from 'react-icons/gi';
 import ShoppingCartPopup from '../Components/ShoppingCartPopup';
 import LoginPopup from '../Components/LoginPopup';
 import { useCart } from '../Providers/CartProvider';
-import { API_BASE } from '../../lib/apiBase';
+import { API_BASE, createApiUrl } from '../../lib/apiBase';
 import { getCategoryPlaceholderImage } from '../../lib/categoryPlaceholders';
 
 
@@ -116,7 +116,7 @@ const Navbar = () => {
 
     setIsSearching(true);
     try {
-      const url = new URL(`${API_BASE}/api/products`);
+      const url = createApiUrl('/api/products');
       // Map category names to API category values
       if (selectedCategory === 'Laptops' || selectedCategory === 'Refurbished Laptops') {
         url.searchParams.set('category', 'laptop');
