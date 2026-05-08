@@ -1,8 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async rewrites() {
-    if (process.env.NODE_ENV !== 'development') return [];
-    const target = (process.env.API_PROXY_TARGET || 'http://127.0.0.1:3001').replace(/\/$/, '');
+    const raw =
+      process.env.API_PROXY_TARGET ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      (process.env.NODE_ENV === 'development' ? 'http://127.0.0.1:3001' : '');
+    const target = typeof raw === 'string' ? raw.trim().replace(/\/$/, '') : '';
+    if (!target) return [];
     return [{ source: '/api/:path*', destination: `${target}/api/:path*` }];
   },
   images: {

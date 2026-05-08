@@ -18,8 +18,21 @@ const catalogDealsRoutes = require('./routes/catalogDeals');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
-app.use(cors());
+// Middleware — any origin (`*`). Browsers disallow credentials + wildcard together.
+app.use(
+  cors({
+    origin: '*',
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'X-CMS-User-Id',
+      'X-CMS-User-Name',
+      'X-CMS-User-Role',
+    ],
+  }),
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
