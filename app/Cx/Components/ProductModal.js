@@ -434,13 +434,11 @@ const ProductModal = ({ isOpen, onClose, product }) => {
           }).filter((spec) => spec.value)
       : productType === 'furniture'
         ? [
-            { label: 'Length', value: sanitizeSpecValue(productData.length) },
-            { label: 'Width', value: sanitizeSpecValue(productData.width) },
-            { label: 'Height', value: sanitizeSpecValue(productData.height) },
-            { label: 'Structure', value: sanitizeSpecValue(productData.structure) },
+            { label: 'Brand', value: sanitizeSpecValue(productData.brand) },
+            { label: 'Series', value: sanitizeSpecValue(productData.series) },
+            { label: 'Features', value: sanitizeSpecValue(productData.features) },
+            { label: 'Benefits', value: sanitizeSpecValue(productData.benefits) },
             { label: 'Fabric', value: sanitizeSpecValue(productData.fabric) },
-            { label: 'Seats', value: sanitizeSpecValue(productData.seats) },
-            { label: 'Material', value: sanitizeSpecValue(productData.material) },
             { label: 'Warranty', value: sanitizeSpecValue(productData.warranty) },
           ].filter((spec) => spec.value)
       : CATALOG_TYPES.includes(productType)

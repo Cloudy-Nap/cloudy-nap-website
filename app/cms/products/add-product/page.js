@@ -25,15 +25,7 @@ const GENERAL_FIELD_CONFIG = {
     { id: 'name', label: 'Product name', type: 'text', placeholder: 'Memory foam pillow — medium' },
     { id: 'price', label: 'Price (PKR)', type: 'text', placeholder: '4500' },
   ],
-  furniture: [
-    { id: 'name', label: 'Product name', type: 'text', placeholder: 'Velvet accent chair — teal' },
-    {
-      id: 'price',
-      label: 'Price (display text)',
-      type: 'text',
-      placeholder: 'PKR 32,000 or Contact for quote',
-    },
-  ],
+  furniture: [{ id: 'name', label: 'Product name', type: 'text', placeholder: 'Velvet accent chair — teal' }],
   sofacumbed: [{ id: 'name', label: 'Product name', type: 'text', placeholder: '3-seater sofa cum bed — grey' }],
 };
 
@@ -57,13 +49,11 @@ const accessorySpecs = [
 ];
 
 const furnitureSpecs = [
-  { id: 'length', label: 'Length', placeholder: 'e.g. 198 cm or 6 ft 6 in' },
-  { id: 'width', label: 'Width', placeholder: 'e.g. 92 cm' },
-  { id: 'height', label: 'Height', placeholder: 'e.g. 85 cm' },
-  { id: 'structure', label: 'Structure', placeholder: 'Frame type, joinery, support system' },
-  { id: 'fabric', label: 'Fabric / upholstery', placeholder: 'Velvet, leather, linen blend' },
-  { id: 'seats', label: 'Seats / configuration', placeholder: '3-seater' },
-  { id: 'material', label: 'Material', placeholder: 'Solid wood, metal legs' },
+  { id: 'brand', label: 'Brand', placeholder: 'Manufacturer' },
+  { id: 'series', label: 'Series / line', placeholder: 'Collection name' },
+  { id: 'features', label: 'Features', placeholder: 'Key features' },
+  { id: 'benefits', label: 'Benefits', placeholder: 'Benefits' },
+  { id: 'fabric', label: 'Fabric / upholstery', placeholder: 'Velvet, linen…' },
   { id: 'warranty', label: 'Warranty', placeholder: '2 years' },
 ];
 
@@ -92,6 +82,7 @@ const CmsAddProductPage = () => {
   });
   const [bedVariants, setBedVariants] = useState([{ width: '', height: '', length: '', price: '' }]);
   const [sofaVariants, setSofaVariants] = useState([{ price: '', fabric: '' }]);
+  const [furnitureVariants, setFurnitureVariants] = useState([{ option_name: '', price: '' }]);
   const [specs, setSpecs] = useState({});
   const [images, setImages] = useState([]);
   const [status, setStatus] = useState({ type: '', message: '' });
@@ -143,6 +134,9 @@ const CmsAddProductPage = () => {
     }
     if (category === 'sofacumbed') {
       setSofaVariants([{ price: '', fabric: '' }]);
+    }
+    if (category === 'furniture') {
+      setFurnitureVariants([{ option_name: '', price: '' }]);
     }
   }, [category]);
 
@@ -214,6 +208,20 @@ const CmsAddProductPage = () => {
     setSofaVariants((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
   };
 
+  const updateFurnitureVariant = (index, field, value) => {
+    setFurnitureVariants((prev) =>
+      prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)),
+    );
+  };
+
+  const addFurnitureVariantRow = () => {
+    setFurnitureVariants((prev) => [...prev, { option_name: '', price: '' }]);
+  };
+
+  const removeFurnitureVariantRow = (index) => {
+    setFurnitureVariants((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
+  };
+
   const handleReset = () => {
     setDetails({
       name: '',
@@ -223,6 +231,7 @@ const CmsAddProductPage = () => {
     setSpecs({});
     setBedVariants([{ width: '', height: '', length: '', price: '' }]);
     setSofaVariants([{ price: '', fabric: '' }]);
+    setFurnitureVariants([{ option_name: '', price: '' }]);
     setStatus({ type: '', message: '' });
     setImages((prev) => {
       prev.forEach((item) => URL.revokeObjectURL(item.preview));
@@ -249,6 +258,14 @@ const CmsAddProductPage = () => {
       const priced = sofaVariants.filter((v) => String(v.price || '').trim() !== '');
       if (!priced.length) {
         setStatus({ type: 'error', message: 'Add at least one fabric option with a price (PKR).' });
+        return;
+      }
+    } else if (category === 'furniture') {
+      const ok = furnitureVariants.filter(
+        (v) => String(v.option_name || '').trim() !== '' && String(v.price || '').trim() !== '',
+      );
+      if (!ok.length) {
+        setStatus({ type: 'error', message: 'Add at least one option with a name and price (PKR).' });
         return;
       }
     } else if (!details.price.trim()) {
@@ -288,7 +305,15 @@ const CmsAddProductPage = () => {
                 ...specs,
                 variants: sofaVariants.filter((v) => String(v.price || '').trim() !== ''),
               }
-            : specs;
+            : category === 'furniture'
+              ? {
+                  ...specs,
+                  variants: furnitureVariants.filter(
+                    (v) =>
+                      String(v.option_name || '').trim() !== '' && String(v.price || '').trim() !== '',
+                  ),
+                }
+              : specs;
       formData.append('specs', JSON.stringify(specsPayload));
 
       const cmsUser = JSON.parse(window.localStorage.getItem('cmsUser') || '{}');
@@ -589,6 +614,63 @@ const CmsAddProductPage = () => {
                         <button
                           type="button"
                           onClick={() => removeSofaVariantRow(index)}
+                          className="text-xs font-semibold text-red-600 hover:text-red-800 px-2 py-2"
+                        >
+                          Remove
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {category === 'furniture' && (
+            <section className="space-y-6 pt-2 border-t border-slate-100">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Options &amp; prices</p>
+                <p className="text-xs text-slate-600 mt-1">
+                  Each row is one sellable option (e.g. size/finish). Option name and PKR are required per row.
+                </p>
+              </div>
+              <div className="space-y-4">
+                {furnitureVariants.map((row, index) => (
+                  <div
+                    key={`furniture-var-${index}`}
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                  >
+                    <label className="flex flex-col sm:col-span-2">
+                      <span className="text-xs font-semibold text-slate-600 mb-1">Option name</span>
+                      <input
+                        value={row.option_name}
+                        onChange={(e) => updateFurnitureVariant(index, 'option_name', e.target.value)}
+                        placeholder="e.g. 3-seater — Grey"
+                        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </label>
+                    <label className="flex flex-col">
+                      <span className="text-xs font-semibold text-slate-600 mb-1">Price (PKR)</span>
+                      <input
+                        value={row.price}
+                        onChange={(e) => updateFurnitureVariant(index, 'price', e.target.value)}
+                        placeholder="85000"
+                        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </label>
+                    <div className="flex gap-2 justify-end lg:justify-start">
+                      <button
+                        type="button"
+                        onClick={() => addFurnitureVariantRow()}
+                        className="text-xs font-semibold text-blue-600 hover:text-blue-800 px-2 py-2"
+                      >
+                        <FiPlusCircle className="inline mr-1" />
+                        Add option
+                      </button>
+                      {furnitureVariants.length > 1 ? (
+                        <button
+                          type="button"
+                          onClick={() => removeFurnitureVariantRow(index)}
                           className="text-xs font-semibold text-red-600 hover:text-red-800 px-2 py-2"
                         >
                           Remove

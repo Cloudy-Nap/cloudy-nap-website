@@ -75,16 +75,9 @@ const sanitizeProduct = (item) => {
       ? item.description.trim()
       : [item.series, item.features].filter(Boolean).join(' · ') || 'No description yet.';
 
-  let priceNumeric = 0;
-  let priceLabel = 'Price on request';
-  if (resolvedType === 'furniture') {
-    const s = item.price !== null && item.price !== undefined ? String(item.price).trim() : '';
-    priceLabel = s || 'Price on request';
-    priceNumeric = parseNumeric(s, 0);
-  } else {
-    priceNumeric = parseNumeric(item.price, 0);
-    priceLabel = priceNumeric > 0 ? `PKR ${priceNumeric.toLocaleString('en-PK')}` : 'Price on request';
-  }
+  const priceNumeric = parseNumeric(item.price, 0);
+  const priceLabel =
+    priceNumeric > 0 ? `PKR ${priceNumeric.toLocaleString('en-PK')}` : 'Price on request';
 
   return {
     ...item,
@@ -131,10 +124,7 @@ const EDIT_GENERAL_FIELD_CONFIG = {
     { id: 'name', label: 'Product name', type: 'text', placeholder: 'Memory foam pillow' },
     { id: 'price', label: 'Price (PKR)', type: 'text', placeholder: '4500' },
   ],
-  furniture: [
-    { id: 'name', label: 'Product name', type: 'text', placeholder: 'Accent chair' },
-    { id: 'price', label: 'Price (display text)', type: 'text', placeholder: 'PKR 32,000' },
-  ],
+  furniture: [{ id: 'name', label: 'Product name', type: 'text', placeholder: 'Accent chair' }],
   sofacumbed: [{ id: 'name', label: 'Product name', type: 'text', placeholder: '3-seater sofa cum bed' }],
 };
 
@@ -158,13 +148,11 @@ const ACCESSORY_SPEC_FIELDS = [
 ];
 
 const FURNITURE_SPEC_FIELDS = [
-  { id: 'length', label: 'Length', sourceKey: 'length', placeholder: '198 cm' },
-  { id: 'width', label: 'Width', sourceKey: 'width', placeholder: '92 cm' },
-  { id: 'height', label: 'Height', sourceKey: 'height', placeholder: '85 cm' },
-  { id: 'structure', label: 'Structure', sourceKey: 'structure', placeholder: 'Frame / structure' },
-  { id: 'fabric', label: 'Fabric / upholstery', sourceKey: 'fabric', placeholder: 'Velvet' },
-  { id: 'seats', label: 'Seats / configuration', sourceKey: 'seats', placeholder: '3-seater' },
-  { id: 'material', label: 'Material', sourceKey: 'material', placeholder: 'Solid wood, velvet' },
+  { id: 'brand', label: 'Brand', sourceKey: 'brand', placeholder: 'Manufacturer' },
+  { id: 'series', label: 'Series / line', sourceKey: 'series', placeholder: 'Collection' },
+  { id: 'features', label: 'Features', sourceKey: 'features', placeholder: 'Key features' },
+  { id: 'benefits', label: 'Benefits', sourceKey: 'benefits', placeholder: 'Benefits' },
+  { id: 'fabric', label: 'Fabric / upholstery', sourceKey: 'fabric', placeholder: 'Velvet, linen…' },
   { id: 'warranty', label: 'Warranty', sourceKey: 'warranty', placeholder: '2 years' },
 ];
 
@@ -220,6 +208,7 @@ const CmsProductsPage = () => {
   });
   const [editBedVariants, setEditBedVariants] = useState([]);
   const [editSofaVariants, setEditSofaVariants] = useState([]);
+  const [editFurnitureVariants, setEditFurnitureVariants] = useState([]);
   const [editSpecs, setEditSpecs] = useState({});
   const [editExistingImages, setEditExistingImages] = useState([]);
   const [editNewImages, setEditNewImages] = useState([]);
@@ -343,6 +332,7 @@ const CmsProductsPage = () => {
     setEditSpecs({});
     setEditBedVariants([]);
     setEditSofaVariants([]);
+    setEditFurnitureVariants([]);
     setEditExistingImages([]);
     setEditNewImages((prev) => {
       prev.forEach((item) => {
@@ -418,8 +408,10 @@ const CmsProductsPage = () => {
             : [{ width: '', height: '', length: '', price: '' }],
         );
         setEditSofaVariants([]);
+        setEditFurnitureVariants([]);
       } else if (product.type === 'sofacumbed') {
         setEditBedVariants([]);
+        setEditFurnitureVariants([]);
         const rawVariants = Array.isArray(data.product_variants_sofacumbed)
           ? data.product_variants_sofacumbed
           : data.variants;
@@ -433,9 +425,26 @@ const CmsProductsPage = () => {
               }))
             : [{ price: '', fabric: '' }],
         );
+      } else if (product.type === 'furniture') {
+        setEditBedVariants([]);
+        setEditSofaVariants([]);
+        const rawVariants = Array.isArray(data.product_variants_furniture)
+          ? data.product_variants_furniture
+          : data.variants;
+        const list = Array.isArray(rawVariants) ? rawVariants : [];
+        setEditFurnitureVariants(
+          list.length
+            ? list.map((v) => ({
+                id: v.id,
+                option_name: v.option_name != null ? String(v.option_name) : '',
+                price: v.price != null ? String(v.price) : '',
+              }))
+            : [{ option_name: '', price: '' }],
+        );
       } else {
         setEditBedVariants([]);
         setEditSofaVariants([]);
+        setEditFurnitureVariants([]);
       }
 
       const existingImages = extractImageArray(data);
@@ -498,6 +507,20 @@ const CmsProductsPage = () => {
 
   const removeEditSofaVariantRow = useCallback((index) => {
     setEditSofaVariants((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
+  }, []);
+
+  const updateEditFurnitureVariant = useCallback((index, field, value) => {
+    setEditFurnitureVariants((prev) =>
+      prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)),
+    );
+  }, []);
+
+  const addEditFurnitureVariantRow = useCallback(() => {
+    setEditFurnitureVariants((prev) => [...prev, { option_name: '', price: '' }]);
+  }, []);
+
+  const removeEditFurnitureVariantRow = useCallback((index) => {
+    setEditFurnitureVariants((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
   }, []);
 
   const handleEditNewImageChange = useCallback(
@@ -599,6 +622,14 @@ const CmsProductsPage = () => {
         setEditError('Add at least one sofa cum bed option with a price (PKR).');
         return;
       }
+    } else if (editTarget?.type === 'furniture') {
+      const priced = editFurnitureVariants.filter(
+        (v) => String(v.option_name || '').trim() !== '' && String(v.price || '').trim() !== '',
+      );
+      if (!priced.length) {
+        setEditError('Add at least one furniture option with a name and price (PKR).');
+        return;
+      }
     } else if (!editDetails.price.trim()) {
       setEditError('Price is required.');
       return;
@@ -634,7 +665,15 @@ const CmsProductsPage = () => {
                 ...editSpecs,
                 variants: editSofaVariants.filter((v) => String(v.price || '').trim() !== ''),
               }
-            : editSpecs;
+            : editTarget?.type === 'furniture'
+              ? {
+                  ...editSpecs,
+                  variants: editFurnitureVariants.filter(
+                    (v) =>
+                      String(v.option_name || '').trim() !== '' && String(v.price || '').trim() !== '',
+                  ),
+                }
+              : editSpecs;
       formData.append('specs', JSON.stringify(specsToSend));
       formData.append('existingImages', JSON.stringify(editExistingImages));
 
@@ -1129,6 +1168,65 @@ const CmsProductsPage = () => {
                               <button
                                 type="button"
                                 onClick={() => removeEditSofaVariantRow(index)}
+                                disabled={editSubmitting}
+                                className="text-xs font-semibold text-red-600 hover:text-red-800 px-2 py-2 disabled:opacity-60"
+                              >
+                                Remove
+                              </button>
+                            ) : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {editTarget?.type === 'furniture' && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-900 mb-3">Options &amp; prices</h3>
+                    <p className="text-xs text-slate-600 mb-3">
+                      Each option appears on the storefront (e.g. configuration or finish). Prices are PKR.
+                    </p>
+                    <div className="space-y-4">
+                      {editFurnitureVariants.map((row, index) => (
+                        <div
+                          key={`edit-furniture-var-${row.id ?? index}`}
+                          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end bg-slate-50 border border-slate-200 rounded-xl p-4"
+                        >
+                          <label className="flex flex-col sm:col-span-2">
+                            <span className="text-xs font-semibold text-slate-500 uppercase mb-1">Option name</span>
+                            <input
+                              value={row.option_name ?? ''}
+                              onChange={(e) => updateEditFurnitureVariant(index, 'option_name', e.target.value)}
+                              placeholder="e.g. 3-seater — Grey"
+                              disabled={editSubmitting}
+                              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 disabled:opacity-60"
+                            />
+                          </label>
+                          <label className="flex flex-col">
+                            <span className="text-xs font-semibold text-slate-500 uppercase mb-1">Price (PKR)</span>
+                            <input
+                              value={row.price ?? ''}
+                              onChange={(e) => updateEditFurnitureVariant(index, 'price', e.target.value)}
+                              placeholder="85000"
+                              disabled={editSubmitting}
+                              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 disabled:opacity-60"
+                            />
+                          </label>
+                          <div className="flex gap-2 justify-end lg:justify-start">
+                            <button
+                              type="button"
+                              onClick={() => addEditFurnitureVariantRow()}
+                              disabled={editSubmitting}
+                              className="text-xs font-semibold text-blue-600 hover:text-blue-800 px-2 py-2 disabled:opacity-60"
+                            >
+                              <FiPlusCircle className="inline mr-1" />
+                              Add option
+                            </button>
+                            {editFurnitureVariants.length > 1 ? (
+                              <button
+                                type="button"
+                                onClick={() => removeEditFurnitureVariantRow(index)}
                                 disabled={editSubmitting}
                                 className="text-xs font-semibold text-red-600 hover:text-red-800 px-2 py-2 disabled:opacity-60"
                               >

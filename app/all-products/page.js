@@ -348,7 +348,7 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
       computedName;
     let parsedPrice = parseNumeric(item.price);
     if (
-      (type === 'bed' || type === 'sofacumbed') &&
+      (type === 'bed' || type === 'sofacumbed' || type === 'furniture') &&
       Array.isArray(item.variants) &&
       item.variants.length &&
       (!Number.isFinite(parsedPrice) || parsedPrice <= 0)

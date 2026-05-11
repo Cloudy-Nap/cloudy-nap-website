@@ -65,13 +65,8 @@ const sanitizeProduct = (item) => {
   const image = images[0] || item.image || getCategoryPlaceholderImage(resolvedType);
 
   let priceLabel = 'Price on request';
-  if (resolvedType === 'furniture') {
-    const s = item.price !== null && item.price !== undefined ? String(item.price).trim() : '';
-    priceLabel = s || 'Price on request';
-  } else {
-    const n = parseNumeric(item.price, 0);
-    priceLabel = n > 0 ? `PKR ${n.toLocaleString('en-PK')}` : 'Price on request';
-  }
+  const n = parseNumeric(item.price, 0);
+  priceLabel = n > 0 ? `PKR ${n.toLocaleString('en-PK')}` : 'Price on request';
 
   return {
     ...item,

@@ -139,13 +139,11 @@ const buildCuratedCatalogSpecs = (item, productType) => {
       ];
     case 'furniture':
       return [
-        specRow('Length', pickCatalogColumn(item, 'length', 'length_cm', 'length_in', 'length_mm', 'l')),
-        specRow('Width', pickCatalogColumn(item, 'width', 'width_cm', 'width_in', 'w')),
-        specRow('Height', pickCatalogColumn(item, 'height', 'height_cm', 'height_in', 'thickness', 'h')),
-        specRow('Structure', pickCatalogColumn(item, 'structure', 'frame', 'construction')),
+        specRow('Brand', pickCatalogColumn(item, 'brand')),
+        specRow('Series', pickCatalogColumn(item, 'series')),
+        specRow('Features', pickCatalogColumn(item, 'features')),
+        specRow('Benefits', pickCatalogColumn(item, 'benefits')),
         specRow('Fabric', pickCatalogColumn(item, 'fabric', 'fabric_type', 'upholstery', 'textile')),
-        specRow('Seats', pickCatalogColumn(item, 'seats', 'seat', 'seat_count', 'seating_capacity')),
-        specRow('Material', pickCatalogColumn(item, 'material', 'wood', 'finish', 'frame_material')),
         specRow('Warranty', pickCatalogColumn(item, 'warranty')),
       ];
     case 'deal': {
@@ -179,12 +177,16 @@ const catalogSectionTitle = (t) => {
   }
 };
 
-/** List / detail price display for an included catalog row (furniture often display text). */
+/** List / detail price display for an included catalog row. */
 const formatCatalogLinePrice = (detail, catalogType) => {
   if (!detail) return null;
   const p = detail.price;
   if (p === null || p === undefined) return null;
   if (catalogType === 'furniture') {
+    const n = Number(p);
+    if (Number.isFinite(n) && n > 0) {
+      return `PKR ${n.toLocaleString('en-PK')}`;
+    }
     const s = String(p).trim();
     return s || null;
   }
@@ -575,7 +577,10 @@ const ProductPage = () => {
           finalName;
 
         const variantFloorPk =
-          (resolvedType === 'bed' || resolvedType === 'sofacumbed') && Array.isArray(data.variants)
+          (resolvedType === 'bed' ||
+            resolvedType === 'sofacumbed' ||
+            resolvedType === 'furniture') &&
+          Array.isArray(data.variants)
             ? (() => {
                 const nums = data.variants
                   .map((v) => parseNumeric(v?.price, 0))
@@ -587,7 +592,9 @@ const ProductPage = () => {
         const dealOrCatalogNumericPrice =
           resolvedType === DEAL_TYPE
             ? parseNumeric(data.deal_price ?? data.price, 0)
-            : resolvedType === 'bed' || resolvedType === 'sofacumbed'
+            : resolvedType === 'bed' ||
+                resolvedType === 'sofacumbed' ||
+                resolvedType === 'furniture'
               ? Math.max(parseNumeric(data.price, 0), variantFloorPk ?? 0)
               : parseNumeric(data.price, 0);
 
@@ -774,8 +781,16 @@ const ProductPage = () => {
     product.type === 'bed' && Array.isArray(product.variants) ? product.variants : [];
   const sofaVariantsList =
     product.type === 'sofacumbed' && Array.isArray(product.variants) ? product.variants : [];
+  const furnitureVariantsList =
+    product.type === 'furniture' && Array.isArray(product.variants) ? product.variants : [];
   const catalogVariantList =
-    product.type === 'bed' ? bedVariantsList : product.type === 'sofacumbed' ? sofaVariantsList : [];
+    product.type === 'bed'
+      ? bedVariantsList
+      : product.type === 'sofacumbed'
+        ? sofaVariantsList
+        : product.type === 'furniture'
+          ? furnitureVariantsList
+          : [];
   const safeVariantIndex = Math.min(
     selectedBedVariantIndex,
     Math.max(0, catalogVariantList.length - 1),
@@ -784,13 +799,16 @@ const ProductPage = () => {
   const variantUnitPrice =
     selectedCatalogVariant != null ? parseNumeric(selectedCatalogVariant.price, 0) : 0;
   const displayPrice =
-    product.type === 'bed' || product.type === 'sofacumbed'
+    product.type === 'bed' || product.type === 'sofacumbed' || product.type === 'furniture'
       ? variantUnitPrice > 0
         ? variantUnitPrice
         : parseNumeric(product.price, 0)
       : product.price;
   const productForCatalogSpecs =
-    (product.type === 'bed' || product.type === 'sofacumbed') && selectedCatalogVariant
+    (product.type === 'bed' ||
+      product.type === 'sofacumbed' ||
+      product.type === 'furniture') &&
+    selectedCatalogVariant
       ? { ...product, ...selectedCatalogVariant }
       : product;
 
@@ -835,7 +853,9 @@ const ProductPage = () => {
     const cartId =
       product.type === 'sofacumbed' && selectedCatalogVariant?.id != null
         ? `sofacumbed-${product.id}-v-${selectedCatalogVariant.id}`
-        : baseCartId;
+        : product.type === 'furniture' && selectedCatalogVariant?.id != null
+          ? `furniture-${product.id}-v-${selectedCatalogVariant.id}`
+          : baseCartId;
     const imageSrc =
       product.image ||
       getCategoryPlaceholderImage(
@@ -851,10 +871,16 @@ const ProductPage = () => {
       product.type === 'sofacumbed' && selectedCatalogVariant?.fabric != null
         ? String(selectedCatalogVariant.fabric).trim()
         : '';
+    const furnitureOption =
+      product.type === 'furniture' && selectedCatalogVariant?.option_name != null
+        ? String(selectedCatalogVariant.option_name).trim()
+        : '';
     const cartDisplayName =
       product.type === 'sofacumbed' && sofaFabric
         ? `${product.name} — ${sofaFabric}`
-        : product.name;
+        : product.type === 'furniture' && furnitureOption
+          ? `${product.name} — ${furnitureOption}`
+          : product.name;
 
     addToCart(
       {
@@ -1121,6 +1147,46 @@ const ProductPage = () => {
                 <span>
                   {typeof selectedCatalogVariant.fabric === 'string' && selectedCatalogVariant.fabric.trim() !== ''
                     ? selectedCatalogVariant.fabric.trim()
+                    : '—'}
+                </span>
+                <span className="text-gray-500"> — PKR {formatPrice(parseNumeric(selectedCatalogVariant.price, 0))}</span>
+              </div>
+            ) : null}
+
+            {product.type === 'furniture' && furnitureVariantsList.length > 1 ? (
+              <div className="space-y-2">
+                <label htmlFor="furniture-variant-select" className="block text-sm font-medium text-gray-700">
+                  Option
+                </label>
+                <select
+                  id="furniture-variant-select"
+                  value={safeVariantIndex}
+                  onChange={(e) => setSelectedBedVariantIndex(Number(e.target.value))}
+                  className="w-full max-w-md border border-gray-300 rounded-sm px-3 py-2 text-sm text-gray-900 bg-white"
+                >
+                  {furnitureVariantsList.map((v, idx) => {
+                    const label =
+                      typeof v.option_name === 'string' && v.option_name.trim() !== ''
+                        ? v.option_name.trim()
+                        : `Option ${idx + 1}`;
+                    return (
+                      <option key={v.id != null ? String(v.id) : `fur-v-${idx}`} value={idx}>
+                        {label} — PKR {formatPrice(parseNumeric(v.price, 0))}
+                      </option>
+                    );
+                  })}
+                </select>
+                <p className="text-xs text-gray-500">Choose a configuration or finish; price updates accordingly.</p>
+              </div>
+            ) : null}
+
+            {product.type === 'furniture' && furnitureVariantsList.length === 1 && selectedCatalogVariant ? (
+              <div className="text-sm text-gray-700">
+                <span className="font-medium text-gray-900">Option: </span>
+                <span>
+                  {typeof selectedCatalogVariant.option_name === 'string' &&
+                  selectedCatalogVariant.option_name.trim() !== ''
+                    ? selectedCatalogVariant.option_name.trim()
                     : '—'}
                 </span>
                 <span className="text-gray-500"> — PKR {formatPrice(parseNumeric(selectedCatalogVariant.price, 0))}</span>
