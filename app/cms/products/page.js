@@ -622,14 +622,6 @@ const CmsProductsPage = () => {
         setEditError('Add at least one sofa cum bed option with a price (PKR).');
         return;
       }
-    } else if (editTarget?.type === 'furniture') {
-      const priced = editFurnitureVariants.filter(
-        (v) => String(v.option_name || '').trim() !== '' && String(v.price || '').trim() !== '',
-      );
-      if (!priced.length) {
-        setEditError('Add at least one furniture option with a name and price (PKR).');
-        return;
-      }
     } else if (!editDetails.price.trim()) {
       setEditError('Price is required.');
       return;
