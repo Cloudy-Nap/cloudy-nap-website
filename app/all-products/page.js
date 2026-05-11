@@ -20,6 +20,8 @@ import { getCategoryPlaceholderImage } from '../lib/categoryPlaceholders';
 
 /** Mattress / product height filter (inches). Mattress variant dimensions in API are stored as inch values; furniture often uses text with units. */
 const HEIGHT_INCH_STOPS = [6, 8, 12, 16, 20, 24, 28, 32];
+/** Grid pagination — aligned across /all-products, Matteress, furniture routes, etc. */
+const PRODUCTS_PER_PAGE = 50;
 const CM_TO_INCH = 1 / 2.54;
 
 /**
@@ -642,6 +644,23 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
     heightMaxIn,
   ]);
 
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE)),
+    [filteredProducts.length],
+  );
+
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * PRODUCTS_PER_PAGE;
+    return filteredProducts.slice(start, start + PRODUCTS_PER_PAGE);
+  }, [filteredProducts, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage((p) => {
+      const tp = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
+      return p > tp ? tp : p;
+    });
+  }, [filteredProducts.length]);
+
   const formatCurrency = (value) =>
     (Number(value) || 0).toLocaleString('en-PK');
 
@@ -1182,7 +1201,16 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
                 <div className="mt-4 text-sm text-gray-600">
                   {loadingProducts
                     ? 'Loading results...'
-                    : `${filteredProducts.length} ${filteredProducts.length === 1 ? 'result' : 'results'} found.`}
+                    : (() => {
+                        const total = filteredProducts.length;
+                        if (total === 0) return '0 results found.';
+                        if (totalPages <= 1) {
+                          return `${total} ${total === 1 ? 'result' : 'results'} found.`;
+                        }
+                        const from = (currentPage - 1) * PRODUCTS_PER_PAGE + 1;
+                        const to = Math.min(currentPage * PRODUCTS_PER_PAGE, total);
+                        return `${total} ${total === 1 ? 'result' : 'results'} found · Showing ${from}–${to} · Page ${currentPage} of ${totalPages}`;
+                      })()}
                 </div>
               </div>
 
@@ -1198,7 +1226,7 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
                   <div className="py-12 text-sm text-gray-600 text-center">No products available yet.</div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                    {filteredProducts.map((product) => (
+                    {paginatedProducts.map((product) => (
                       <ProductCard
                         key={product.cartId || `${product.type}-${product.id}`}
                         product={product}
@@ -1222,17 +1250,19 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
                 )}
               </div>
 
-              {/* Pagination */}
+              {!loadingProducts && !fetchError && filteredProducts.length > 0 ? (
               <div className="flex flex-wrap items-center justify-center gap-2 mt-auto pt-6 sm:pt-8 px-1 max-w-full">
                 <button
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  type="button"
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
                   className="px-2.5 py-2.5 sm:px-3 sm:py-3 rounded-full border-blue-400 border-2 text-blue-400 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                 >
                   <FaChevronLeft className="text-sm" />
                 </button>
-                {[1, 2, 3, 4, 5, 6].map((page) => (
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                   <button
+                    type="button"
                     key={page}
                     onClick={() => setCurrentPage(page)}
                     className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full text-xs sm:text-sm transition shrink-0 ${
@@ -1245,13 +1275,15 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
                   </button>
                 ))}
                 <button
-                  onClick={() => setCurrentPage(prev => Math.min(6, prev + 1))}
-                  disabled={currentPage === 6}
+                  type="button"
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
                   className="px-2.5 py-2.5 sm:px-3 sm:py-3 border-2 border-blue-400 text-blue-400 rounded-full hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                 >
                   <FaChevronRight className="text-sm" />
                 </button>
               </div>
+              ) : null}
             </div>
           </div>
         </div>
