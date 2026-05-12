@@ -5,7 +5,7 @@ import { openSans } from '../Font/font';
 const Map = () => {
   const [activeCity, setActiveCity] = useState('Karachi');
 
-  const cities = ['Karachi', 'Lahore', 'Quetta', 'Peshawar'];
+  const cities = ['Karachi'];
 
   return (
     <div className={`w-full py-8 lg:py-12 bg-white ${openSans.className}`}>

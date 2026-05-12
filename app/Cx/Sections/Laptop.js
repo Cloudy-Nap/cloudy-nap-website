@@ -310,7 +310,7 @@ const Laptop = () => {
     <div className={`w-full py-8 lg:py-12 bg-white ${openSans.className}`}>
       <div className="max-w-7xl mx-auto px-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-3xl font-bold text-gray-900">Shop Beds</h2>
+          <h2 className="text-3xl font-bold text-gray-900">Shop Mattress</h2>
         </div>
 
         <div className="relative px-12">
