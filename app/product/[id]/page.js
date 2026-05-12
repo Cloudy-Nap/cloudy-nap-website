@@ -549,8 +549,25 @@ const ProductPage = () => {
         const data = await response.json();
         const resolvedType =
           endpointType === DEAL_TYPE || data?.type === DEAL_TYPE ? DEAL_TYPE : resolveProductType(data, endpointType);
-        const imageArray = extractImageArray(data, resolvedType);
         const placeholder = getCategoryPlaceholderImage(resolvedType);
+        const extracted = extractImageArray(data, resolvedType);
+        let imageArray = extracted;
+        if (CATALOG_TYPES.includes(resolvedType)) {
+          const cover = typeof data.image === 'string' && data.image.trim() ? data.image.trim() : '';
+          if (cover) {
+            const urlsOnly = extracted
+              .filter((u) => typeof u === 'string' && u.trim())
+              .map((u) => u.trim())
+              .filter((u) => u !== placeholder);
+            if (!urlsOnly.length) {
+              imageArray = [cover];
+            } else if (urlsOnly.includes(cover)) {
+              imageArray = [cover, ...urlsOnly.filter((u) => u !== cover)];
+            } else {
+              imageArray = [cover, ...urlsOnly];
+            }
+          }
+        }
         const images = imageArray.length ? imageArray : [placeholder];
         const rawId =
           data.id !== null && data.id !== undefined && data.id.toString

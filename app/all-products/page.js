@@ -306,31 +306,41 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
 
   const extractImageArray = (item) => {
     if (!item) return [];
-    const candidates = [
-      item.imageUrls,
-      item.image_urls,
-      item.images,
-      item.imageurls,
-    ];
-    for (const candidate of candidates) {
-      if (Array.isArray(candidate)) {
-        return candidate
-          .map((url) => (typeof url === 'string' ? url.trim() : ''))
-          .filter((url) => url);
-      }
-    }
-    if (typeof item.image === 'string' && item.image.trim()) {
-      return [item.image.trim()];
-    }
-    return [];
+    let urls = [];
+    if (Array.isArray(item.imageUrls)) urls = item.imageUrls;
+    else if (Array.isArray(item.image_urls)) urls = item.image_urls;
+    else if (Array.isArray(item.images)) urls = item.images;
+    else if (Array.isArray(item.imageurls)) urls = item.imageurls;
+
+    const normalized = (Array.isArray(urls) ? urls : [])
+      .map((url) => (typeof url === 'string' ? url.trim() : ''))
+      .filter((url) => url);
+
+    const single =
+      typeof item.image === 'string' && item.image.trim() !== '' ? item.image.trim() : '';
+
+    if (!normalized.length && single) return [single];
+    if (single && !normalized.includes(single)) return [single, ...normalized];
+    return normalized;
   };
 
   const normalizeProduct = (item, type) => {
     if (!item) return null;
     const placeholder = getCategoryPlaceholderImage(type === 'deal' ? 'deal' : type);
     const rawImages = extractImageArray(item);
-    const primaryImage = rawImages[0] || item.image || placeholder;
-    const imageArray = rawImages.length ? rawImages : [primaryImage];
+    const rawCover =
+      typeof item.image === 'string' && item.image.trim() !== '' ? item.image.trim() : '';
+    let gallery = rawImages;
+    if (rawCover) {
+      const idx = gallery.indexOf(rawCover);
+      if (idx > 0) {
+        gallery = [rawCover, ...gallery.filter((u) => u !== rawCover)];
+      } else if (idx === -1) {
+        gallery = [rawCover, ...gallery];
+      }
+    }
+    const primaryImage = rawCover || gallery[0] || item.image || placeholder;
+    const imageArray = gallery.length ? gallery : [primaryImage];
     const hasId = item.id !== null && item.id !== undefined;
     const rawId = hasId ? item.id.toString() : '';
     const computedName = (item.name ||

@@ -66,8 +66,17 @@ const Laptop = () => {
           const rawImageUrls = Array.isArray(item.image_urls)
             ? item.image_urls.filter((url) => typeof url === 'string' && url.trim() !== '')
             : [];
-          const primaryImage = rawImageUrls[0] || item.image || getCategoryPlaceholderImage('bed');
-          const imageArray = rawImageUrls.length ? rawImageUrls : [primaryImage];
+          const cover =
+            typeof item.image === 'string' && item.image.trim() !== '' ? item.image.trim() : '';
+          const primaryImage = cover || rawImageUrls[0] || getCategoryPlaceholderImage('bed');
+          const imageArray =
+            rawImageUrls.length > 0
+              ? cover && rawImageUrls.includes(cover)
+                ? [cover, ...rawImageUrls.filter((u) => u !== cover)]
+                : cover && !rawImageUrls.includes(cover)
+                  ? [cover, ...rawImageUrls]
+                  : rawImageUrls
+              : [primaryImage];
           const rawId = item.id !== null && item.id !== undefined && item.id.toString
             ? item.id.toString()
             : item.id;

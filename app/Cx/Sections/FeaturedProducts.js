@@ -63,9 +63,19 @@ function normalizeFeaturedProduct(item) {
   const type = String(item.type || 'bed').toLowerCase();
   const rawId = item.id != null ? String(item.id) : '';
   const fromImageUrls = normalizeImageUrlList(item.image_urls);
-  const imageArray =
+  let imageArray =
     fromImageUrls.length > 0 ? fromImageUrls : normalizeImageUrlList(item.imageUrls);
+  const cover =
+    typeof item.image === 'string' && item.image.trim() !== '' ? item.image.trim() : '';
+  if (cover && imageArray.length) {
+    imageArray = imageArray.includes(cover)
+      ? [cover, ...imageArray.filter((u) => u !== cover)]
+      : [cover, ...imageArray];
+  } else if (cover && !imageArray.length) {
+    imageArray = [cover];
+  }
   const image =
+    cover ||
     imageArray[0] ||
     (typeof item.image === 'string' && item.image.trim() ? item.image.trim() : null) ||
     getCategoryPlaceholderImage(type);

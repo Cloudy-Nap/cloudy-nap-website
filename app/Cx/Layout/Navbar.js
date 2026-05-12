@@ -63,6 +63,9 @@ const Navbar = () => {
 
   const extractPrimaryImage = (item) => {
     if (!item) return getCategoryPlaceholderImage('bed');
+    const cover =
+      typeof item.image === 'string' && item.image.trim() !== '' ? item.image.trim() : '';
+    if (cover) return cover;
     const candidates = [
       item.imageUrls,
       item.image_urls,
@@ -72,11 +75,8 @@ const Navbar = () => {
     for (const candidate of candidates) {
       if (Array.isArray(candidate) && candidate.length) {
         const found = candidate.find((url) => typeof url === 'string' && url.trim() !== '');
-        if (found) return found;
+        if (found) return found.trim();
       }
-    }
-    if (typeof item.image === 'string' && item.image.trim()) {
-      return item.image.trim();
     }
     return getCategoryPlaceholderImage(item.type, item.category);
   };
