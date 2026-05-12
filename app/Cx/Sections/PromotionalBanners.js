@@ -4,13 +4,16 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
+/** Mattress listing + sidebar brand filter (`beds.brand` === DolceVita, case-insensitive). */
+const DOLCE_VITA_MATTRESSES_HREF = '/all-products?subcategory=matteress&brand=dolcevita';
+
 const PromotionalBanners = () => {
   return (
     <div className="w-full py-8 lg:py-12 bg-white">
       <div className="max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Dolce Vita mattresses — beds */}
-          <Link href="/all-products?subcategory=matteress" className="relative rounded-lg overflow-hidden group cursor-pointer block">
+          <Link href={DOLCE_VITA_MATTRESSES_HREF} className="relative rounded-lg overflow-hidden group cursor-pointer block">
             <Image 
               src="/banner-m-1.png" 
               alt="Dolce Vita mattresses" 
@@ -30,8 +33,8 @@ const PromotionalBanners = () => {
             </div>
           </Link>
 
-          {/* Dolce Vita 5000 Series — same mattress catalog */}
-          <Link href="/all-products?subcategory=matteress" className="relative rounded-lg overflow-hidden group cursor-pointer block">
+          {/* Dolce Vita 5000 Series — DolceVita mattresses only */}
+          <Link href={DOLCE_VITA_MATTRESSES_HREF} className="relative rounded-lg overflow-hidden group cursor-pointer block">
             <Image 
               src="/banner-m-2.png" 
               alt="Dolce Vita 5000 Series mattresses" 

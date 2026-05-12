@@ -94,6 +94,8 @@ const MATTRESS_BRAND_OPTIONS = [
   { slug: 'englander', label: 'Englander' },
   { slug: 'citi-foam', label: 'Citi Foam' },
   { slug: 'diamond', label: 'Diamond' },
+  /** Matches `beds.brand` (case-insensitive), e.g. Dolce Vita promos */
+  { slug: 'dolcevita', label: 'DolceVita' },
 ];
 
 const MATTRESS_BRAND_LABEL_BY_SLUG = MATTRESS_BRAND_OPTIONS.reduce((acc, o) => {
@@ -243,7 +245,7 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
   const mattressBrandSlug = useMemo(() => {
     const raw = typeof mattressBrandQuery === 'string' ? mattressBrandQuery.trim().toLowerCase() : '';
     if (!raw) return '';
-    return ['englander', 'citi-foam', 'diamond'].includes(raw) ? raw : '';
+    return ['englander', 'citi-foam', 'diamond', 'dolcevita'].includes(raw) ? raw : '';
   }, [mattressBrandQuery]);
 
   const clampPrice = (value) => {
