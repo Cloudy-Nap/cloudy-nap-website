@@ -285,6 +285,7 @@ const ProductPage = () => {
   const searchParams = useSearchParams();
   const requestedType = searchParams?.get('type');
   const requestedTypeLower = typeof requestedType === 'string' ? requestedType.toLowerCase() : '';
+  /** Omitting `?type=` defaulted to laptop → `/api/laptops/:id` collided with catalog ids (e.g. bed id 9 vs laptops row 9). This storefront lists mattresses under `/laptops`; default catalog bed when type is omitted. Use `?type=laptop` for legacy laptop PDPs. */
   const initialType =
     requestedTypeLower === DEAL_TYPE
       ? DEAL_TYPE
@@ -294,7 +295,9 @@ const ProductPage = () => {
           ? 'printer'
           : requestedTypeLower === 'scanner'
             ? 'scanner'
-            : 'laptop';
+            : requestedTypeLower === 'laptop'
+              ? 'laptop'
+              : 'bed';
   
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);

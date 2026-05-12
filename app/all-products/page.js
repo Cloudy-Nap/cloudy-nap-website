@@ -349,10 +349,15 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
         : item.processor || item.graphics || '') ||
       computedName;
     let parsedPrice = parseNumeric(item.price);
+    const firstVariant = Array.isArray(item.variants) && item.variants.length ? item.variants[0] : null;
+    const variantsLookCatalog =
+      firstVariant &&
+      typeof firstVariant === 'object' &&
+      (firstVariant.product_id != null || firstVariant.furniture_id != null);
     if (
-      (type === 'bed' || type === 'sofacumbed' || type === 'furniture') &&
       Array.isArray(item.variants) &&
       item.variants.length &&
+      variantsLookCatalog &&
       (!Number.isFinite(parsedPrice) || parsedPrice <= 0)
     ) {
       const nums = item.variants.map((v) => parseNumeric(v?.price, 0)).filter((n) => n > 0);
@@ -453,15 +458,27 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
 
         const normalized = (Array.isArray(payload) ? payload : [])
           .map((item) => {
-            let inferredType = item?.type;
+            let inferredType = item?.type ? String(item.type).toLowerCase() : '';
             if (!inferredType && typeof item?.category === 'string') {
               const categoryLower = item.category.toLowerCase();
               if (categoryLower.includes('printer')) {
                 inferredType = 'printer';
               } else if (categoryLower.includes('scanner')) {
                 inferredType = 'scanner';
+              } else if (
+                categoryLower.includes('matteress') ||
+                categoryLower.includes('mattress') ||
+                categoryLower.includes('bed')
+              ) {
+                inferredType = 'bed';
+              } else if (categoryLower.includes('sofa')) {
+                inferredType = 'sofacumbed';
+              } else if (categoryLower.includes('furniture')) {
+                inferredType = 'furniture';
+              } else if (categoryLower.includes('accessor') || categoryLower.includes('pillow')) {
+                inferredType = 'accessory';
               } else {
-                inferredType = 'laptop';
+                inferredType = 'bed';
               }
             }
             return normalizeProduct(item, inferredType || 'bed');
