@@ -583,7 +583,7 @@ const ProductPage = () => {
           Array.isArray(data.variants)
             ? (() => {
                 const nums = data.variants
-                  .map((v) => parseNumeric(v?.price, 0))
+                  .map((v) => parseNumeric(pickCatalogColumn(v, 'price'), 0))
                   .filter((n) => n > 0);
                 return nums.length ? Math.min(...nums) : null;
               })()
@@ -796,13 +796,19 @@ const ProductPage = () => {
     Math.max(0, catalogVariantList.length - 1),
   );
   const selectedCatalogVariant = catalogVariantList.length ? catalogVariantList[safeVariantIndex] : null;
+  const catalogVariantPriceNums = catalogVariantList
+    .map((v) => parseNumeric(pickCatalogColumn(v, 'price'), 0))
+    .filter((n) => n > 0);
+  const catalogVariantFloorPk = catalogVariantPriceNums.length ? Math.min(...catalogVariantPriceNums) : 0;
   const variantUnitPrice =
-    selectedCatalogVariant != null ? parseNumeric(selectedCatalogVariant.price, 0) : 0;
+    selectedCatalogVariant != null ? parseNumeric(pickCatalogColumn(selectedCatalogVariant, 'price'), 0) : 0;
   const displayPrice =
     product.type === 'bed' || product.type === 'sofacumbed' || product.type === 'furniture'
       ? variantUnitPrice > 0
         ? variantUnitPrice
-        : parseNumeric(product.price, 0)
+        : catalogVariantFloorPk > 0
+          ? catalogVariantFloorPk
+          : parseNumeric(product.price, 0)
       : product.price;
   const productForCatalogSpecs =
     (product.type === 'bed' ||
@@ -1104,7 +1110,7 @@ const ProductPage = () => {
                     const label = dim ? `${dim} in.` : `Size ${idx + 1}`;
                     return (
                       <option key={v.id != null ? String(v.id) : `v-${idx}`} value={idx}>
-                        {label} — PKR {formatPrice(parseNumeric(v.price, 0))}
+                        {label} — PKR {formatPrice(parseNumeric(pickCatalogColumn(v, 'price'), 0))}
                       </option>
                     );
                   })}
@@ -1130,7 +1136,7 @@ const ProductPage = () => {
                         : `Option ${idx + 1}`;
                     return (
                       <option key={v.id != null ? String(v.id) : `sofa-v-${idx}`} value={idx}>
-                        {fabric} — PKR {formatPrice(parseNumeric(v.price, 0))}
+                        {fabric} — PKR {formatPrice(parseNumeric(pickCatalogColumn(v, 'price'), 0))}
                       </option>
                     );
                   })}
@@ -1149,7 +1155,7 @@ const ProductPage = () => {
                     ? selectedCatalogVariant.fabric.trim()
                     : '—'}
                 </span>
-                <span className="text-gray-500"> — PKR {formatPrice(parseNumeric(selectedCatalogVariant.price, 0))}</span>
+                <span className="text-gray-500"> — PKR {formatPrice(parseNumeric(pickCatalogColumn(selectedCatalogVariant, 'price'), 0))}</span>
               </div>
             ) : null}
 
@@ -1171,7 +1177,7 @@ const ProductPage = () => {
                         : `Option ${idx + 1}`;
                     return (
                       <option key={v.id != null ? String(v.id) : `fur-v-${idx}`} value={idx}>
-                        {label} — PKR {formatPrice(parseNumeric(v.price, 0))}
+                        {label} — PKR {formatPrice(parseNumeric(pickCatalogColumn(v, 'price'), 0))}
                       </option>
                     );
                   })}
@@ -1189,7 +1195,7 @@ const ProductPage = () => {
                     ? selectedCatalogVariant.option_name.trim()
                     : '—'}
                 </span>
-                <span className="text-gray-500"> — PKR {formatPrice(parseNumeric(selectedCatalogVariant.price, 0))}</span>
+                <span className="text-gray-500"> — PKR {formatPrice(parseNumeric(pickCatalogColumn(selectedCatalogVariant, 'price'), 0))}</span>
               </div>
             ) : null}
 

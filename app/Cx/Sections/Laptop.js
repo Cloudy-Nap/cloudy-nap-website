@@ -72,13 +72,23 @@ const Laptop = () => {
             ? item.id.toString()
             : item.id;
 
+          let priceNum = parseNumeric(item.price, 0);
+          if (
+            Array.isArray(item.variants) &&
+            item.variants.length &&
+            (!Number.isFinite(priceNum) || priceNum <= 0)
+          ) {
+            const nums = item.variants.map((v) => parseNumeric(v?.price, 0)).filter((n) => n > 0);
+            if (nums.length) priceNum = Math.min(...nums);
+          }
+
           return {
             ...item,
             id: rawId,
             cartId: rawId ? `bed-${rawId}` : undefined,
             type: 'bed',
             category: 'Matteress',
-            price: parseNumeric(item.price, 0),
+            price: priceNum,
             rating: parseNumeric(item.rating, 4.5),
             reviews: parseNumeric(item.reviews, 120),
             description: item.description || item.title || item.name,
@@ -293,7 +303,9 @@ const Laptop = () => {
           )}
           <div className="flex items-baseline gap-2 mt-auto flex-wrap">
             <span className="text-base font-bold text-gray-900">
-              PKR {Number(product.price || 0).toLocaleString('en-PK')}
+              {Number(product.price) > 0
+                ? `PKR ${Number(product.price).toLocaleString('en-PK')}`
+                : 'Price on request'}
             </span>
             {product.oldPriceNumeric != null && (
               <span className="text-sm text-gray-400 line-through">

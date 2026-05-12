@@ -69,7 +69,16 @@ function normalizeFeaturedProduct(item) {
     imageArray[0] ||
     (typeof item.image === 'string' && item.image.trim() ? item.image.trim() : null) ||
     getCategoryPlaceholderImage(type);
-  const priceValue = parsePrice(item.price);
+  let priceValue = parsePrice(item.price);
+  if (
+    (type === 'bed' || type === 'sofacumbed' || type === 'furniture') &&
+    priceValue <= 0 &&
+    Array.isArray(item.variants) &&
+    item.variants.length
+  ) {
+    const nums = item.variants.map((v) => parsePrice(v?.price)).filter((n) => n > 0);
+    if (nums.length) priceValue = Math.min(...nums);
+  }
   const oldPriceValue = parsePrice(item.old_price);
   const rawDesc = typeof item.description === 'string' ? item.description.trim() : '';
   const desc =
