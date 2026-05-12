@@ -39,12 +39,22 @@ const parseNumeric = (value, fallback = 0) => {
 
 const extractImageArray = (value) => {
   if (!value) return [];
-  if (Array.isArray(value.imageUrls)) return value.imageUrls.filter((url) => typeof url === 'string' && url.trim() !== '');
-  if (Array.isArray(value.image_urls)) return value.image_urls.filter((url) => typeof url === 'string' && url.trim() !== '');
-  if (Array.isArray(value.images)) return value.images.filter((url) => typeof url === 'string' && url.trim() !== '');
-  if (Array.isArray(value.imageurls)) return value.imageurls.filter((url) => typeof url === 'string' && url.trim() !== '');
-  if (typeof value.image === 'string' && value.image.trim() !== '') return [value.image.trim()];
-  return [];
+  let urls = [];
+  if (Array.isArray(value.imageUrls)) urls = value.imageUrls;
+  else if (Array.isArray(value.image_urls)) urls = value.image_urls;
+  else if (Array.isArray(value.images)) urls = value.images;
+  else if (Array.isArray(value.imageurls)) urls = value.imageurls;
+
+  const normalized = (Array.isArray(urls) ? urls : [])
+    .filter((url) => typeof url === 'string' && url.trim() !== '')
+    .map((url) => url.trim());
+
+  const single =
+    typeof value.image === 'string' && value.image.trim() !== '' ? value.image.trim() : '';
+
+  if (!normalized.length && single) return [single];
+  if (single && !normalized.includes(single)) return [single, ...normalized];
+  return normalized;
 };
 
 const categoryLabel = (type) => {
@@ -67,8 +77,18 @@ const sanitizeProduct = (item) => {
   const resolvedType = item.type || 'bed';
   if (!CLOUDYNAP_TYPES.has(resolvedType)) return null;
 
-  const images = extractImageArray(item);
-  const image = images[0] || item.image || getCategoryPlaceholderImage(resolvedType);
+  const rawCover =
+    typeof item.image === 'string' && item.image.trim() !== '' ? item.image.trim() : '';
+  let images = extractImageArray(item);
+  if (rawCover) {
+    const idx = images.indexOf(rawCover);
+    if (idx > 0) {
+      images = [rawCover, ...images.filter((u) => u !== rawCover)];
+    } else if (idx === -1) {
+      images = [rawCover, ...images];
+    }
+  }
+  const image = rawCover || images[0] || getCategoryPlaceholderImage(resolvedType);
 
   const desc =
     typeof item.description === 'string' && item.description.trim()
