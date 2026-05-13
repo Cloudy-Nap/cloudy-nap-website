@@ -125,8 +125,22 @@ const extractEmail = (order) => {
     return addressEmail.trim();
   }
 
-  const email = order.user_email || order.email || order.user?.email;
-  return email || 'Not provided';
+  const email =
+    order.customer_email ||
+    order.user_email ||
+    order.email ||
+    order.user?.email;
+  return (email && String(email).trim()) || 'Not provided';
+};
+
+const extractPhone = (order) => {
+  if (!order) return '';
+  const shippingAddress = parseAddressLike(order.shipping_address);
+  const billingAddress = parseAddressLike(order.billing_address);
+  const fromAddr = shippingAddress?.phone || billingAddress?.phone;
+  if (fromAddr && String(fromAddr).trim()) return String(fromAddr).trim();
+  const p = order.customer_phone || order.user_phone || order.phone || order.user?.phone;
+  return (p && String(p).trim()) || '';
 };
 
 const sanitizeOrder = (order) => {
@@ -138,10 +152,12 @@ const sanitizeOrder = (order) => {
     orderNumber: order.order_number || order.id || `ORDER-${order.id}`,
     customerName: extractCustomerName(order),
     email: extractEmail(order),
+    phone: extractPhone(order),
     total: Number(order.totalamount ?? order.total_amount ?? order.total) || 0,
     itemCount: Number(order.itemcount ?? order.items?.length ?? 1) || 1,
     createdAt: order.created_at || order.createdat || order.createdAt || null,
     status,
+    isGuest: order.user_id == null || order.user_id === '',
     raw: order,
   };
 };
@@ -305,9 +321,11 @@ const CmsOrdersPage = () => {
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
       const matchesStatus = statusFilter === 'all' ? true : order.status === statusFilter;
-      const matchesSearch = searchTerm
-        ? order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.customerName.toLowerCase().includes(searchTerm.toLowerCase())
+      const q = searchTerm.trim().toLowerCase();
+      const matchesSearch = q
+        ? [order.orderNumber, order.customerName, order.email, order.phone]
+            .filter(Boolean)
+            .some((field) => String(field).toLowerCase().includes(q))
         : true;
       return matchesStatus && matchesSearch;
     });
@@ -635,6 +653,14 @@ const CmsOrdersPage = () => {
                         <div>
                           <p className="text-sm font-semibold text-slate-900">{order.customerName}</p>
                           <p className="text-xs text-slate-600">{order.email}</p>
+                          {order.phone ? (
+                            <p className="text-xs text-slate-600">Phone: {order.phone}</p>
+                          ) : null}
+                          {order.isGuest ? (
+                            <p className="text-[10px] uppercase tracking-wide text-amber-800 mt-1">
+                              Guest checkout
+                            </p>
+                          ) : null}
                         </div>
 
                         <p className="text-xs text-slate-600 max-w-2xl">
@@ -740,8 +766,16 @@ const CmsOrdersPage = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-600">
                       <div className="space-y-1">
                         <p className="text-slate-500 text-xs uppercase tracking-wide">Customer</p>
+                        {detailOrder.isGuest ? (
+                          <span className="inline-block text-[10px] uppercase tracking-wide text-amber-800 bg-amber-100 px-2 py-0.5 rounded mb-1">
+                            Guest checkout
+                          </span>
+                        ) : null}
                         <p className="font-semibold text-slate-900">{detailOrder.customerName}</p>
                         <p className="text-xs text-slate-500">{detailOrder.email}</p>
+                        {detailOrder.phone ? (
+                          <p className="text-xs text-slate-500">Phone: {detailOrder.phone}</p>
+                        ) : null}
                       </div>
                       <div className="space-y-1">
                         <p className="text-slate-500 text-xs uppercase tracking-wide">Financials</p>

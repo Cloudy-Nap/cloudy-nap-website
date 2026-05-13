@@ -73,6 +73,18 @@ const CheckoutPage = () => {
   const [statusMessage, setStatusMessage] = useState('');
   const [orderPlacing, setOrderPlacing] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [checkoutAccountUserId, setCheckoutAccountUserId] = useState(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = window.localStorage.getItem('user');
+      const parsed = stored ? JSON.parse(stored) : {};
+      setCheckoutAccountUserId(parsed?.id ?? null);
+    } catch {
+      setCheckoutAccountUserId(null);
+    }
+  }, []);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -180,11 +192,12 @@ const CheckoutPage = () => {
     setStatusMessage('');
 
     try {
-      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-      if (!storedUser?.id) {
-        setStatusMessage('Please sign in before placing an order.');
-        setOrderPlacing(false);
-        return;
+      let accountUserId = null;
+      try {
+        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        accountUserId = storedUser?.id ?? null;
+      } catch {
+        accountUserId = null;
       }
 
       const fullName = `${billingInfo.firstName} ${billingInfo.lastName}`.trim();
@@ -219,7 +232,7 @@ const CheckoutPage = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: storedUser.id,
+          userId: accountUserId,
           status: paymentMethod === 'cod' ? 'pending' : 'in_progress',
           totals: {
             subtotal: cartSubtotal,
@@ -327,6 +340,17 @@ const CheckoutPage = () => {
                     {userError}
                   </div>
                 )}
+
+                <div className="mb-6 rounded-xs border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  {checkoutAccountUserId ? (
+                    <span>You are signed in — this order will be linked to your account.</span>
+                  ) : (
+                    <span>
+                      Guest checkout — no account required. We use your name, phone, and email below for delivery
+                      and updates.
+                    </span>
+                  )}
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>

@@ -86,13 +86,53 @@ const Navbar = () => {
     return `PKR ${numeric.toLocaleString('en-PK')}`;
   };
 
+  const allProductsSubcategories = [
+    { label: 'Matteress', slug: 'matteress', Icon: MdOutlineBed },
+    { label: 'Pillows', slug: 'pillows', Icon: GiPillow },
+    { label: 'Accessories', slug: 'accessories', Icon: MdOutlineShoppingBag },
+    { label: 'Sofa Cum Bed', slug: 'sofa-cum-bed', Icon: MdWeekend },
+    { label: 'Furniture', slug: 'furniture', Icon: MdChair },
+  ];
+
+  /** Search dropdown — same Cloudynap groupings as the nav row below */
+  const categories = ['All Categories', ...allProductsSubcategories.map(({ label }) => label), 'Deals'];
+
   const normalizeProduct = (item) => {
     if (!item) return null;
-    const inferredType =
-      item?.type ||
-      (typeof item?.category === 'string' && item.category.toLowerCase().includes('printer')
-        ? 'printer'
-        : 'bed');
+    const raw = item?.type ? String(item.type).toLowerCase() : '';
+    const catalogTypes = ['bed', 'accessory', 'furniture', 'sofacumbed', 'deal'];
+    let inferredType = catalogTypes.includes(raw)
+      ? raw
+      : ['laptop', 'printer', 'scanner'].includes(raw)
+        ? raw
+        : '';
+    if (!inferredType && typeof item?.category === 'string') {
+      const c = item.category.toLowerCase();
+      if (c.includes('printer')) inferredType = 'printer';
+      else if (c.includes('scanner')) inferredType = 'scanner';
+      else if (c.includes('deal')) inferredType = 'deal';
+      else inferredType = 'bed';
+    }
+    if (!inferredType) inferredType = 'bed';
+
+    const categoryLabel =
+      item.category ||
+      (inferredType === 'bed'
+        ? 'Matteress'
+        : inferredType === 'accessory'
+          ? 'Accessories'
+          : inferredType === 'furniture'
+            ? 'Furniture'
+            : inferredType === 'sofacumbed'
+              ? 'Sofa Cum Bed'
+              : inferredType === 'deal'
+                ? 'Deals'
+                : inferredType === 'printer'
+                  ? 'Printers'
+                  : inferredType === 'scanner'
+                    ? 'Scanners'
+                    : 'Laptops');
+
     return {
       id: item.id || item.sourceId || null,
       name: item.name || 'Unnamed Product',
@@ -101,10 +141,18 @@ const Navbar = () => {
       price: item.price || 0,
       image: extractPrimaryImage(item),
       type: inferredType,
-      category:
-        item.category ||
-        (inferredType === 'printer' ? 'Printers' : inferredType === 'bed' ? 'Matteress' : 'Laptops'),
+      category: categoryLabel,
     };
+  };
+
+  const applySearchSubcategoryToUrl = (url) => {
+    if (selectedCategory === 'All Categories') return;
+    if (selectedCategory === 'Deals') {
+      url.searchParams.set('subcategory', 'deals');
+      return;
+    }
+    const match = allProductsSubcategories.find((s) => s.label === selectedCategory);
+    if (match) url.searchParams.set('subcategory', match.slug);
   };
 
   const performSearch = async (query) => {
@@ -117,14 +165,7 @@ const Navbar = () => {
     setIsSearching(true);
     try {
       const url = createApiUrl('/api/products');
-      // Map category names to API category values
-      if (selectedCategory === 'Laptops' || selectedCategory === 'Refurbished Laptops') {
-        url.searchParams.set('category', 'laptop');
-      } else if (selectedCategory === 'Printers' || selectedCategory === 'Toners' || selectedCategory === 'Cartridges') {
-        url.searchParams.set('category', 'printer');
-      }
-      // Note: LED Monitors, Desktop PCs, Scanners, etc. don't have specific API filters yet
-      // They will search all products
+      applySearchSubcategoryToUrl(url);
 
       const response = await fetch(url.toString());
       if (!response.ok) {
@@ -136,25 +177,7 @@ const Navbar = () => {
       
       const normalizedQuery = query.trim().toLowerCase();
       
-      // Filter by category first
-      let categoryFiltered = products.map(normalizeProduct).filter(Boolean);
-      
-      if (selectedCategory !== 'All Categories') {
-        // Map category selection to product types/categories
-        if (selectedCategory === 'Laptops' || selectedCategory === 'Refurbished Laptops') {
-          categoryFiltered = categoryFiltered.filter((product) => 
-            product.type === 'laptop' || product.category === 'Laptops'
-          );
-        } else if (selectedCategory === 'Printers' || selectedCategory === 'Toners' || selectedCategory === 'Cartridges') {
-          categoryFiltered = categoryFiltered.filter((product) => 
-            product.type === 'printer' || product.category === 'Printers'
-          );
-        } else {
-          // For categories without products (Desktop PCs, LED Monitors, etc.), return empty
-          // This prevents showing laptops/printers when searching in categories that don't exist
-          categoryFiltered = [];
-        }
-      }
+      const categoryFiltered = products.map(normalizeProduct).filter(Boolean);
       
       // Then filter by search query
       const filtered = categoryFiltered
@@ -228,13 +251,12 @@ const Navbar = () => {
     params.set('search', searchTerm.trim());
     
     if (selectedCategory !== 'All Categories') {
-      // Map category names to API category values
-      if (selectedCategory === 'Laptops' || selectedCategory === 'Refurbished Laptops') {
-        params.set('category', 'laptop');
-      } else if (selectedCategory === 'Printers' || selectedCategory === 'Toners' || selectedCategory === 'Cartridges') {
-        params.set('category', 'printer');
+      if (selectedCategory === 'Deals') {
+        params.set('subcategory', 'deals');
+      } else {
+        const match = allProductsSubcategories.find((s) => s.label === selectedCategory);
+        if (match) params.set('subcategory', match.slug);
       }
-      // Note: Other categories will search all products
     }
     
     router.push(`/all-products?${params.toString()}`);
@@ -247,28 +269,6 @@ const Navbar = () => {
     setSearchTerm('');
     router.push(`/product/${product.id}?type=${product.type}`);
   };
-
-  const categories = [
-    'All Categories',
-    'Laptops',
-    'Printers & Scanners',
-    'LED Monitors',
-    'Toners',
-    'Desktop PCs',
-    'Cartridges',
-    'Scanners',
-    'Refurbished Laptops',
-    'Refurbished Desktop PCs',
-    'Computer Accessories'
-  ];
-
-  const allProductsSubcategories = [
-    { label: 'Matteress', slug: 'matteress', Icon: MdOutlineBed },
-    { label: 'Pillows', slug: 'pillows', Icon: GiPillow },
-    { label: 'Accessories', slug: 'accessories', Icon: MdOutlineShoppingBag },
-    { label: 'Sofa Cum Bed', slug: 'sofa-cum-bed', Icon: MdWeekend },
-    { label: 'Furniture', slug: 'furniture', Icon: MdChair },
-  ];
 
   /** Matches `app/all-products/page.js` mattress brand URL slugs */
   const mattressBrandNavLinks = [

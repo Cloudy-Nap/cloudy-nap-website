@@ -2359,19 +2359,7 @@ const handleCardFormSubmit = async (event) => {
                   </p>
 
                   <form onSubmit={handleAccountSubmit} className="mt-6 space-y-6">
-                    <div className="flex flex-col md:flex-row md:items-start gap-6">
-                      <div className="w-24 h-24 rounded-full overflow-hidden bg-linear-to-br from-blue-500 to-blue-300 shrink-0">
-                        <img
-                          src={userInfo?.avatar || ''}
-                          alt={displayName}
-                          className="w-full h-full object-cover"
-                          onError={(event) => {
-                            event.currentTarget.src = '';
-                          }}
-                        />
-                      </div>
-
-                      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-xs font-semibold text-gray-600 mb-1" htmlFor="displayName">
                             Display name
@@ -2501,7 +2489,6 @@ const handleCardFormSubmit = async (event) => {
                             placeholder="75400"
                           />
                         </div>
-                      </div>
                     </div>
 
                     {accountMessage && (
