@@ -8,16 +8,22 @@ import { CiCreditCard1 } from "react-icons/ci";
 import { CiHeadphones } from "react-icons/ci";
 import { openSans } from '../Font/font';
 
+const HERO_DESKTOP_BANNERS = [
+  { src: '/desktop-1.png', alt: 'Cloudynap promotion' },
+  { src: '/desktop-2.png', alt: 'Cloudynap promotion' },
+  { src: '/desktop-3.png', alt: 'Cloudynap promotion' },
+];
+
+const HERO_MOBILE_BANNERS = [
+  { src: '/mobile-1.png', alt: 'Cloudynap promotion' },
+  { src: '/mobile-2.png', alt: 'Cloudynap promotion' },
+  { src: '/mobile-3.png', alt: 'Cloudynap promotion' },
+];
+
 const Hero = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  const banners = [
-    { src: '/ban-1.png', alt: 'Promotional banner' },
-    { src: '/ban-2.png', alt: 'Promotional banner' },
-    { src: '/banner-2.png', alt: 'Promotional banner' },
-  ];
-
-  const maxSlides = banners.length;
+  const maxSlides = HERO_DESKTOP_BANNERS.length;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -29,26 +35,49 @@ const Hero = () => {
 
   return (
     <div className={`w-full ${openSans.className}`}>
-      {/* Main Banner Carousel */}
+      {/* Main Banner Carousel — desktop vs mobile assets */}
       <div className="w-full relative overflow-hidden">
-        <div 
-          className="flex transition-transform duration-700 ease-in-out"
-          style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-        >
-          {banners.map((banner, index) => (
-            <div key={`${banner.src}-${index}`} className="w-full shrink-0 relative">
-              <div className="relative w-full aspect-[16/9] md:aspect-[16/6] lg:aspect-[1920/600] overflow-hidden">
-                <Image 
-                  src={banner.src} 
-                  alt={banner.alt} 
-                  fill
-                  className="object-cover object-center"
-                  priority={index === 0}
-                  sizes="100vw"
-                />
+        <div className="hidden lg:block">
+          <div
+            className="flex transition-transform duration-700 ease-in-out"
+            style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+          >
+            {HERO_DESKTOP_BANNERS.map((banner, index) => (
+              <div key={banner.src} className="w-full shrink-0 relative">
+                <div className="relative w-full aspect-[16/9] md:aspect-[16/6] lg:aspect-[1920/600] overflow-hidden">
+                  <Image
+                    src={banner.src}
+                    alt={banner.alt}
+                    fill
+                    className="object-cover object-center"
+                    priority={index === 0}
+                    sizes="100vw"
+                  />
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+        </div>
+        <div className="lg:hidden">
+          <div
+            className="flex transition-transform duration-700 ease-in-out"
+            style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+          >
+            {HERO_MOBILE_BANNERS.map((banner, index) => (
+              <div key={banner.src} className="w-full shrink-0 relative">
+                <div className="relative w-full aspect-[3/4] max-h-[min(85vh,680px)] overflow-hidden">
+                  <Image
+                    src={banner.src}
+                    alt={banner.alt}
+                    fill
+                    className="object-cover object-center"
+                    priority={index === 0}
+                    sizes="100vw"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

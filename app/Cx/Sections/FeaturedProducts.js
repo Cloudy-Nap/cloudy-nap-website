@@ -335,31 +335,24 @@ const FeaturedProducts = () => {
       <div className="max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Left Banner */}
-          <div className="lg:col-span-1">
-            <div className="bg-linear-to-b from-blue-900 to-black rounded-lg overflow-hidden h-full">
-              <div className="p-6 text-white">
-                <p className="text-xs uppercase tracking-wide mb-2">Cloudy Nap</p>
-                <h2 className="text-3xl font-bold mb-2">Featured picks</h2>
-                <p className="text-lg mb-4">From our catalog</p>
-                
-                <div className="bg-gray-800 p-3 rounded mb-4">
-                  <p className="text-xs text-center">Offers ends in: DD : HH : MM : SS</p>
-                </div>
-                
-                <button className="w-full bg-[#00aeef] hover:bg-[#0099d9] text-white py-3 px-6 rounded-lg font-semibold transition flex items-center justify-center gap-2">
+          <div className="lg:col-span-1 h-full">
+            <div className="relative h-full min-h-[380px] lg:min-h-[520px] rounded-lg overflow-hidden bg-gray-100">
+              <Image
+                src="/left-banner.png"
+                alt="Cloudynap featured offer"
+                fill
+                className="object-cover object-center"
+                sizes="(max-width: 1024px) 100vw, 280px"
+                priority
+              />
+              <div className="absolute inset-x-0 top-0 p-4 pt-9 flex justify-center bg-linear-to-b from-black/50 to-transparent pb-12">
+                <Link
+                  href="/all-products"
+                  className="w-full max-w-[240px] bg-[#00aeef] hover:bg-[#0099d9] text-white py-3 px-6 rounded-lg font-semibold transition flex items-center justify-center gap-2 shadow-md"
+                >
                   SHOP NOW
                   <FiArrowRight />
-                </button>
-              </div>
-              
-              <div className="mt-4 overflow-hidden flex justify-center items-end h-112">
-                <Image
-                  src="/matt.png"
-                  alt="Featured collection"
-                  width={600}
-                  height={600}
-                  className="object-contain w-full h-auto"
-                />
+                </Link>
               </div>
             </div>
           </div>
