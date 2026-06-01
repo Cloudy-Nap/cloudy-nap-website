@@ -64,6 +64,7 @@ const Footer = () => {
           <div>
             <h3 className="text-[#1a2f4a] font-bold text-lg mb-4">Important Links</h3>
             <ul className="space-y-2">
+              <li><Link href="/track-your-order" className="text-[#1a2f4a] hover:text-[#00aeef] transition">Track Your Order</Link></li>
               <li><Link href="#" className="text-[#1a2f4a] hover:text-[#00aeef] transition">Delivery</Link></li>
               <li><Link href="#" className="text-[#1a2f4a] hover:text-[#00aeef] transition">Sitemap</Link></li>
               <li><Link href="#" className="text-[#1a2f4a] hover:text-[#00aeef] transition">Stores</Link></li>

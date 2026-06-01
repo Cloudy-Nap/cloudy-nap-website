@@ -135,10 +135,10 @@ const OrderConfirmationContent = () => {
             Go to Dashboard
           </Link>
           <Link
-            href="/profile"
+            href={orderInfo?.orderId ? `/track-your-order?orderId=${orderInfo.orderId}` : '/track-your-order'}
             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xs bg-[#00aeef] text-white hover:bg-[#0099d9] transition text-sm font-semibold"
           >
-            View Order <FiArrowRight />
+            Track Order <FiArrowRight />
           </Link>
         </div>
       </div>
