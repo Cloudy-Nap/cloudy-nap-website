@@ -53,17 +53,24 @@ export const formatOrderDate = (dateString, includeTime = true) => {
   });
 };
 
-/** Strip "#", spaces; return numeric order id or null. */
-export const parseOrderIdInput = (value) => {
-  const trimmed = String(value || '').trim().replace(/^#/, '');
+const TRACKING_PREFIX = 'CN-';
+
+/** Normalize tracking number for lookup (uppercase, CN- prefix). */
+export const normalizeTrackingNumberInput = (value) => {
+  const trimmed = String(value || '').trim().toUpperCase();
   if (!trimmed) return null;
-  const direct = Number(trimmed);
-  if (Number.isFinite(direct) && direct > 0) return direct;
-  const match = trimmed.match(/(\d+)/);
-  if (match) {
-    const parsed = Number(match[1]);
-    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+
+  if (/^CN-[A-Z0-9]{6,14}$/.test(trimmed)) {
+    return trimmed;
   }
+
+  const alnum = trimmed.replace(/[^A-Z0-9]/g, '');
+  if (alnum.length >= 6 && alnum.length <= 14) {
+    return alnum.startsWith('CN') && alnum.length > 2
+      ? `CN-${alnum.slice(2)}`
+      : `${TRACKING_PREFIX}${alnum}`;
+  }
+
   return null;
 };
 
@@ -157,7 +164,8 @@ export const sanitizeOrderDetailData = (raw) => {
     rawStatus: raw.status || raw.order_status || '',
     statusBadge: statusMeta.badge,
     id: raw.id,
-    number: raw.order_number || raw.id,
+    trackingNumber: raw.tracking_number || null,
+    number: raw.tracking_number || raw.order_number || raw.id,
     status,
     placedAt: raw.created_at || raw.createdAt || null,
     expectedDelivery: raw.expected_delivery || raw.expectedDelivery || null,

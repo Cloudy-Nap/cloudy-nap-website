@@ -277,9 +277,15 @@ const CheckoutPage = () => {
 
       const result = await response.json();
       const orderId = result?.order?.id;
-      if (typeof window !== 'undefined' && orderId) {
+      const trackingNumber = result?.order?.tracking_number;
+      if (typeof window !== 'undefined') {
         try {
-          window.localStorage.setItem('latestOrderId', orderId.toString());
+          if (orderId) {
+            window.localStorage.setItem('latestOrderId', orderId.toString());
+          }
+          if (trackingNumber) {
+            window.localStorage.setItem('latestTrackingNumber', trackingNumber);
+          }
         } catch (storageError) {
           console.error('Failed to store order confirmation:', storageError);
         }
@@ -288,7 +294,12 @@ const CheckoutPage = () => {
       clearCart();
       setOrderPlaced(true);
       setStatusMessage('Order placed successfully! Redirecting...');
-      router.push(orderId ? `/order-confirmation?orderId=${orderId}` : '/order-confirmation');
+      const confirmQuery = trackingNumber
+        ? `tracking=${encodeURIComponent(trackingNumber)}`
+        : orderId
+          ? `orderId=${orderId}`
+          : '';
+      router.push(confirmQuery ? `/order-confirmation?${confirmQuery}` : '/order-confirmation');
     } catch (error) {
       console.error('Place order error:', error);
       setStatusMessage(error.message || 'Failed to place order.');

@@ -149,6 +149,7 @@ const sanitizeOrder = (order) => {
 
   return {
     id: order.id?.toString?.() ?? order.id,
+    trackingNumber: order.tracking_number || null,
     orderNumber: order.order_number || order.id || `ORDER-${order.id}`,
     customerName: extractCustomerName(order),
     email: extractEmail(order),
@@ -323,7 +324,7 @@ const CmsOrdersPage = () => {
       const matchesStatus = statusFilter === 'all' ? true : order.status === statusFilter;
       const q = searchTerm.trim().toLowerCase();
       const matchesSearch = q
-        ? [order.orderNumber, order.customerName, order.email, order.phone]
+        ? [order.trackingNumber, order.orderNumber, order.id, order.customerName, order.email, order.phone]
             .filter(Boolean)
             .some((field) => String(field).toLowerCase().includes(q))
         : true;
@@ -540,7 +541,7 @@ const CmsOrdersPage = () => {
               <input
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Search by order number or customer..."
+                placeholder="Search by tracking #, order ID, or customer..."
                 className="bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none"
               />
             </div>
@@ -638,7 +639,11 @@ const CmsOrdersPage = () => {
                         <div className="flex items-center gap-3">
                           <span className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
                             <FiPackage />
-                            Order #{order.orderNumber}
+                            {order.trackingNumber ? (
+                              <>Tracking {order.trackingNumber}</>
+                            ) : (
+                              <>Order #{order.orderNumber}</>
+                            )}
                           </span>
                           <span className="text-xs text-slate-500">
                             {order.createdAt
@@ -692,6 +697,12 @@ const CmsOrdersPage = () => {
                           <span>{order.itemCount}</span>
                         </div>
                         <div className="flex items-center justify-between">
+                          <span>Tracking #</span>
+                          <span className="text-xs font-mono text-slate-600">
+                            {order.trackingNumber || '—'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
                           <span>Order ID</span>
                           <span className="text-xs text-slate-600">{order.id}</span>
                         </div>
@@ -719,8 +730,15 @@ const CmsOrdersPage = () => {
                   Order Detail
                 </p>
                 <h2 className="mt-2 text-2xl font-semibold text-slate-900">
-                  Order #{detailOrder?.orderNumber || detailOrder?.id || '—'}
+                  {detailOrder?.trackingNumber
+                    ? detailOrder.trackingNumber
+                    : `Order #${detailOrder?.orderNumber || detailOrder?.id || '—'}`}
                 </h2>
+                {detailOrder?.trackingNumber && (
+                  <p className="text-xs text-slate-500 mt-1 font-mono">
+                    Internal order ID: #{detailOrder.id}
+                  </p>
+                )}
                 <p className="text-xs text-slate-400 mt-1">
                   Placed on{' '}
                   {detailOrder?.createdAt
@@ -762,6 +780,12 @@ const CmsOrdersPage = () => {
                       >
                         {detailOrder.status.toUpperCase()}
                       </span>
+                    </div>
+                    <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                      <p className="text-slate-500 text-xs uppercase tracking-wide">Tracking number</p>
+                      <p className="mt-1 font-mono text-base font-semibold text-slate-900">
+                        {detailOrder.trackingNumber || 'Not assigned (legacy order)'}
+                      </p>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-600">
                       <div className="space-y-1">

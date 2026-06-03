@@ -283,7 +283,8 @@ const ProfilePage = () => {
       const itemCount = order.order_items?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
       return {
         id: order.id,
-        displayId: `#${order.id}`,
+        trackingNumber: order.tracking_number || null,
+        displayId: order.tracking_number || `#${order.id}`,
         status: order.status?.toUpperCase?.() || 'PENDING',
         date: order.created_at ? new Date(order.created_at).toLocaleString() : '—',
         total: `PKR ${Number(order.total || 0).toLocaleString('en-PK')} (${itemCount} Products)`,
@@ -744,7 +745,7 @@ const handleCardFormSubmit = async (event) => {
           <table className="min-w-full text-sm text-left text-gray-600">
             <thead className="bg-gray-50 text-xs uppercase text-gray-500">
               <tr>
-                <th className="px-6 py-3 font-medium">Order ID</th>
+                <th className="px-6 py-3 font-medium">Tracking #</th>
                 <th className="px-6 py-3 font-medium">Status</th>
                 <th className="px-6 py-3 font-medium">Date</th>
                 <th className="px-6 py-3 font-medium">Total</th>
@@ -1345,10 +1346,22 @@ const handleCardFormSubmit = async (event) => {
                                 <div className="flex flex-1 flex-col gap-2">
                                   <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
                                     <p className="text-sm font-semibold text-gray-900">
-                                      Order ID:{' '}
-                                      <span className="text-gray-700">
-                                        #{order.id}
-                                      </span>
+                                      {order.tracking_number ? (
+                                        <>
+                                          Tracking:{' '}
+                                          <Link
+                                            href={`/track-your-order?tracking=${encodeURIComponent(order.tracking_number)}`}
+                                            className="font-mono text-[#00aeef] hover:underline"
+                                          >
+                                            {order.tracking_number}
+                                          </Link>
+                                        </>
+                                      ) : (
+                                        <>
+                                          Order ID:{' '}
+                                          <span className="text-gray-700">#{order.id}</span>
+                                        </>
+                                      )}
                                     </p>
                                     <span className={`inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full ${statusColor}`}>
                                       {orderStatus}

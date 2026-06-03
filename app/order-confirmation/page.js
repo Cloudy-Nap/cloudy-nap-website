@@ -8,6 +8,7 @@ import Navbar from '../Cx/Layout/Navbar';
 import Footer from '../Cx/Layout/Footer';
 import { openSans } from '../Cx/Font/font';
 import { API_BASE } from '../lib/apiBase';
+import { normalizeTrackingNumberInput } from '../lib/orderTracking';
 
 const OrderConfirmationContent = () => {
   const [status, setStatus] = useState('loading'); // loading | success | failure
@@ -16,50 +17,78 @@ const OrderConfirmationContent = () => {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    try {
-      const queryOrderId = searchParams.get('orderId');
-      let storedId = queryOrderId;
 
-      if (!storedId) {
-        storedId = window.localStorage.getItem('latestOrderId') || '';
-      }
+    const queryTracking =
+      searchParams.get('tracking') ||
+      searchParams.get('trackingNumber') ||
+      searchParams.get('tracking_number');
+    const queryOrderId = searchParams.get('orderId');
 
-      const parsedId = Number(storedId);
-      if (!parsedId) {
-        setStatus('failure');
-        if (!queryOrderId) {
-          window.localStorage.removeItem('latestOrderId');
-        }
-        return;
-      }
+    let trackingRaw = queryTracking;
+    if (!trackingRaw) {
+      trackingRaw = window.localStorage.getItem('latestTrackingNumber') || '';
+    }
 
-      const fetchOrder = async () => {
-        try {
-          const response = await fetch(`${API_BASE}/api/orders/${parsedId}`);
-          if (!response.ok) throw new Error('Order not found');
-          const data = await response.json();
-          setOrderInfo({
-            orderId: data.id,
-            total: data.total,
-            createdAt: data.created_at,
-            status: data.status,
-          });
-          setStatus('success');
-        } catch (error) {
-          console.error('Fetch order confirmation error:', error);
-          setStatus('failure');
-        } finally {
-          if (!queryOrderId) {
-            window.localStorage.removeItem('latestOrderId');
+    const normalizedTracking = normalizeTrackingNumberInput(trackingRaw);
+
+    const fetchByTracking = async (trackingNumber) => {
+      const response = await fetch(
+        `${API_BASE}/api/orders/track/${encodeURIComponent(trackingNumber)}`,
+      );
+      if (!response.ok) throw new Error('Order not found');
+      return response.json();
+    };
+
+    const fetchById = async (id) => {
+      const response = await fetch(`${API_BASE}/api/orders/${id}`);
+      if (!response.ok) throw new Error('Order not found');
+      return response.json();
+    };
+
+    const load = async () => {
+      try {
+        let data = null;
+
+        if (normalizedTracking) {
+          data = await fetchByTracking(normalizedTracking);
+        } else if (queryOrderId) {
+          const parsedId = Number(queryOrderId);
+          if (Number.isFinite(parsedId) && parsedId > 0) {
+            data = await fetchById(parsedId);
+          }
+        } else {
+          const storedId = window.localStorage.getItem('latestOrderId') || '';
+          const parsedId = Number(storedId);
+          if (Number.isFinite(parsedId) && parsedId > 0) {
+            data = await fetchById(parsedId);
           }
         }
-      };
 
-      fetchOrder();
-    } catch (error) {
-      console.error('Order confirmation error:', error);
-      setStatus('failure');
-    }
+        if (!data) {
+          setStatus('failure');
+          return;
+        }
+
+        setOrderInfo({
+          orderId: data.id,
+          trackingNumber: data.tracking_number || null,
+          total: data.total,
+          createdAt: data.created_at,
+          status: data.status,
+        });
+        setStatus('success');
+      } catch (error) {
+        console.error('Fetch order confirmation error:', error);
+        setStatus('failure');
+      } finally {
+        if (!queryTracking && !queryOrderId) {
+          window.localStorage.removeItem('latestOrderId');
+          window.localStorage.removeItem('latestTrackingNumber');
+        }
+      }
+    };
+
+    load();
   }, [searchParams]);
 
   const renderContent = () => {
@@ -103,6 +132,10 @@ const OrderConfirmationContent = () => {
       );
     }
 
+    const trackHref = orderInfo?.trackingNumber
+      ? `/track-your-order?tracking=${encodeURIComponent(orderInfo.trackingNumber)}`
+      : '/track-your-order';
+
     return (
       <div className="flex flex-col items-center text-center gap-4">
         <div className="w-20 h-20 rounded-full border-4 border-green-200 bg-green-50 text-green-500 flex items-center justify-center text-4xl">
@@ -113,14 +146,25 @@ const OrderConfirmationContent = () => {
             Your order is successfully placed
           </h1>
           <p className="text-sm text-gray-600 max-w-md mx-auto">
-            Thank you for shopping with us. We will notify you when your items are on the way.
+            Thank you for shopping with us. Save your tracking number below to check status anytime.
           </p>
         </div>
         {orderInfo && (
-          <div className="text-sm text-gray-600">
-            <p>
-              <span className="font-semibold text-gray-900">Order ID:</span> #{orderInfo.orderId ?? '—'}
-            </p>
+          <div className="text-sm text-gray-600 space-y-2 w-full max-w-sm">
+            {orderInfo.trackingNumber ? (
+              <p className="rounded-lg border border-[#00aeef]/30 bg-sky-50 px-4 py-3">
+                <span className="block text-xs font-semibold uppercase tracking-wide text-[#0099d9] mb-1">
+                  Tracking number
+                </span>
+                <span className="font-mono text-lg font-bold text-gray-900 tracking-wider">
+                  {orderInfo.trackingNumber}
+                </span>
+              </p>
+            ) : (
+              <p>
+                <span className="font-semibold text-gray-900">Order ID:</span> #{orderInfo.orderId ?? '—'}
+              </p>
+            )}
             <p>
               <span className="font-semibold text-gray-900">Total:</span>{' '}
               PKR {(Number(orderInfo.total) || 0).toLocaleString('en-PK')}
@@ -135,7 +179,7 @@ const OrderConfirmationContent = () => {
             Go to Dashboard
           </Link>
           <Link
-            href={orderInfo?.orderId ? `/track-your-order?orderId=${orderInfo.orderId}` : '/track-your-order'}
+            href={trackHref}
             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xs bg-[#00aeef] text-white hover:bg-[#0099d9] transition text-sm font-semibold"
           >
             Track Order <FiArrowRight />
@@ -167,4 +211,3 @@ const OrderConfirmationPage = () => {
 };
 
 export default OrderConfirmationPage;
-

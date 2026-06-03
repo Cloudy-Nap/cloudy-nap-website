@@ -9,18 +9,19 @@ import Footer from '../Cx/Layout/Footer';
 import OrderTrackingDetails from '../Cx/Components/OrderTrackingDetails';
 import { openSans } from '../Cx/Font/font';
 import { API_BASE } from '../lib/apiBase';
-import { parseOrderIdInput, sanitizeOrderDetailData } from '../lib/orderTracking';
+import { normalizeTrackingNumberInput, sanitizeOrderDetailData } from '../lib/orderTracking';
 
 function TrackYourOrderContent() {
   const searchParams = useSearchParams();
-  const [orderIdInput, setOrderIdInput] = useState('');
+  const [trackingInput, setTrackingInput] = useState('');
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const lookupOrder = useCallback(async (rawId) => {
-    const orderId = parseOrderIdInput(rawId);
-    if (!orderId) {
-      setError('Please enter a valid order ID (e.g. 1042).');
+
+  const lookupOrder = useCallback(async (rawTracking) => {
+    const trackingNumber = normalizeTrackingNumberInput(rawTracking);
+    if (!trackingNumber) {
+      setError('Please enter a valid tracking number (e.g. CN-A7K9X2M4).');
       setOrder(null);
       return;
     }
@@ -30,16 +31,19 @@ function TrackYourOrderContent() {
     setOrder(null);
 
     try {
-      const response = await fetch(`${API_BASE}/api/orders/${orderId}`);
+      const response = await fetch(
+        `${API_BASE}/api/orders/track/${encodeURIComponent(trackingNumber)}`,
+      );
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error('No order found with that ID. Check the number and try again.');
+          throw new Error('No order found for this tracking number. Check the code and try again.');
         }
-        throw new Error('Unable to load order details. Please try again.');
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || 'Unable to load order details. Please try again.');
       }
       const data = await response.json();
       setOrder(sanitizeOrderDetailData(data));
-      setOrderIdInput(String(orderId));
+      setTrackingInput(trackingNumber);
     } catch (err) {
       console.error('Track order error:', err);
       setError(err.message || 'Failed to find order.');
@@ -50,16 +54,19 @@ function TrackYourOrderContent() {
   }, []);
 
   useEffect(() => {
-    const fromUrl = searchParams.get('orderId');
+    const fromUrl =
+      searchParams.get('tracking') ||
+      searchParams.get('trackingNumber') ||
+      searchParams.get('tracking_number');
     if (fromUrl) {
-      setOrderIdInput(fromUrl.replace(/^#/, ''));
+      setTrackingInput(fromUrl);
       lookupOrder(fromUrl);
     }
   }, [searchParams, lookupOrder]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    lookupOrder(orderIdInput);
+    lookupOrder(trackingInput);
   };
 
   return (
@@ -83,7 +90,7 @@ function TrackYourOrderContent() {
           <div className="text-center">
             <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900">Track Your Order</h1>
             <p className="mt-2 text-sm text-gray-600">
-              Enter the order ID from your confirmation email or receipt to see status and details.
+              Enter the tracking number from your confirmation email or receipt (e.g. CN-A7K9X2M4).
             </p>
           </div>
 
@@ -91,19 +98,19 @@ function TrackYourOrderContent() {
             onSubmit={handleSubmit}
             className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 space-y-4"
           >
-            <label htmlFor="orderId" className="block text-sm font-medium text-gray-700">
-              Order ID
+            <label htmlFor="trackingNumber" className="block text-sm font-medium text-gray-700">
+              Tracking number
             </label>
             <div className="flex flex-col sm:flex-row gap-3">
               <input
-                id="orderId"
+                id="trackingNumber"
                 type="text"
-                inputMode="numeric"
                 autoComplete="off"
-                placeholder="e.g. 1042"
-                value={orderIdInput}
-                onChange={(e) => setOrderIdInput(e.target.value)}
-                className="flex-1 px-4 py-3 rounded-lg border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#00aeef] focus:border-transparent"
+                spellCheck={false}
+                placeholder="CN-A7K9X2M4"
+                value={trackingInput}
+                onChange={(e) => setTrackingInput(e.target.value)}
+                className="flex-1 px-4 py-3 rounded-lg border border-gray-300 text-gray-900 uppercase tracking-wide focus:outline-none focus:ring-2 focus:ring-[#00aeef] focus:border-transparent"
               />
               <button
                 type="submit"
@@ -124,11 +131,7 @@ function TrackYourOrderContent() {
               </button>
             </div>
             <p className="text-xs text-gray-500">
-              No login required. You can also find your order ID on the{' '}
-              <Link href="/order-confirmation" className="text-[#00aeef] hover:underline">
-                order confirmation
-              </Link>{' '}
-              page after checkout.
+              No login required. Save this number after checkout — you will need it to track your order.
             </p>
           </form>
 

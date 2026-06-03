@@ -47,8 +47,11 @@ export default function OrderTrackingDetails({ order }) {
       <div className="rounded-2xl border border-amber-100 bg-amber-50 px-6 py-6 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">
-            Order #{order.number}
+            Tracking #{order.trackingNumber || order.number}
           </p>
+          {order.trackingNumber && order.id != null && (
+            <p className="mt-1 text-xs text-gray-500">Internal order ref: #{order.id}</p>
+          )}
           <p className="mt-2 text-sm text-gray-700">
             {order.items.length} Product{order.items.length === 1 ? '' : 's'} • Order placed on{' '}
             <span className="font-semibold text-gray-900">{formatOrderDate(order.placedAt)}</span>
