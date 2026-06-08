@@ -203,6 +203,12 @@ export default function OrderTrackingDetails({ order }) {
             <span>Subtotal</span>
             <span className="text-gray-900 font-semibold">{formatCurrency(order.subtotal)}</span>
           </div>
+          {order.voucherCode && order.voucherDiscount > 0 && (
+            <div className="flex items-center justify-between text-green-700">
+              <span>Voucher ({order.voucherCode})</span>
+              <span className="font-semibold">−{formatCurrency(order.voucherDiscount)}</span>
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <span>Tax</span>
             <span className="text-gray-900 font-semibold">{formatCurrency(order.tax)}</span>

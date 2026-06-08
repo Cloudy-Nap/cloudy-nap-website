@@ -16,6 +16,7 @@ import {
   FiLogOut,
   FiPercent,
   FiGift,
+  FiTag,
 } from 'react-icons/fi';
 import { API_BASE } from '../../lib/apiBase';
 
@@ -76,6 +77,7 @@ const navigationItems = [
   { id: 'inventory', label: 'Inventory', href: '/cms/inventory', icon: FiPackage, page: 'inventory' },
   { id: 'customers', label: 'Customers', href: '/cms/customers', icon: FiUsers, page: 'customers' },
   { id: 'discounts', label: 'Discounts', href: '/cms/discounts', icon: FiPercent, page: 'discounts' },
+  { id: 'vouchers', label: 'Vouchers', href: '/cms/vouchers', icon: FiTag, page: 'vouchers' },
   { id: 'deals', label: 'Deals', href: '/cms/deals', icon: FiGift, page: 'deals' },
   { id: 'settings', label: 'Settings', href: '/cms/settings', icon: FiSettings, page: 'settings' },
 ];
@@ -151,6 +153,7 @@ const CmsDashboardPage = () => {
             'inventory',
             'customers',
             'discounts',
+            'vouchers',
             'deals',
             'settings',
           ];

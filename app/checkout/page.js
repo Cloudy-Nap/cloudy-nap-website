@@ -74,6 +74,10 @@ const CheckoutPage = () => {
   const [orderPlacing, setOrderPlacing] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [checkoutAccountUserId, setCheckoutAccountUserId] = useState(null);
+  const [voucherInput, setVoucherInput] = useState('');
+  const [appliedVoucher, setAppliedVoucher] = useState(null);
+  const [voucherLoading, setVoucherLoading] = useState(false);
+  const [voucherMessage, setVoucherMessage] = useState('');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -85,6 +89,12 @@ const CheckoutPage = () => {
       setCheckoutAccountUserId(null);
     }
   }, []);
+
+  useEffect(() => {
+    if (!appliedVoucher) return;
+    setAppliedVoucher(null);
+    setVoucherMessage('Cart changed — re-apply your voucher if needed.');
+  }, [cartSubtotal]); // eslint-disable-line react-hooks/exhaustive-deps -- only reset when subtotal changes
 
   useEffect(() => {
     const loadUser = async () => {
@@ -153,8 +163,66 @@ const CheckoutPage = () => {
     loadUser();
   }, []);
 
-  const taxAmount = useMemo(() => Math.round(cartSubtotal * 0.02), [cartSubtotal]);
-  const total = useMemo(() => cartSubtotal + taxAmount, [cartSubtotal, taxAmount]);
+  const taxAmount = useMemo(() => {
+    if (appliedVoucher?.totals?.tax != null) {
+      return Number(appliedVoucher.totals.tax) || 0;
+    }
+    return Math.round(cartSubtotal * 0.02);
+  }, [cartSubtotal, appliedVoucher]);
+
+  const voucherDiscount = useMemo(() => {
+    if (appliedVoucher?.discount_amount != null) {
+      return Number(appliedVoucher.discount_amount) || 0;
+    }
+    return 0;
+  }, [appliedVoucher]);
+
+  const total = useMemo(() => {
+    if (appliedVoucher?.totals?.total != null) {
+      return Number(appliedVoucher.totals.total) || 0;
+    }
+    return cartSubtotal + taxAmount;
+  }, [cartSubtotal, taxAmount, appliedVoucher]);
+
+  const handleApplyVoucher = async () => {
+    const code = voucherInput.trim();
+    if (!code) {
+      setVoucherMessage('Enter a voucher code.');
+      return;
+    }
+    if (cartItems.length === 0) {
+      setVoucherMessage('Add items to your cart before applying a voucher.');
+      return;
+    }
+
+    setVoucherLoading(true);
+    setVoucherMessage('');
+    try {
+      const response = await fetch(`${API_BASE}/api/vouchers/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, subtotal: cartSubtotal }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || 'Invalid voucher code.');
+      }
+      setAppliedVoucher(data);
+      setVoucherInput(data.voucher?.code || code);
+      setVoucherMessage(`"${data.voucher?.name}" applied — ${data.voucher?.discount_percent}% off`);
+    } catch (error) {
+      setAppliedVoucher(null);
+      setVoucherMessage(error.message || 'Could not apply voucher.');
+    } finally {
+      setVoucherLoading(false);
+    }
+  };
+
+  const handleRemoveVoucher = () => {
+    setAppliedVoucher(null);
+    setVoucherInput('');
+    setVoucherMessage('');
+  };
 
   const handleBillingChange = (field) => (event) => {
     setBillingInfo((prev) => ({ ...prev, [field]: event.target.value }));
@@ -238,8 +306,12 @@ const CheckoutPage = () => {
             subtotal: cartSubtotal,
             tax: taxAmount,
             shipping: 0,
+            discount: voucherDiscount,
             total,
           },
+          ...(appliedVoucher?.voucher?.code
+            ? { voucherCode: appliedVoucher.voucher.code }
+            : {}),
           shippingAddress: shippingAddressPayload,
           billingAddress: billingAddressPayload,
           paymentMethod,
@@ -692,6 +764,54 @@ const CheckoutPage = () => {
                 </div>
               )}
 
+              <div className="px-6 py-5 border-t border-gray-100 space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+                    Voucher code
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={voucherInput}
+                      onChange={(e) => {
+                        setVoucherInput(e.target.value.toUpperCase());
+                        setVoucherMessage('');
+                      }}
+                      placeholder="Enter code"
+                      disabled={!!appliedVoucher || voucherLoading || orderPlacing}
+                      className="flex-1 rounded-xs border border-gray-200 px-3 py-2 text-sm font-mono uppercase text-gray-800 focus:outline-none focus:border-[#00aeef] focus:ring-2 focus:ring-[#00aeef]/20 disabled:bg-gray-50"
+                    />
+                    {appliedVoucher ? (
+                      <button
+                        type="button"
+                        onClick={handleRemoveVoucher}
+                        className="shrink-0 px-3 py-2 text-sm font-semibold text-red-600 border border-red-200 rounded-xs hover:bg-red-50"
+                      >
+                        Remove
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleApplyVoucher}
+                        disabled={voucherLoading || orderPlacing || cartItems.length === 0}
+                        className="shrink-0 px-3 py-2 text-sm font-semibold text-white bg-[#00aeef] rounded-xs hover:bg-[#0099d9] disabled:opacity-60"
+                      >
+                        {voucherLoading ? '…' : 'Apply'}
+                      </button>
+                    )}
+                  </div>
+                  {voucherMessage && (
+                    <p
+                      className={`mt-2 text-xs ${
+                        appliedVoucher ? 'text-green-600' : 'text-red-500'
+                      }`}
+                    >
+                      {voucherMessage}
+                    </p>
+                  )}
+                </div>
+              </div>
+
               <div className="px-6 py-5 space-y-3 border-t border-gray-100">
                 <div className="flex items-center justify-between text-sm text-gray-600">
                   <span className="font-medium text-gray-700">Sub-total</span>
@@ -702,8 +822,15 @@ const CheckoutPage = () => {
                   <span className="text-green-500 ">Free</span>
                 </div>
                 <div className="flex items-center justify-between text-sm text-gray-600">
-                  <span className="font-medium text-gray-700">Discount</span>
-                  <span>N/A</span>
+                  <span className="font-medium text-gray-700">
+                    Voucher discount
+                    {appliedVoucher?.voucher?.discount_percent
+                      ? ` (${appliedVoucher.voucher.discount_percent}%)`
+                      : ''}
+                  </span>
+                  <span className={voucherDiscount > 0 ? 'text-green-600 font-medium' : ''}>
+                    {voucherDiscount > 0 ? `−${formatCurrency(voucherDiscount)}` : '—'}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between text-sm text-gray-600">
                   <span className="font-medium text-gray-700">Tax</span>

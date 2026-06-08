@@ -150,6 +150,8 @@ const sanitizeOrder = (order) => {
   return {
     id: order.id?.toString?.() ?? order.id,
     trackingNumber: order.tracking_number || null,
+    voucherCode: order.voucher_code || null,
+    voucherDiscount: Number(order.discount) || 0,
     orderNumber: order.order_number || order.id || `ORDER-${order.id}`,
     customerName: extractCustomerName(order),
     email: extractEmail(order),
@@ -804,6 +806,11 @@ const CmsOrdersPage = () => {
                       <div className="space-y-1">
                         <p className="text-slate-500 text-xs uppercase tracking-wide">Financials</p>
                         <p>Subtotal: {formatCurrency(detailOrder.subtotal)}</p>
+                        {detailOrder.voucherCode ? (
+                          <p>
+                            Voucher ({detailOrder.voucherCode}): −{formatCurrency(detailOrder.voucherDiscount)}
+                          </p>
+                        ) : null}
                         <p>Tax: {formatCurrency(detailOrder.tax)}</p>
                         <p>Shipping: {formatCurrency(detailOrder.shippingCost)}</p>
                         <p className="font-semibold text-slate-900">Total: {formatCurrency(detailOrder.total)}</p>

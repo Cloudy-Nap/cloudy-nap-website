@@ -174,6 +174,8 @@ export const sanitizeOrderDetailData = (raw) => {
     shippingCost: parseAmount(raw.shipping),
     total: parseAmount(raw.total || raw.totalamount || 0),
     notes: raw.notes || raw.order_notes || '',
+    voucherCode: raw.voucher_code || null,
+    voucherDiscount: parseAmount(raw.discount),
     items,
     billing: normalizeOrderDetailAddress(
       raw.billing_address || raw.billingAddress || raw.billing,
