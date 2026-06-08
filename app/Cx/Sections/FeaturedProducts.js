@@ -188,7 +188,7 @@ const FeaturedProductCard = ({ product, onPreview, onAddToCart }) => {
   return (
     <Link
       href={href}
-      className="relative bg-white border border-gray-300 rounded-lg overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer flex flex-col"
+      className="relative bg-white border border-gray-300 rounded-lg overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer flex flex-col min-h-[360px] md:min-h-0"
     >
       {product.label && (
         <div className={`absolute top-2 left-2 ${product.label.color} text-white text-xs font-bold px-2 py-1 rounded z-10`}>
@@ -222,13 +222,13 @@ const FeaturedProductCard = ({ product, onPreview, onAddToCart }) => {
         </button>
       </div>
 
-      <div className="relative w-full h-40 flex items-center justify-center p-4 bg-white">
+      <div className="relative w-full h-56 md:h-40 flex items-center justify-center p-2 md:p-4 bg-white">
         <Image
           src={images[activeImage] || getCategoryPlaceholderImage(productType)}
           alt={product.name}
-          width={160}
-          height={160}
-          className="object-contain max-h-full max-w-full"
+          width={220}
+          height={220}
+          className="object-contain max-h-full max-w-full w-full h-full md:w-auto md:h-auto"
         />
 
         {images.length > 1 && (
@@ -336,7 +336,7 @@ const FeaturedProducts = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Left Banner */}
           <div className="lg:col-span-1 h-full">
-            <div className="relative h-full min-h-[380px] lg:min-h-[520px] rounded-lg overflow-hidden bg-gray-100">
+            <div className="relative h-full min-h-[444px] md:min-h-[380px] lg:min-h-[520px] rounded-lg overflow-hidden bg-gray-100">
               <Image
                 src="/left-banner.png"
                 alt="Cloudynap featured offer"
@@ -378,7 +378,7 @@ const FeaturedProducts = () => {
                 {Array.from({ length: 8 }).map((_, i) => (
                   <div
                     key={i}
-                    className="border border-gray-200 rounded-lg overflow-hidden animate-pulse bg-gray-100 h-72"
+                    className="border border-gray-200 rounded-lg overflow-hidden animate-pulse bg-gray-100 h-80 md:h-72"
                   />
                 ))}
               </div>

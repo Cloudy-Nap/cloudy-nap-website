@@ -32,7 +32,7 @@ const Footer = () => {
               <CiPhone className="text-xl mt-1 shrink-0" />
               <div>
                 <p className="text-[#1a2f4a]/80 font-medium">Contact Us</p>
-                <p className="text-[#1a2f4a]">+92-333-2673177</p>
+                <a href="tel:+923359909045" className="text-[#1a2f4a] hover:underline">0335 9909045</a>
               </div>
             </div>
             

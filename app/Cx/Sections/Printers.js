@@ -236,7 +236,7 @@ const Printers = () => {
       <Link
         key={product.cartId || `sofacumbed-${product.id}`}
         href={productHref}
-        className="relative bg-white border border-gray-300 rounded-lg overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer flex flex-col shrink-0 w-[234px] h-[320px]"
+        className="relative bg-white border border-gray-300 rounded-lg overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer flex flex-col shrink-0 w-[234px] h-[384px] md:h-[320px]"
       >
         {product.label && (
           <div className={`absolute top-2 left-2 ${product.label.color} text-white text-xs font-bold px-2 py-1 rounded z-10`}>
@@ -272,12 +272,12 @@ const Printers = () => {
           </button>
         </div>
 
-        <div className="relative w-full h-40 flex items-center justify-center p-4 bg-white">
+        <div className="relative w-full h-56 md:h-40 flex items-center justify-center p-2 md:p-4 bg-white">
           {renderCardImage(
             images[activeImage],
             `${product.name} preview ${activeImage + 1}`,
-            'object-contain transition-opacity duration-200 max-h-full max-w-full',
-            { width: 140, height: 140 },
+            'object-contain transition-opacity duration-200 max-h-full max-w-full w-full h-full md:w-auto md:h-auto',
+            { width: 220, height: 220 },
           )}
 
           {images.length > 1 && (
@@ -362,7 +362,7 @@ const Printers = () => {
 
           <div
             ref={scrollContainerRef}
-            className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth"
+            className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth min-h-[384px] md:min-h-0"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {loading ? (

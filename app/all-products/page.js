@@ -806,7 +806,7 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
     return (
       <Link
         href={productHref}
-        className="relative bg-white border border-gray-300 rounded-sm overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer flex flex-col"
+        className="relative bg-white border border-gray-300 rounded-sm overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer flex flex-col min-h-[360px] md:min-h-0"
       >
         {productType === 'deal' ? (
           <div className="absolute top-2 left-2 z-20 bg-amber-500 text-white text-[10px] sm:text-xs font-extrabold px-2 py-1 rounded shadow">
@@ -843,12 +843,12 @@ export const ProductsPage = ({ searchParams: initialSearchParams = {}, restrictT
           </button>
         </div>
 
-        <div className="relative w-full h-40 flex items-center justify-center p-4 bg-white">
+        <div className="relative w-full h-56 md:h-40 flex items-center justify-center p-2 md:p-4 bg-white">
           {renderProductImage(
             images[activeImage],
             `${product.name} preview ${activeImage + 1}`,
-            'object-contain transition-opacity duration-200 max-h-full max-w-full',
-            { width: 160, height: 160 },
+            'object-contain transition-opacity duration-200 max-h-full max-w-full w-full h-full md:w-auto md:h-auto',
+            { width: 220, height: 220 },
             getCategoryPlaceholderImage(productType === 'deal' ? 'deal' : productType, product.category),
           )}
 

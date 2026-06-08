@@ -185,7 +185,7 @@ const PoliciesPage = () => {
                 </p>
                 <p className="font-medium">
                   Email: info@hitechcomputers.com<br />
-                  Phone: +92-333-2673177
+                  Phone: 0335 9909045
                 </p>
               </div>
             </section>
@@ -260,7 +260,7 @@ const PoliciesPage = () => {
                 </p>
                 <p className="font-medium">
                   Hi-Tek Computers<br />
-                  Phone: +92-333-2673177<br />
+                  Phone: 0335 9909045<br />
                   Email: info@hitechcomputers.com
                 </p>
               </div>
