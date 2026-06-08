@@ -15,28 +15,29 @@ import {
   FiAlertTriangle,
   FiPackage,
   FiX,
+  FiTrash2,
 } from 'react-icons/fi';
 import { API_BASE } from '../../lib/apiBase';
 
 const STATUS_COLORS = {
-  pending: 'from-[#f97316]/70 to-[#fb7185]/60',
+  pending: 'from-yellow-400/70 to-yellow-500/60',
   processing: 'from-[#38bdf8]/70 to-[#6366f1]/60',
   completed: 'from-[#22c55e]/70 to-[#16a34a]/60',
-  cancelled: 'from-[#ef4444]/70 to-[#f97316]/60',
+  cancelled: 'from-red-500/70 to-red-600/60',
 };
 
 const STATUS_BADGE_BG = {
-  pending: 'from-amber-500 to-rose-500',
+  pending: 'from-yellow-500 to-yellow-600',
   processing: 'from-blue-600 to-blue-700',
   completed: 'from-emerald-500 to-emerald-700',
-  cancelled: 'from-[#ef4444] to-[#f97316]',
+  cancelled: 'from-red-600 to-red-700',
 };
 
 const STATUS_BADGE_SHADOW = {
-  pending: 'shadow-[#fb7185]/40',
+  pending: 'shadow-yellow-500/40',
   processing: 'shadow-blue-500/25',
   completed: 'shadow-[#16a34a]/40',
-  cancelled: 'shadow-[#f97316]/40',
+  cancelled: 'shadow-red-500/40',
 };
 
 const STATUS_OPTIONS = [
@@ -262,6 +263,7 @@ const CmsOrdersPage = () => {
   const [detailError, setDetailError] = useState('');
   const [detailMessage, setDetailMessage] = useState('');
   const [detailSaving, setDetailSaving] = useState(false);
+  const [detailDeleting, setDetailDeleting] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -339,7 +341,11 @@ const CmsOrdersPage = () => {
     const pending = orders.filter((order) => order.status === 'pending').length;
     const processing = orders.filter((order) => order.status === 'processing').length;
     const completed = orders.filter((order) => order.status === 'completed').length;
-    const revenue = orders.reduce((sum, order) => sum + (Number.isFinite(order.total) ? order.total : 0), 0);
+    const revenue = orders.reduce((sum, order) => {
+      if (order.status !== 'completed') return sum;
+      const amount = Number(order.total);
+      return sum + (Number.isFinite(amount) ? amount : 0);
+    }, 0);
 
     return {
       total,
@@ -351,7 +357,7 @@ const CmsOrdersPage = () => {
   }, [orders]);
 
   const closeDetailModal = () => {
-    if (detailSaving) return;
+    if (detailSaving || detailDeleting) return;
     setDetailModalOpen(false);
     setDetailOrder(null);
     setDetailStatus('pending');
@@ -434,6 +440,43 @@ const CmsOrdersPage = () => {
     }
   };
 
+  const handleDeleteOrder = async (orderId, orderLabel) => {
+    if (!orderId) return;
+    if (
+      !window.confirm(
+        `Permanently delete cancelled order ${orderLabel || `#${orderId}`}? This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+
+    setDetailDeleting(true);
+    setDetailError('');
+    setDetailMessage('');
+
+    try {
+      const response = await fetch(`${API_BASE}/api/orders/${orderId}`, {
+        method: 'DELETE',
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Failed to delete order.');
+      }
+
+      setOrders((prev) => prev.filter((order) => String(order.id) !== String(orderId)));
+      setDetailDeleting(false);
+      setDetailModalOpen(false);
+      setDetailOrder(null);
+      setDetailStatus('pending');
+      setDetailError('');
+      setDetailMessage('');
+    } catch (err) {
+      console.error('Order delete error:', err);
+      setDetailError(err.message || 'Failed to delete order.');
+      setDetailDeleting(false);
+    }
+  };
+
   const renderAddressSection = (title, address) => (
     <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2">
       <h4 className="text-xs font-semibold text-slate-900/80 uppercase tracking-wide">{title}</h4>
@@ -502,7 +545,7 @@ const CmsOrdersPage = () => {
                 <p className="text-xs uppercase tracking-wide text-slate-600">Pending</p>
                 <p className="mt-3 text-2xl font-semibold text-slate-900">{stats.pending}</p>
               </div>
-              <span className="h-11 w-11 rounded-full bg-linear-to-br from-amber-200/50 to-rose-100/30 flex items-center justify-center text-[#fb7185]">
+              <span className="h-11 w-11 rounded-full bg-linear-to-br from-yellow-200/80 to-yellow-100/40 flex items-center justify-center text-yellow-600">
                 <FiClock />
               </span>
             </div>
@@ -532,7 +575,7 @@ const CmsOrdersPage = () => {
                 <FiCheckCircle />
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-2">Total value of all orders</p>
+            <p className="text-xs text-slate-500 mt-2">Total from completed orders only</p>
           </div>
         </section>
 
@@ -563,7 +606,7 @@ const CmsOrdersPage = () => {
                 onClick={() => setStatusFilter('pending')}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
                   statusFilter === 'pending'
-                    ? 'bg-linear-to-r from-amber-500 to-rose-500 text-white shadow-lg shadow-rose-500/20'
+                    ? 'bg-linear-to-r from-yellow-500 to-yellow-600 text-white shadow-lg shadow-yellow-500/25'
                     : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
                 }`}
               >
@@ -588,6 +631,16 @@ const CmsOrdersPage = () => {
                 }`}
               >
                 Completed
+              </button>
+              <button
+                onClick={() => setStatusFilter('cancelled')}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+                  statusFilter === 'cancelled'
+                    ? 'bg-linear-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-500/25'
+                    : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                Cancelled
               </button>
             </div>
           </div>
@@ -708,6 +761,23 @@ const CmsOrdersPage = () => {
                           <span>Order ID</span>
                           <span className="text-xs text-slate-600">{order.id}</span>
                         </div>
+                        {order.status === 'cancelled' && (
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleDeleteOrder(
+                                order.id,
+                                order.trackingNumber || `#${order.orderNumber}`,
+                              );
+                            }}
+                            disabled={detailDeleting}
+                            className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 transition disabled:opacity-60"
+                          >
+                            <FiTrash2 />
+                            Delete order
+                          </button>
+                        )}
                       </div>
                     </div>
                   </article>
@@ -755,7 +825,7 @@ const CmsOrdersPage = () => {
                 type="button"
                 onClick={closeDetailModal}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition disabled:opacity-60"
-                disabled={detailSaving}
+                disabled={detailSaving || detailDeleting}
               >
                 <FiX className="text-lg" />
                 <span className="sr-only">Close modal</span>
@@ -896,11 +966,27 @@ const CmsOrdersPage = () => {
                   )}
                 </div>
 
-                <div className="flex justify-end">
+                <div className="flex flex-col sm:flex-row sm:justify-end gap-3">
+                  {detailOrder?.status === 'cancelled' && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleDeleteOrder(
+                          detailOrder.id,
+                          detailOrder.trackingNumber || `#${detailOrder.orderNumber || detailOrder.id}`,
+                        )
+                      }
+                      disabled={detailSaving || detailDeleting}
+                      className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-red-300 bg-red-50 text-sm font-semibold text-red-700 hover:bg-red-100 transition disabled:opacity-60"
+                    >
+                      <FiTrash2 />
+                      {detailDeleting ? 'Deleting…' : 'Delete order'}
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={closeDetailModal}
-                    disabled={detailSaving}
+                    disabled={detailSaving || detailDeleting}
                     className="px-5 py-2.5 rounded-lg border border-slate-300 text-sm font-semibold text-slate-800 hover:bg-slate-100 transition disabled:opacity-60"
                   >
                     Close
