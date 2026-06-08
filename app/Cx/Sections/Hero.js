@@ -14,6 +14,10 @@ const HERO_DESKTOP_BANNERS = [
   { src: '/desktop-3.png', alt: 'Cloudynap promotion' },
 ];
 
+/** Native export size of mobile-*.png — keeps layout 1:1 with source (no upscale crop). */
+const MOBILE_BANNER_WIDTH = 375;
+const MOBILE_BANNER_HEIGHT = 448;
+
 const HERO_MOBILE_BANNERS = [
   { src: '/mobile-1.png', alt: 'Cloudynap promotion' },
   { src: '/mobile-2.png', alt: 'Cloudynap promotion' },
@@ -64,17 +68,18 @@ const Hero = () => {
             style={{ transform: `translateX(-${currentSlide * 100}%)` }}
           >
             {HERO_MOBILE_BANNERS.map((banner, index) => (
-              <div key={banner.src} className="w-full shrink-0 relative">
-                <div className="relative w-full aspect-[3/4] max-h-[min(85vh,680px)] overflow-hidden">
-                  <Image
-                    src={banner.src}
-                    alt={banner.alt}
-                    fill
-                    className="object-cover object-center"
-                    priority={index === 0}
-                    sizes="100vw"
-                  />
-                </div>
+              <div key={banner.src} className="w-full shrink-0">
+                <Image
+                  src={banner.src}
+                  alt={banner.alt}
+                  width={MOBILE_BANNER_WIDTH}
+                  height={MOBILE_BANNER_HEIGHT}
+                  className="block w-full h-auto"
+                  priority={index === 0}
+                  sizes="(max-width: 1024px) 100vw, 0px"
+                  quality={100}
+                  unoptimized
+                />
               </div>
             ))}
           </div>
