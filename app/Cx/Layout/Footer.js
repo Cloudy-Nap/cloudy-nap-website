@@ -37,13 +37,20 @@ const Footer = () => {
             </div>
             
             <div className="mt-6">
-              <Image
-                src="/google-reviews.png"
-                alt="Google Reviews"
-                width={100}
-                height={40}
-                className="object-contain mb-2"
-              />
+              <a
+                href="https://www.google.com/maps/place/Diamond+Supreme+Foam+(CLOUDYNAP)/@24.8864581,67.0691541,17z/data=!3m1!4b1!4m6!3m5!1s0x3eb33f005c988d77:0xd0dcddb87f515bd6!8m2!3d24.8864581!4d67.0665792"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block"
+              >
+                <Image
+                  src="/google-reviews.png"
+                  alt="Google Reviews"
+                  width={100}
+                  height={40}
+                  className="object-contain mb-2"
+                />
+              </a>
             </div>
           </div>
 

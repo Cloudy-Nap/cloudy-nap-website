@@ -15,6 +15,7 @@ const activitiesRoutes = require('./routes/activities');
 const { publicRouter: categoryDiscountsPublic, cmsRouter: categoryDiscountsCms } = require('./routes/categoryDiscounts');
 const catalogDealsRoutes = require('./routes/catalogDeals');
 const { publicRouter: vouchersPublic, cmsRouter: vouchersCms } = require('./routes/vouchers');
+const googleReviewsRoutes = require('./routes/googleReviews');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -48,6 +49,7 @@ app.use('/api/catalog', catalogRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/discounts', categoryDiscountsPublic);
 app.use('/api/vouchers', vouchersPublic);
+app.use('/api/google-reviews', googleReviewsRoutes);
 // Register before `/api/cms` catch-all style routes
 app.use('/api/cms/activities', activitiesRoutes);
 app.use('/api/cms/discounts', categoryDiscountsCms);
