@@ -38,7 +38,7 @@ const Footer = () => {
             
             <div className="mt-6">
               <a
-                href="https://www.google.com/maps/place/Diamond+Supreme+Foam+(CLOUDYNAP)/@24.8864581,67.0691541,17z/data=!3m1!4b1!4m6!3m5!1s0x3eb33f005c988d77:0xd0dcddb87f515bd6!8m2!3d24.8864581!4d67.0665792"
+                href="https://www.google.com/maps/place/Diamond+Supreme+Foam+(CLOUDYNAP)/@24.8864082,67.0638874,761m/data=!3m1!1e3!4m8!3m7!1s0x3eb33f005c988d77:0xd0dcddb87f515bd6!8m2!3d24.8864034!4d67.0664677!9m1!1b1!16s%2Fg%2F11z2vxgf3s?entry=ttu&g_ep=EgoyMDI2MDYwMy4xIKXMDSoASAFQAw%3D%3D"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block"
