@@ -30,18 +30,18 @@ const RATING_ONLY_FALLBACKS = [
 
 const googleReviews = [
   {
+    name: 'Faizan Farooq',
+    time: '3 days ago',
+    rating: 5,
+    isNew: true,
+    text: 'Great service. Sales person very professional. They give you complete guidance regarding product — this is the best choice at all. Alhumdulillah',
+  },
+  {
     name: 'Shiraz Sabzwari',
     time: '46 minutes ago',
     rating: 5,
     isNew: true,
     text: 'Good service, very professional and cooperative staff. Highly recommend!',
-  },
-  {
-    name: 'JuLia _Arts',
-    time: 'an hour ago',
-    rating: 5,
-    isNew: true,
-    text: 'Fair price with Excellent Quality',
   },
   {
     name: 'Abdul Ahad',
@@ -58,11 +58,11 @@ const googleReviews = [
     text: 'Very good experience.',
   },
   {
-    name: 'Faizan Farooq',
-    time: '3 days ago',
+    name: 'JuLia _Arts',
+    time: 'an hour ago',
     rating: 5,
     isNew: true,
-    text: 'Great service. Sales person very professional. They give you complete guidance regarding product — this is the best choice at all. Alhumdulillah',
+    text: 'Fair price with Excellent Quality',
   },
   {
     name: 'Shahzaib Khan',
