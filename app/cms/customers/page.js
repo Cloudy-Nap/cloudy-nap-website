@@ -17,6 +17,7 @@ import {
   FiPackage,
   FiCalendar,
   FiDollarSign,
+  FiPlus,
 } from 'react-icons/fi';
 import { API_BASE } from '../../lib/apiBase';
 
@@ -54,6 +55,49 @@ const CmsCustomersPage = () => {
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [ordersPage, setOrdersPage] = useState(1);
   const ORDERS_PER_PAGE = 3;
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [addSubmitting, setAddSubmitting] = useState(false);
+  const [addError, setAddError] = useState('');
+  const [addMessage, setAddMessage] = useState('');
+  const [newCustomer, setNewCustomer] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    phone: '',
+    address: '',
+  });
+
+  const cmsHeaders = () => {
+    if (typeof window === 'undefined') return {};
+    const cmsUser = JSON.parse(window.localStorage.getItem('cmsUser') || '{}');
+    return {
+      'Content-Type': 'application/json',
+      'X-CMS-User-Id': String(cmsUser.id || ''),
+      'X-CMS-User-Name': String(cmsUser.username || cmsUser.user_name || ''),
+      'X-CMS-User-Role': String(cmsUser.role || ''),
+    };
+  };
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await fetch(`${API_BASE}/api/users`);
+      if (!response.ok) throw new Error('Failed to load customers');
+      const data = await response.json();
+      const normalized = Array.isArray(data)
+        ? data.map((entry) => sanitizeUser(entry)).filter(Boolean)
+        : [];
+      setUsers(normalized);
+    } catch (err) {
+      console.error('CMS customers fetch error:', err);
+      setError(err.message || 'Failed to load customers.');
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -66,28 +110,90 @@ const CmsCustomersPage = () => {
   }, [router]);
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setLoading(true);
-        setError('');
-        const response = await fetch(`${API_BASE}/api/users`);
-        if (!response.ok) throw new Error('Failed to load customers');
-        const data = await response.json();
-        const normalized = Array.isArray(data)
-          ? data.map((entry) => sanitizeUser(entry)).filter(Boolean)
-          : [];
-        setUsers(normalized);
-      } catch (err) {
-        console.error('CMS customers fetch error:', err);
-        setError(err.message || 'Failed to load customers.');
-        setUsers([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUsers();
   }, []);
+
+  const resetAddForm = () => {
+    setNewCustomer({
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      phone: '',
+      address: '',
+    });
+    setAddError('');
+    setAddMessage('');
+  };
+
+  const openAddModal = () => {
+    resetAddForm();
+    setAddModalOpen(true);
+  };
+
+  const closeAddModal = () => {
+    if (addSubmitting) return;
+    setAddModalOpen(false);
+    resetAddForm();
+  };
+
+  const handleNewCustomerChange = (field) => (event) => {
+    setNewCustomer((prev) => ({ ...prev, [field]: event.target.value }));
+  };
+
+  const handleCreateCustomer = async (event) => {
+    event.preventDefault();
+    setAddError('');
+    setAddMessage('');
+
+    if (!newCustomer.email.trim()) {
+      setAddError('Email is required.');
+      return;
+    }
+
+    if (!newCustomer.password || newCustomer.password.length < 6) {
+      setAddError('Password must be at least 6 characters.');
+      return;
+    }
+
+    try {
+      setAddSubmitting(true);
+      const response = await fetch(`${API_BASE}/api/users`, {
+        method: 'POST',
+        headers: cmsHeaders(),
+        body: JSON.stringify({
+          firstName: newCustomer.firstName.trim(),
+          lastName: newCustomer.lastName.trim(),
+          email: newCustomer.email.trim(),
+          password: newCustomer.password,
+          phone: newCustomer.phone.trim() || undefined,
+          address: newCustomer.address.trim() || undefined,
+        }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Failed to create customer.');
+      }
+
+      const created = sanitizeUser(payload.user);
+      if (created) {
+        setUsers((prev) => [created, ...prev]);
+      } else {
+        await fetchUsers();
+      }
+
+      setAddMessage('Customer created successfully.');
+      setTimeout(() => {
+        closeAddModal();
+      }, 700);
+    } catch (err) {
+      console.error('Create customer error:', err);
+      setAddError(err.message || 'Failed to create customer.');
+    } finally {
+      setAddSubmitting(false);
+    }
+  };
 
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
@@ -187,6 +293,14 @@ const CmsCustomersPage = () => {
             </p>
           </div>
           <div className="flex gap-3 items-center">
+            <button
+              type="button"
+              onClick={openAddModal}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-emerald-500/20"
+            >
+              <FiPlus />
+              Add customer
+            </button>
             <Link
               href="/cms/dashboard"
               className="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 hover:bg-slate-100 transition shadow-lg shadow-black/10"
@@ -195,7 +309,7 @@ const CmsCustomersPage = () => {
               Back to dashboard
             </Link>
             <button
-              onClick={() => router.refresh()}
+              onClick={fetchUsers}
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-blue-500/20"
             >
               <FiRefreshCw className={loading ? 'animate-spin' : ''} />
@@ -531,6 +645,146 @@ const CmsCustomersPage = () => {
             </div>
           </div>
         </>
+      )}
+
+      {addModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-10">
+          <div
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            onClick={closeAddModal}
+            aria-hidden="true"
+          />
+          <div className="relative w-full max-w-lg rounded-3xl border border-slate-200 bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+              <div>
+                <p className="text-xs uppercase tracking-[0.35em] text-slate-400">New account</p>
+                <h2 className="mt-1 text-xl font-semibold text-slate-900">Add customer</h2>
+              </div>
+              <button
+                type="button"
+                onClick={closeAddModal}
+                disabled={addSubmitting}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-100 transition disabled:opacity-60"
+              >
+                <FiX />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateCustomer} className="px-6 py-6 space-y-4">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <label className="block">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
+                    First name
+                  </span>
+                  <input
+                    type="text"
+                    value={newCustomer.firstName}
+                    onChange={handleNewCustomerChange('firstName')}
+                    className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    placeholder="First name"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
+                    Last name
+                  </span>
+                  <input
+                    type="text"
+                    value={newCustomer.lastName}
+                    onChange={handleNewCustomerChange('lastName')}
+                    className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    placeholder="Last name"
+                  />
+                </label>
+              </div>
+
+              <label className="block">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
+                  Email *
+                </span>
+                <input
+                  type="email"
+                  value={newCustomer.email}
+                  onChange={handleNewCustomerChange('email')}
+                  required
+                  className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  placeholder="customer@email.com"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
+                  Password *
+                </span>
+                <input
+                  type="password"
+                  value={newCustomer.password}
+                  onChange={handleNewCustomerChange('password')}
+                  required
+                  minLength={6}
+                  className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  placeholder="At least 6 characters"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
+                  Phone
+                </span>
+                <input
+                  type="tel"
+                  value={newCustomer.phone}
+                  onChange={handleNewCustomerChange('phone')}
+                  className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  placeholder="0335 9909045"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
+                  Address
+                </span>
+                <textarea
+                  value={newCustomer.address}
+                  onChange={handleNewCustomerChange('address')}
+                  rows={3}
+                  className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none"
+                  placeholder="Delivery address"
+                />
+              </label>
+
+              {addError && (
+                <div className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+                  {addError}
+                </div>
+              )}
+
+              {addMessage && (
+                <div className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+                  {addMessage}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={closeAddModal}
+                  disabled={addSubmitting}
+                  className="px-5 py-2.5 rounded-lg border border-slate-300 text-sm font-semibold text-slate-800 hover:bg-slate-100 transition disabled:opacity-60"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={addSubmitting}
+                  className="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-sm font-semibold text-white transition disabled:opacity-60"
+                >
+                  {addSubmitting ? 'Creating…' : 'Create customer'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

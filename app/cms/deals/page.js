@@ -340,16 +340,28 @@ const CmsDealsPage = () => {
             <h2 className="text-lg font-semibold text-slate-900">
               {editingId ? 'Edit deal' : 'Create deal'}
             </h2>
-            {editingId && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-blue-700"
-              >
-                <FiX />
-                Cancel edit
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {editingId && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(editingId)}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-red-300 text-red-700 text-sm hover:bg-red-50"
+                  >
+                    <FiTrash2 />
+                    Delete deal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-blue-700"
+                  >
+                    <FiX />
+                    Cancel edit
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -546,7 +558,7 @@ const CmsDealsPage = () => {
               {deals.map((d) => (
                 <li
                   key={d.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-900/40 px-4 py-3"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3"
                 >
                   <div>
                     <p className="font-medium text-slate-900">{d.title}</p>
@@ -567,7 +579,7 @@ const CmsDealsPage = () => {
                     <button
                       type="button"
                       onClick={() => handleDelete(d.id)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-red-500/40 text-red-300 text-sm hover:bg-red-500/10"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-red-300 text-red-700 text-sm hover:bg-red-50"
                     >
                       <FiTrash2 />
                       Delete

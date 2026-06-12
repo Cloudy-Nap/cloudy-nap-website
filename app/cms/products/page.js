@@ -235,6 +235,7 @@ const CmsProductsPage = () => {
   const [editCover, setEditCover] = useState(null);
   const [editLoading, setEditLoading] = useState(false);
   const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editDeleting, setEditDeleting] = useState(false);
   const [editError, setEditError] = useState('');
   const [editMessage, setEditMessage] = useState('');
 
@@ -746,6 +747,50 @@ const CmsProductsPage = () => {
     }
   };
 
+  const handleDeleteProduct = async () => {
+    if (!editTarget) return;
+
+    const productName = editDetails.name || editTarget.name || 'this product';
+    if (
+      !window.confirm(
+        `Delete "${productName}" permanently? This cannot be undone. If it is part of a deal package, remove it from the deal first.`,
+      )
+    ) {
+      return;
+    }
+
+    setEditError('');
+    setEditMessage('');
+
+    try {
+      setEditDeleting(true);
+      const cmsUserLocal = JSON.parse(window.localStorage.getItem('cmsUser') || '{}');
+      const response = await fetch(`${API_BASE}/api/products/${editTarget.type}/${editTarget.id}`, {
+        method: 'DELETE',
+        headers: {
+          'X-CMS-User-Id': String(cmsUserLocal.id || ''),
+          'X-CMS-User-Name': String(cmsUserLocal.username || cmsUserLocal.user_name || ''),
+          'X-CMS-User-Role': String(cmsUserLocal.role || ''),
+        },
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Failed to delete product.');
+      }
+
+      setProducts((prev) =>
+        prev.filter((item) => !(item.id === editTarget.id && item.type === editTarget.type)),
+      );
+      closeEditModal();
+    } catch (err) {
+      console.error('Delete product error:', err);
+      setEditError(err.message || 'Failed to delete product.');
+    } finally {
+      setEditDeleting(false);
+    }
+  };
+
   return (
     <div className="relative min-h-screen text-slate-900">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.06),transparent_55%)] pointer-events-none" />
@@ -992,7 +1037,7 @@ const CmsProductsPage = () => {
                 type="button"
                 onClick={closeEditModal}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition disabled:opacity-60"
-                disabled={editSubmitting}
+                disabled={editSubmitting || editDeleting}
               >
                 <FiX className="text-lg" />
                 <span className="sr-only">Close</span>
@@ -1394,22 +1439,34 @@ const CmsProductsPage = () => {
                   </div>
                 )}
 
-                <div className="flex flex-col sm:flex-row sm:justify-end gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <button
                     type="button"
-                    onClick={closeEditModal}
-                    disabled={editSubmitting}
-                    className="px-5 py-2.5 rounded-lg border border-slate-300 text-sm font-semibold text-slate-800 hover:bg-slate-100 transition disabled:opacity-60"
+                    onClick={handleDeleteProduct}
+                    disabled={editSubmitting || editDeleting}
+                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-red-300 text-sm font-semibold text-red-700 hover:bg-red-50 transition disabled:opacity-60"
                   >
-                    Cancel
+                    <FiTrash2 />
+                    {editDeleting ? 'Deleting…' : 'Delete product'}
                   </button>
-                  <button
-                    type="submit"
-                    disabled={editSubmitting}
-                    className="px-5 py-2.5 rounded-lg bg-linear-to-r from-blue-600 to-blue-700 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {editSubmitting ? 'Saving…' : 'Save changes'}
-                  </button>
+
+                  <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+                    <button
+                      type="button"
+                      onClick={closeEditModal}
+                      disabled={editSubmitting || editDeleting}
+                      className="px-5 py-2.5 rounded-lg border border-slate-300 text-sm font-semibold text-slate-800 hover:bg-slate-100 transition disabled:opacity-60"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={editSubmitting || editDeleting}
+                      className="px-5 py-2.5 rounded-lg bg-linear-to-r from-blue-600 to-blue-700 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {editSubmitting ? 'Saving…' : 'Save changes'}
+                    </button>
+                  </div>
                 </div>
               </form>
             )}

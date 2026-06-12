@@ -4,9 +4,6 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-/** Mattress listing + sidebar brand filter (`beds.brand` === DolceVita, case-insensitive). */
-const DOLCE_VITA_MATTRESSES_HREF = '/all-products?subcategory=matteress&brand=dolcevita';
-
 const PromotionalBanners = () => {
   return (
     <div className="w-full py-8 lg:py-12 bg-white">
