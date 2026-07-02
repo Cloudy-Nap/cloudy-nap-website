@@ -355,12 +355,12 @@ const Navbar = () => {
         </div>
         <div className="flex items-center gap-3 sm:gap-4 flex-wrap justify-end">
           <span className="text-sm">Follow us:</span>
-          <div className="flex items-center gap-3">
-            <Link href="https://www.facebook.com/hitekcomputer" target="_blank" rel="noopener noreferrer" className="text-[#1a2f4a] hover:text-[#00aeef] transition"><FaFacebook className="cursor-pointer" /></Link>
-            <Link href="https://www.instagram.com/hitek_computers" target="_blank" rel="noopener noreferrer" className="text-[#1a2f4a] hover:text-[#00aeef] transition"><FaInstagram className="cursor-pointer" /></Link>
-            <Link href="https://www.tiktok.com/@hi_tek_computers" target="_blank" rel="noopener noreferrer" className="text-[#1a2f4a] hover:text-[#00aeef] transition"><FaTiktok className="cursor-pointer" /></Link>
-            <Link href="https://www.linkedin.com/company/hitek-computers/?viewAsMember=true" target="_blank" rel="noopener noreferrer" className="text-[#1a2f4a] hover:text-[#00aeef] transition"><FaLinkedin className="cursor-pointer" /></Link>
-            <Link href="https://www.youtube.com/@HiTek_Computers" target="_blank" rel="noopener noreferrer" className="text-[#1a2f4a] hover:text-[#00aeef] transition"><FaYoutube className="cursor-pointer" /></Link>
+          <div className="flex items-center gap-3 text-[#1a2f4a]" aria-hidden="true">
+            <FaFacebook className="text-lg" />
+            <FaInstagram className="text-lg" />
+            <FaTiktok className="text-lg" />
+            <FaLinkedin className="text-lg" />
+            <FaYoutube className="text-lg" />
           </div>
           <div className="flex items-center gap-2 px-2 py-1 border border-slate-400/40 rounded cursor-pointer hover:bg-white/60 transition">
             <span className="text-sm">Eng</span>
