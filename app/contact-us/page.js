@@ -107,8 +107,8 @@ const ContactUsPage = () => {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">Email</h3>
-                    <a href="mailto:info@hitechcomputers.com" className="text-gray-600 hover:text-[#00aeef] transition">
-                      info@hitechcomputers.com
+                    <a href="mailto:info@cloudynap.com" className="text-gray-600 hover:text-[#00aeef] transition">
+                      info@cloudynap.com
                     </a>
                   </div>
                 </div>
@@ -121,7 +121,7 @@ const ContactUsPage = () => {
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">Address</h3>
                     <p className="text-gray-600">
-                      Hi-Tek Computers<br />
+                      Cloudynap<br />
                       Pakistan
                     </p>
                   </div>
@@ -135,53 +135,12 @@ const ContactUsPage = () => {
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">Business Hours</h3>
                     <p className="text-gray-600">
-                      Monday - Saturday: 9:00 AM - 7:00 PM<br />
-                      Sunday: Closed
+                      Mon - Sun: 12:00 PM - 10:00 PM
                     </p>
                   </div>
                 </div>
 
-                {/* Social Media */}
-                <div className="pt-6 border-t border-gray-200">
-                  <h3 className="font-semibold text-gray-900 mb-4">Follow Us</h3>
-                  <div className="flex items-center gap-3">
-                    <a
-                      href="#"
-                      className="w-10 h-10 bg-[#00aeef] hover:bg-[#0099d9] rounded-full flex items-center justify-center transition"
-                      aria-label="Facebook"
-                    >
-                      <FaFacebook className="text-white" />
-                    </a>
-                    <a
-                      href="#"
-                      className="w-10 h-10 bg-[#00aeef] hover:bg-[#0099d9] rounded-full flex items-center justify-center transition"
-                      aria-label="Instagram"
-                    >
-                      <FaInstagram className="text-white" />
-                    </a>
-                    <a
-                      href="#"
-                      className="w-10 h-10 bg-[#00aeef] hover:bg-[#0099d9] rounded-full flex items-center justify-center transition"
-                      aria-label="TikTok"
-                    >
-                      <FaTiktok className="text-white" />
-                    </a>
-                    <a
-                      href="#"
-                      className="w-10 h-10 bg-[#00aeef] hover:bg-[#0099d9] rounded-full flex items-center justify-center transition"
-                      aria-label="Twitter"
-                    >
-                      <FaXTwitter className="text-white" />
-                    </a>
-                    <a
-                      href="#"
-                      className="w-10 h-10 bg-[#00aeef] hover:bg-[#0099d9] rounded-full flex items-center justify-center transition"
-                      aria-label="LinkedIn"
-                    >
-                      <FaLinkedin className="text-white" />
-                    </a>
-                  </div>
-                </div>
+               
               </div>
             </div>
 

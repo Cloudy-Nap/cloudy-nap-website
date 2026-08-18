@@ -30,8 +30,8 @@ const PoliciesPage = () => {
           {/* Navigation */}
           <div className="bg-white rounded-lg shadow-sm p-4 mb-8 sticky top-4 z-10">
             <div className="flex flex-wrap gap-4">
-              <a href="#refund-policy" className="text-sm text-[#00aeef] hover:text-[#0099d9] transition">
-                Refund Policy
+              <a href="#warranty-policy" className="text-sm text-[#00aeef] hover:text-[#0099d9] transition">
+                Warranty Policy
               </a>
               <a href="#cancellation-policy" className="text-sm text-[#00aeef] hover:text-[#0099d9] transition">
                 Cancellation Policy
@@ -46,44 +46,53 @@ const PoliciesPage = () => {
           </div>
 
           <div className="space-y-8">
-            {/* Refund Policy */}
-            <section id="refund-policy" className="bg-white rounded-lg shadow-sm p-6 sm:p-8">
+            {/* Warranty Policy */}
+            <section id="warranty-policy" className="bg-white rounded-lg shadow-sm p-6 sm:p-8">
               <div className="flex items-center gap-3 mb-4">
                 <FiRefreshCw className="text-2xl text-[#00aeef]" />
-                <h2 className="text-2xl font-bold text-gray-900">Refund Policy</h2>
+                <h2 className="text-2xl font-bold text-gray-900">Warranty Policy</h2>
               </div>
               <div className="prose max-w-none text-gray-700 space-y-4">
-                <p className="text-lg">
-                  At Hi-Tek Computers, we want you to be completely satisfied with your purchase. If you are not satisfied with a product you have purchased, we offer a hassle-free refund process.
+                <h3 className="font-semibold text-gray-900 mb-2">Warranty</h3>
+                <p>
+                  Cloudynap warrants that it will, at Cloudynap&apos;s option, replace or repair the purchaser&apos;s product if it is defective due to faulty workmanship or materials, subject to the limitations described in this warranty.
                 </p>
-                
-                <div className="bg-blue-50 border-l-4 border-[#00aeef] p-4 my-4">
-                  <h3 className="font-semibold text-gray-900 mb-2">3-Day Satisfaction Guarantee</h3>
-                  <p>
-                    If you don't like a product for any reason, you can request a full refund within <strong>3 days</strong> of receiving your order. We will process your refund promptly and return the full purchase amount to your original payment method.
-                  </p>
-                </div>
+                <p>
+                  This warranty covers defects in materials and workmanship for a duration specified on the accompanying warranty card.
+                </p>
+                <p>
+                  Cloudynap is not responsible for any other expenses including but not limited to transportation, installation or labor costs. Cloudynap is not liable to any additional costs that exceed the price of the mattress.
+                </p>
 
-                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Refund Eligibility</h3>
-                <ul className="list-disc pl-6 space-y-2">
-                  <li>Product must be returned in its original condition with all accessories and packaging</li>
-                  <li>Refund request must be made within 3 days of delivery</li>
-                  <li>Product must not be damaged, used, or modified</li>
-                  <li>All original tags, labels, and documentation must be included</li>
-                </ul>
-
-                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Refund Process</h3>
+                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Limitations of Warranty</h3>
+                <p>This warranty covers:</p>
                 <ol className="list-decimal pl-6 space-y-2">
-                  <li>Contact our customer service team within 3 days of delivery</li>
-                  <li>Provide your order number and reason for refund</li>
-                  <li>We will provide you with a return authorization and shipping instructions</li>
-                  <li>Ship the product back to us using the provided instructions</li>
-                  <li>Once we receive and inspect the product, we will process your refund within 5-7 business days</li>
+                  <li>Structural failures, including broken, burst, or bent coils.</li>
+                  <li>Excessive sagging or deformation beyond normal wear and tear. (More than 1.5&quot;)</li>
+                  <li>Foam splitting or cracking not resulting from misuse.</li>
+                  <li>Any manufacturing defect in the assembly of the mattress cover.</li>
                 </ol>
 
-                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Refund Timeline</h3>
+                <p className="mt-4">The warranty does not cover:</p>
+                <ol className="list-decimal pl-6 space-y-2">
+                  <li>Any product which has been subject to misuse, neglect, accident or used in violation of instructions, including instructions to place mattress on proper bed frame.</li>
+                  <li>Defects resulting from physical damage, including but not limited to burns, cuts, tears, liquid damage, or stains to the mattress structure or cover.</li>
+                  <li>Indentation / Sagging less than 1.5&quot;.</li>
+                  <li>Personal preference regarding mattress comfort level.</li>
+                  <li>Damage caused by improper storage, including leaving the mattress compressed in its original packaging for extended periods (over 2-4 weeks).</li>
+                  <li>Damage resulting from using an unsuitable foundation that does not provide adequate support for the mattress.</li>
+                  <li>If the polyethylene packaging has not been removed, we will be unable to process the claim.</li>
+                </ol>
+
+                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Depreciation Policy</h3>
                 <p>
-                  Refunds will be processed to your original payment method within 5-7 business days after we receive the returned product. The time it takes for the refund to appear in your account depends on your bank or payment provider, typically 3-10 business days.
+                  The value of the mattress decreases over time. Under our warranty policy, we determine the warranty claim value using a depreciation factor that takes into account the length of the warranty and the age of the mattress. The depreciation percentage is calculated with the following formula:
+                </p>
+                <p className="font-medium bg-blue-50 border-l-4 border-[#00aeef] p-4">
+                  Depreciation Percentage = [(Current Gross Price / Total Warranty Period) × Period of usage]
+                </p>
+                <p>
+                  Disclaimer: Depreciation is calculated from the date of purchase up to the date the voucher is issued.
                 </p>
               </div>
             </section>
@@ -129,63 +138,36 @@ const PoliciesPage = () => {
                 <h2 className="text-2xl font-bold text-gray-900">Privacy Policy</h2>
               </div>
               <div className="prose max-w-none text-gray-700 space-y-4">
-                <p className="text-sm text-gray-500 mb-4">Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                
-                <p className="text-lg">
-                  At Hi-Tek Computers, we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and make purchases.
-                </p>
-
-                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Information We Collect</h3>
-                <p>We collect information that you provide directly to us, including:</p>
-                <ul className="list-disc pl-6 space-y-2">
-                  <li>Name, email address, phone number, and shipping address</li>
-                  <li>Payment information (processed securely through our payment providers)</li>
-                  <li>Order history and preferences</li>
-                  <li>Account credentials if you create an account</li>
-                </ul>
-
-                <h3 className="font-semibold text-gray-900 mt-6 mb-2">How We Use Your Information</h3>
-                <p>We use the information we collect to:</p>
-                <ul className="list-disc pl-6 space-y-2">
-                  <li>Process and fulfill your orders</li>
-                  <li>Communicate with you about your orders and our services</li>
-                  <li>Send you marketing communications (with your consent)</li>
-                  <li>Improve our website and customer experience</li>
-                  <li>Prevent fraud and ensure security</li>
-                  <li>Comply with legal obligations</li>
-                </ul>
-
-                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Information Sharing</h3>
                 <p>
-                  We do not sell your personal information. We may share your information only with:
+                  Cloudynap works to ensure that your privacy is protected when using our services. This website is operated by Cloudynap and this privacy policy applies to your use of any Cloudynap websites. We therefore have a policy explaining what personal information is, how we use the information, who has access to the data, and your rights regarding the information collected. Your access and use of our website constitute your acceptance of our Privacy Policy and Terms of Use.
                 </p>
-                <ul className="list-disc pl-6 space-y-2">
-                  <li>Service providers who assist us in operating our website and processing payments</li>
-                  <li>Shipping companies to deliver your orders</li>
-                  <li>Legal authorities when required by law</li>
-                </ul>
 
-                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Data Security</h3>
+                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Personal Data</h3>
                 <p>
-                  We implement appropriate security measures to protect your personal information. However, no method of transmission over the internet is 100% secure, and we cannot guarantee absolute security.
+                  We take responsibility for all the personal data (such as your name, address, email address, phone number, and date of birth) that you provide us with, obtained when you place an order or when you create a personal profile.
                 </p>
 
-                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Your Rights</h3>
-                <p>You have the right to:</p>
-                <ul className="list-disc pl-6 space-y-2">
-                  <li>Access your personal information</li>
-                  <li>Correct inaccurate information</li>
-                  <li>Request deletion of your information</li>
-                  <li>Opt-out of marketing communications</li>
-                </ul>
-
-                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Contact Us</h3>
+                <h3 className="font-semibold text-gray-900 mt-6 mb-2">How do we use your personal data?</h3>
                 <p>
-                  If you have questions about this Privacy Policy, please contact us at:
+                  We use the information that we collect to fulfil orders. This includes sending you products that are ordered and offers for marketing purposes. In order to provide you with relevant offers and information, we may analyze your personal data. We will only keep your data for as long as necessary to carry out our services to you or for as long as we are required by law. After this your personal data will be deleted.
                 </p>
-                <p className="font-medium">
-                  Email: info@hitechcomputers.com<br />
-                  Phone: 0335 9909045
+
+                <h3 className="font-semibold text-gray-900 mt-6 mb-2">What information does Cloudynap share with third parties?</h3>
+                <p>
+                  Cloudynap may share your personal information with third parties or affiliates of Cloudynap who perform services on our behalf or process authorized transactions. The personal information we share with these companies to perform services on our behalf is protected via contractual agreements and cannot be shared. We do not sell your information to any third party nor do we disclose your personal information to unaffiliated third parties.
+                </p>
+
+                <h3 className="font-semibold text-gray-900 mt-6 mb-2">What are your rights?</h3>
+                <p>
+                  You have the right to request information about the personal data we hold on you. If your data is incorrect, incomplete or irrelevant, you can ask to have the information corrected or removed.
+                </p>
+                <p>
+                  A cookie is a small text file that is saved to, and during subsequent visits, retrieved from your computer or mobile device. Cloudynap uses cookies to enhance and simplify your visit. We do not use cookies to store personal information or to disclose information to third parties. There are two types of cookies: permanent and temporary (session cookies). Permanent cookies are stored as a file on your computer or mobile device for no longer than 12 months. Session cookies are stored temporarily and disappear when you close your browser session. We use permanent cookies to store your choice of start page and to store your details. We use session cookies when you use the product filtration function and to check if you are logged in. You can easily erase cookies from your computer or mobile device using your browser.
+                </p>
+
+                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Third-party cookies</h3>
+                <p>
+                  We use third-party cookies to collect statistics in aggregate form in analysis tools such as Google Analytics and Google ads. The cookies used are both permanent and temporary (session cookies). The permanent cookies are stored on your computer or mobile device for no longer than 24 hours.
                 </p>
               </div>
             </section>
@@ -197,71 +179,24 @@ const PoliciesPage = () => {
                 <h2 className="text-2xl font-bold text-gray-900">Terms & Conditions</h2>
               </div>
               <div className="prose max-w-none text-gray-700 space-y-4">
-                <p className="text-sm text-gray-500 mb-4">Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                
-                <p className="text-lg">
-                  Please read these Terms and Conditions carefully before using our website and making a purchase. By accessing our website and making a purchase, you agree to be bound by these terms.
-                </p>
-
-                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Acceptance of Terms</h3>
                 <p>
-                  By accessing and using the Hi-Tek Computers website, you accept and agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our website.
+                  You (&quot;you&quot; or &quot;End User&quot; or &quot;your&quot; or &quot;Buyer&quot; or &quot;Customer&quot;) are required to read and accept all of the terms and conditions laid down in this Terms and Conditions (&quot;Terms and Conditions&quot; or &quot;TERMS AND CONDITIONS&quot; or &quot;Terms&quot; or &quot;Agreement&quot;) and the linked Privacy Policy, before you may use the Cloudynap website (hereinafter referred to as &quot;Site&quot; or &quot;brand&quot; or &quot;Cloudynap Online Store&quot; or &quot;we&quot; or &quot;our&quot;). The Site allows you to browse, select and purchase mattresses, furniture, and accessories (&quot;Goods&quot; or &quot;Products&quot; or &quot;Services&quot;). Your use of this website and its related sites, services and tools. These TERMS AND CONDITIONS are effective upon acceptance and govern the relationship between you and Cloudynap (hereinafter the &quot;Company&quot;), including the sale and supply of any Products on the Site. If these TERMS AND CONDITIONS conflict with any other document, the TERMS AND CONDITIONS will prevail for the purposes of usage of the Site. If you do not agree to be bound by these TERMS AND CONDITIONS and the Privacy Policy, you may not use the Site in any way. For the purposes of this TERMS AND CONDITIONS, the term &quot;Acceptance&quot; shall mean your affirmative action in clicking on &quot;checkbox&quot; and on the &quot;continue button&quot; as provided on the registration page or such other actions that implies your acceptance.
                 </p>
 
-                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Use of Website</h3>
-                <p>You agree to use our website only for lawful purposes and in a way that does not:</p>
-                <ul className="list-disc pl-6 space-y-2">
-                  <li>Infringe on the rights of others</li>
-                  <li>Violate any applicable laws or regulations</li>
-                  <li>Interfere with or disrupt the website or servers</li>
-                  <li>Attempt to gain unauthorized access to any part of the website</li>
-                </ul>
-
-                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Product Information</h3>
                 <p>
-                  We strive to provide accurate product descriptions, images, and pricing. However, we do not warrant that product descriptions or other content on the website is accurate, complete, reliable, current, or error-free. Prices are subject to change without notice.
+                  The Company may amend this Agreement and/or the Privacy Policy at any time by posting a revised version on the Site. All updates and amendments shall be notified to you via posts on the website or through e-mail. The revised version will be effective at the time we post it on the Site, and in the event you continue to use our Site, you are impliedly agreeing to the revised TERMS AND CONDITIONS and Privacy Policy expressed herein.
                 </p>
 
-                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Orders and Payment</h3>
-                <ul className="list-disc pl-6 space-y-2">
-                  <li>All orders are subject to product availability</li>
-                  <li>We reserve the right to refuse or cancel any order</li>
-                  <li>Payment must be received before order processing</li>
-                  <li>Prices are in PKR (Pakistani Rupees) unless otherwise stated</li>
-                  <li>We accept various payment methods as displayed on our website</li>
-                </ul>
-
-                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Shipping and Delivery</h3>
-                <ul className="list-disc pl-6 space-y-2">
-                  <li>Delivery times are estimates and not guaranteed</li>
-                  <li>Shipping costs are calculated at checkout</li>
-                  <li>Risk of loss and title pass to you upon delivery</li>
-                  <li>You are responsible for providing accurate shipping information</li>
-                </ul>
-
-                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Intellectual Property</h3>
                 <p>
-                  All content on this website, including text, graphics, logos, images, and software, is the property of Hi-Tek Computers and is protected by copyright and trademark laws.
+                  In addition, if the revised version of this Agreement includes a Substantial Change, we will provide you with 30 days&apos; prior notice of such Substantial Change as per the Notification Preferences provided by you. You are advised to regularly check for any amendments or updates to the terms and conditions contained in this Agreement. For the purpose of this Agreement, the term &quot;Substantial Change&quot; means a change to the terms of this Agreement that materially reduces your rights or increases your responsibilities. Please read these terms and conditions carefully. These terms &amp; conditions, as modified or amended from time to time, are a binding contract between the Company and you. If you visit, use, or shop at the Site (or any future site operated by the Company), you accept these terms and conditions. In addition, when you use any current or future services of the Company or visit or purchase from any business affiliated with the Company or third party vendors, whether or not included in the Site, you will also be subject to the guidelines and conditions applicable to such service or merchant. If these conditions are inconsistent with such guidelines and conditions, such guidelines and conditions will prevail.
                 </p>
 
-                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Limitation of Liability</h3>
                 <p>
-                  Hi-Tek Computers shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the website or purchase of products.
+                  If this Terms and Conditions conflicts with any other document, the Terms and Conditions will prevail for the purposes of usage of the Site. As a condition of purchase, the Site requires your permission to send you administrative and promotional emails. We will send you information regarding your account activity and purchases, as well as updates about our products and promotional offers. You can opt out of our promotional emails anytime by clicking the UNSUBSCRIBE link at the bottom of any of our email correspondences. Please see our Privacy Policy for details. We shall have no responsibility in any manner whatsoever regarding any promotional emails or SMS/MMS sent to you. The offers made in those promotional emails or SMS/MMS shall be subject to change at the sole discretion of the Company and the Company owes no responsibility to provide you any information regarding such change. By placing an order, you make an offer to us to purchase products you have selected based on standard Site restrictions, Merchant specific restrictions, and on the terms and conditions stated below. You are required to create an account in order to purchase any product from the Site. This is required so we can provide you with easy access to print your orders and view your past purchases.
                 </p>
 
-                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Changes to Terms</h3>
                 <p>
-                  We reserve the right to modify these Terms and Conditions at any time. Changes will be effective immediately upon posting on the website. Your continued use of the website constitutes acceptance of the modified terms.
-                </p>
-
-                <h3 className="font-semibold text-gray-900 mt-6 mb-2">Contact Information</h3>
-                <p>
-                  For questions about these Terms and Conditions, please contact us:
-                </p>
-                <p className="font-medium">
-                  Hi-Tek Computers<br />
-                  Phone: 0335 9909045<br />
-                  Email: info@hitechcomputers.com
+                  The Site/Company takes no responsibility for the services or products that are sold or supplied by third party vendors. The Company makes no warranty to their end users for the quality, safety, usability, or other aspects of a product or service that is supplied by a Merchant and/or for some services or activities that involve potential bodily harm, and for those activities, the Company takes no responsibility for the service or activity being offered, and the End User takes responsibility for his or her own actions in utilizing those services.
                 </p>
               </div>
             </section>

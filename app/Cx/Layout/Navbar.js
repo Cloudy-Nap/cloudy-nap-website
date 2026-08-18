@@ -137,7 +137,7 @@ const Navbar = () => {
       id: item.id || item.sourceId || null,
       name: item.name || 'Unnamed Product',
       brand: item.brand || '',
-      model: item.model || '',
+      model: item.model || '', 
       price: item.price || 0,
       image: extractPrimaryImage(item),
       type: inferredType,

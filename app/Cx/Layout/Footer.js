@@ -63,7 +63,7 @@ const Footer = () => {
               <li><Link href="#" className="text-[#1a2f4a] hover:text-[#00aeef] transition">Secure payment</Link></li>
               <li><Link href="/contact-us" className="text-[#1a2f4a] hover:text-[#00aeef] transition">Contact us</Link></li>
               <li><Link href="/policies#terms-conditions" className="text-[#1a2f4a] hover:text-[#00aeef] transition">Terms & Conditions</Link></li>
-              <li><Link href="/policies#refund-policy" className="text-[#1a2f4a] hover:text-[#00aeef] transition">Refund & Cancellation Policy</Link></li>
+              <li><Link href="/policies#warranty-policy" className="text-[#1a2f4a] hover:text-[#00aeef] transition">Warranty Policy</Link></li>
             </ul>
           </div>
 
