@@ -360,7 +360,7 @@ router.post('/send-otp', async (req, res) => {
     });
 
     // Send email with OTP (non-blocking - respond immediately)
-    const fromEmail = process.env.EMAIL_FROM || process.env.EMAIL_USER || 'noreply@hitechcomputers.com';
+    const fromEmail = process.env.EMAIL_FROM || process.env.EMAIL_USER || 'noreply@cloudynap.com';
     
     // Send response immediately, then try to send email in background
     res.json({ 
@@ -379,11 +379,11 @@ router.post('/send-otp', async (req, res) => {
           const emailPromise = emailTransporter.sendMail({
             from: fromEmail,
             to: originalEmail,
-            subject: 'Verify your email - Hi-Tek Computers',
+            subject: 'Verify your email - Cloudynap',
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                 <h2 style="color: #00aeef;">Email Verification</h2>
-                <p>Thank you for signing up with Hi-Tek Computers!</p>
+                <p>Thank you for signing up with Cloudynap!</p>
                 <p>Your verification code is:</p>
                 <div style="background-color: #f5f5f5; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
                   <h1 style="color: #00aeef; font-size: 32px; letter-spacing: 5px; margin: 0;">${otp}</h1>
@@ -419,7 +419,7 @@ router.post('/send-otp', async (req, res) => {
       console.log('📧 OTP EMAIL (Email not configured - check console)');
       console.log('='.repeat(50));
       console.log(`To: ${originalEmail}`);
-      console.log(`Subject: Verify your email - Hi-Tek Computers`);
+      console.log(`Subject: Verify your email - Cloudynap`);
       console.log(`\nYour verification code is: ${otp}`);
       console.log(`This code will expire in 10 minutes.`);
       console.log('='.repeat(50));

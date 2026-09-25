@@ -11,7 +11,7 @@ import React, {
 } from 'react';
 
 const CartContext = createContext(null);
-const STORAGE_KEY = 'hi-tech-cart-items';
+const STORAGE_KEY = 'cloudynap-cart-items';
 
 const normalizeId = (id) => {
   if (id === null || id === undefined) {

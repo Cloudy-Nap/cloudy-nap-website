@@ -26,7 +26,7 @@ const Footer = () => {
                 unoptimized
               />
             </div>
-            <p className="text-[#1a2f4a]/80">Your Trusted IT Partner.</p>
+            <p className="text-[#1a2f4a]/80">Your Trusted Comfort Partner.</p>
             
             <div className="flex items-start gap-3">
               <CiPhone className="text-xl mt-1 shrink-0" />

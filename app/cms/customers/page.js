@@ -289,7 +289,7 @@ const CmsCustomersPage = () => {
             </p>
             <h1 className="mt-2 text-3xl font-semibold text-slate-900">Customer Directory</h1>
             <p className="mt-1 text-sm text-slate-600">
-              Browse every user registered on your hi-tech storefront. Use search and pagination to manage your customer base.
+              Browse every user registered on your Cloudynap storefront. Use search and pagination to manage your customer base.
             </p>
           </div>
           <div className="flex gap-3 items-center">

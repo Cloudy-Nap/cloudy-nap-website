@@ -142,7 +142,7 @@ const BulkAddProductsPage = () => {
             <h1 className="mt-3 text-3xl font-semibold text-slate-900">Bulk CSV import</h1>
             <p className="mt-2 text-sm text-slate-600 max-w-2xl">
               Import multiple catalog rows from a CSV. Choose the table that matches your file (beds, accessories,
-              furniture, sofa cum bed) or a legacy laptop, printer, or scanner file. You can also add products one at a time
+              furniture, or sofa cum bed). You can also add products one at a time
               via{' '}
               <Link href="/cms/products/add-product" className="text-blue-600 hover:underline">
                 Add product
@@ -171,11 +171,6 @@ const BulkAddProductsPage = () => {
                         <option value="accessory">Accessories</option>
                         <option value="furniture">Furniture</option>
                         <option value="sofacumbed">Sofa cum bed</option>
-                      </optgroup>
-                      <optgroup className="text-slate-900" label="Legacy electronics">
-                        <option value="laptop">Laptop (legacy)</option>
-                        <option value="printer">Printer (legacy)</option>
-                        <option value="scanner">Scanner (legacy)</option>
                       </optgroup>
                     </select>
                     <FiInfo className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-blue-600" />

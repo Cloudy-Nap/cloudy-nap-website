@@ -107,7 +107,7 @@ const CmsLoginPage = () => {
             </p>
             <h1 className="mt-4 text-3xl font-bold">CMS Control Center</h1>
             <p className="mt-3 text-sm text-blue-100 leading-relaxed">
-              Manage products, orders, and inventory across your hi-tech storefront with a single, powerful dashboard.
+              Manage products, orders, and inventory across your Cloudynap storefront with a single, powerful dashboard.
             </p>
           </div>
 
@@ -141,7 +141,7 @@ const CmsLoginPage = () => {
             </div>
             <h2 className="mt-4 text-2xl font-semibold text-slate-900">Welcome back, Administrator</h2>
             <p className="mt-2 text-sm text-slate-600">
-              Use your CMS credentials to continue. Need access? Contact your hi-tech platform owner.
+              Use your CMS credentials to continue. Need access? Contact your Cloudynap platform owner.
             </p>
           </div>
 
